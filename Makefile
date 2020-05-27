@@ -12,7 +12,7 @@ setup_haxe_lib:
 	haxelib setup ~/.local/haxelib
 
 deps:
-	docker run --rm -v ~/.local/haxelib/:/haxelib -v ${PWD}:/app -w /app haxe:4.0-alpine haxelib install build.hxml
+	docker run --rm -v ~/.local/haxelib/:/haxelib -v ${PWD}:/app -w /app haxe:4.0-alpine haxelib install --always build.hxml
 	# or just haxelib install build.hxml
 
 http_client:
