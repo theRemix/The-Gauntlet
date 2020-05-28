@@ -337,10 +337,17 @@ Main.prototype = $extend(hxd_App.prototype,{
 	init: function() {
 		var tf = new h2d_Text(hxd_res_DefaultFont.get(),this.s2d);
 		tf.set_text("Hello World !");
+		this.test = new h2d_Text(hxd_res_DefaultFont.get(),this.s2d);
+		this.test.set_text("test init");
+		var _this = this.test;
+		_this.posChanged = true;
+		_this.y = 20;
+		hxd_Window.getInstance().addEventTarget($bind(this,this.onEvent));
 	}
 	,onJoinOrCreate: function(err,room) {
+		var _gthis = this;
 		if(err != null) {
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 24, className : "Main", methodName : "onJoinOrCreate"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 32, className : "Main", methodName : "onJoinOrCreate"});
 			return;
 		}
 		this.room = room;
@@ -353,6 +360,33 @@ Main.prototype = $extend(hxd_App.prototype,{
 		this.room.get_state().players.onAdd = Players.onAdd;
 		this.room.get_state().players.onChange = Players.onChange;
 		this.room.get_state().players.onRemove = Players.onRemove;
+		haxe_Log.trace(this.room.get_state(),{ fileName : "src/Main.hx", lineNumber : 51, className : "Main", methodName : "onJoinOrCreate"});
+		this.room.get_state().onChange = function(changes) {
+			var _g = 0;
+			while(_g < changes.length) {
+				var change = changes[_g];
+				++_g;
+				haxe_Log.trace(change.field == "test",{ fileName : "src/Main.hx", lineNumber : 54, className : "Main", methodName : "onJoinOrCreate"});
+				if(change.field == "test") {
+					_gthis.test.set_text(change.value);
+				}
+			}
+		};
+	}
+	,update: function(dt) {
+	}
+	,onEvent: function(event) {
+		switch(event.kind._hx_index) {
+		case 8:
+			haxe_Log.trace("DOWN keyCode: " + event.keyCode,{ fileName : "src/Main.hx", lineNumber : 68, className : "Main", methodName : "onEvent"});
+			break;
+		case 9:
+			haxe_Log.trace("UP keyCode: " + event.keyCode,{ fileName : "src/Main.hx", lineNumber : 70, className : "Main", methodName : "onEvent"});
+			this.test.set_text("sending");
+			this.room.send("updateTest",event.keyCode == null ? "null" : "" + event.keyCode);
+			break;
+		default:
+		}
 	}
 	,__class__: Main
 });
@@ -813,11 +847,14 @@ Rooms.onLeave = function() {
 	haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Rooms.hx", lineNumber : 23, className : "Rooms", methodName : "onLeave"});
 };
 var State = function() {
+	this.test = "";
 	this.players = new io_colyseus_serializer_schema_MapSchema_$Player();
 	io_colyseus_serializer_schema_Schema.call(this);
 	this._indexes.h[0] = "players";
 	this._types.h[0] = "map";
 	this._childSchemaTypes.h[0] = Player;
+	this._indexes.h[1] = "test";
+	this._types.h[1] = "string";
 };
 $hxClasses["State"] = State;
 State.__name__ = "State";

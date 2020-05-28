@@ -14,29 +14,42 @@ schema.defineTypes(Player, {
 
 // module.exports.State =
 class State extends Schema {
-    players = new MapSchema();
+  constructor(){
+    super();
 
-    something = "This attribute won't be sent to the client-side";
+    this.players = new MapSchema();
+    this.test = 'hemlo';
+  }
 
-    createPlayer (id) {
-        this.players[ id ] = new Player();
+  something = "This attribute won't be sent to the client-side";
+
+  createPlayer (id) {
+    this.players[ id ] = new Player();
+    this.players[ id ].x += 1000;
+    console.log('added player', id)
+  }
+
+  removePlayer (id) {
+    delete this.players[ id ];
+    console.log('removed player', id)
+  }
+
+  movePlayer (id, movement) {
+    if (movement.x) {
+        this.players[ id ].x += movement.x * 10;
+
+    } else if (movement.y) {
+        this.players[ id ].y += movement.y * 10;
     }
+  }
 
-    removePlayer (id) {
-        delete this.players[ id ];
-    }
-
-    movePlayer (id, movement) {
-        if (movement.x) {
-            this.players[ id ].x += movement.x * 10;
-
-        } else if (movement.y) {
-            this.players[ id ].y += movement.y * 10;
-        }
-    }
+  updateTest(str){
+    this.test = str
+  }
 }
 schema.defineTypes(State, {
-  players: { map: Player }
+  players: { map: Player },
+  test: "string"
 });
 
 module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
@@ -51,6 +64,10 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
             console.log("StateHandlerRoom received message from", client.sessionId, ":", data);
             this.state.movePlayer(client.sessionId, data);
         });
+        this.onMessage("updateTest", (client, data) => {
+            console.log("StateHandlerRoom received message from", client.sessionId, ":", data);
+            this.state.updateTest(client.sessionId + ":" + data);
+        });
     }
 
     onAuth(client, options, req) {
@@ -61,6 +78,7 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
     onJoin (client) {
         client.send("playerConnected", "hello");
         this.state.createPlayer(client.sessionId);
+
     }
 
     onLeave (client) {
