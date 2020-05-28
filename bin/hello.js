@@ -326,8 +326,6 @@ var Main = function() {
 	hxd_App.call(this);
 	this.client = new io_colyseus_Client("ws://localhost:3000");
 	this.client.joinOrCreate_State("state_handler",new haxe_ds_StringMap(),State,$bind(this,this.onJoinOrCreate));
-	var tf = new h2d_Text(hxd_res_DefaultFont.get(),this.s2d);
-	tf.set_text("Hello World !");
 };
 $hxClasses["Main"] = Main;
 Main.__name__ = "Main";
@@ -336,9 +334,13 @@ Main.main = function() {
 };
 Main.__super__ = hxd_App;
 Main.prototype = $extend(hxd_App.prototype,{
-	onJoinOrCreate: function(err,room) {
+	init: function() {
+		var tf = new h2d_Text(hxd_res_DefaultFont.get(),this.s2d);
+		tf.set_text("Hello World !");
+	}
+	,onJoinOrCreate: function(err,room) {
 		if(err != null) {
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 20, className : "Main", methodName : "onJoinOrCreate"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 24, className : "Main", methodName : "onJoinOrCreate"});
 			return;
 		}
 		this.room = room;
@@ -696,7 +698,7 @@ var Players = function() { };
 $hxClasses["Players"] = Players;
 Players.__name__ = "Players";
 Players.onAdd = function(player,key) {
-	haxe_Log.trace("PLAYER ADDED AT: ",{ fileName : "src/Players.hx", lineNumber : 4, className : "Players", methodName : "onAdd", customParams : [key]});
+	haxe_Log.trace("PLAYER",{ fileName : "src/Players.hx", lineNumber : 4, className : "Players", methodName : "onAdd", customParams : [player," ADDED AT: ",key]});
 };
 Players.onChange = function(player,key) {
 	haxe_Log.trace("PLAYER CHANGED AT: ",{ fileName : "src/Players.hx", lineNumber : 13, className : "Players", methodName : "onChange", customParams : [key]});

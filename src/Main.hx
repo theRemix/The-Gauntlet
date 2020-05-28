@@ -5,14 +5,18 @@ class Main extends hxd.App {
   private var client:Client;
 	private var room:Room<State>;
 
+  // heaps
+  override function init() {
+    var tf = new h2d.Text(hxd.res.DefaultFont.get(), s2d);
+    tf.text = "Hello World !";
+  }
+
+  // colyseus
   public function new() {
     super();
 
     this.client = new Client('ws://localhost:3000');
     this.client.joinOrCreate("state_handler", [], State, this.onJoinOrCreate);
-
-    var tf = new h2d.Text(hxd.res.DefaultFont.get(), s2d);
-    tf.text = "Hello World !";
   }
 
   private inline function onJoinOrCreate(err:io.colyseus.error.MatchMakeError, room) {

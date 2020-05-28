@@ -1,7 +1,7 @@
 class Players {
 
   public static inline function onAdd(player, key) {
-    trace("PLAYER ADDED AT: ", key);
+    trace("PLAYER", player, " ADDED AT: ", key);
     // var cat = Assets.getMovieClip("library:NyanCatAnimation");
     // this.cats[key] = cat;
     // cat.x = player.x;
