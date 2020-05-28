@@ -128,6 +128,35 @@ Lambda.array = function(it) {
 	}
 	return a;
 };
+Lambda.exists = function(it,f) {
+	var x = $getIterator(it);
+	while(x.hasNext()) {
+		var x1 = x.next();
+		if(f(x1)) {
+			return true;
+		}
+	}
+	return false;
+};
+Lambda.count = function(it,pred) {
+	var n = 0;
+	if(pred == null) {
+		var _ = $getIterator(it);
+		while(_.hasNext()) {
+			var _1 = _.next();
+			++n;
+		}
+	} else {
+		var x = $getIterator(it);
+		while(x.hasNext()) {
+			var x1 = x.next();
+			if(pred(x1)) {
+				++n;
+			}
+		}
+	}
+	return n;
+};
 var h3d_IDrawable = function() { };
 $hxClasses["h3d.IDrawable"] = h3d_IDrawable;
 h3d_IDrawable.__name__ = "h3d.IDrawable";
@@ -295,6 +324,10 @@ hxd_App.prototype = {
 };
 var Main = function() {
 	hxd_App.call(this);
+	this.client = new io_colyseus_Client("ws://localhost:3000");
+	this.client.joinOrCreate_State("state_handler",new haxe_ds_StringMap(),State,$bind(this,this.onJoinOrCreate));
+	var tf = new h2d_Text(hxd_res_DefaultFont.get(),this.s2d);
+	tf.set_text("Hello World !");
 };
 $hxClasses["Main"] = Main;
 Main.__name__ = "Main";
@@ -303,13 +336,374 @@ Main.main = function() {
 };
 Main.__super__ = hxd_App;
 Main.prototype = $extend(hxd_App.prototype,{
-	init: function() {
-		var tf = new h2d_Text(hxd_res_DefaultFont.get(),this.s2d);
-		tf.set_text("Hello World !");
+	onJoinOrCreate: function(err,room) {
+		if(err != null) {
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 20, className : "Main", methodName : "onJoinOrCreate"});
+			return;
+		}
+		this.room = room;
+		this.room.onStateChange.push(Rooms.onStateChange);
+		this.room.onMessage(0,Rooms.onMessage0);
+		this.room.onMessage("type",Rooms.onMessageType);
+		this.room.onMessage("playerConnected",Rooms.onMessagePlayerConnected);
+		this.room.onError.push(Rooms.onError);
+		this.room.onLeave.push(Rooms.onLeave);
+		this.room.get_state().players.onAdd = Players.onAdd;
+		this.room.get_state().players.onChange = Players.onChange;
+		this.room.get_state().players.onRemove = Players.onRemove;
 	}
 	,__class__: Main
 });
 Math.__name__ = "Math";
+var io_colyseus_serializer_schema_Decoder = function() {
+};
+$hxClasses["io.colyseus.serializer.schema.Decoder"] = io_colyseus_serializer_schema_Decoder;
+io_colyseus_serializer_schema_Decoder.__name__ = "io.colyseus.serializer.schema.Decoder";
+io_colyseus_serializer_schema_Decoder.prototype = {
+	decodePrimitiveType: function(type,bytes,it) {
+		switch(type) {
+		case "boolean":
+			return this.boolean(bytes,it);
+		case "float32":
+			return this.float32(bytes,it);
+		case "float64":
+			return this.float64(bytes,it);
+		case "int16":
+			return this.int16(bytes,it);
+		case "int32":
+			return this.int32(bytes,it);
+		case "int64":
+			return this.int64(bytes,it);
+		case "int8":
+			return this.int8(bytes,it);
+		case "number":
+			return this.number(bytes,it);
+		case "string":
+			return this.string(bytes,it);
+		case "uint16":
+			return this.uint16(bytes,it);
+		case "uint32":
+			return this.uint32(bytes,it);
+		case "uint64":
+			return this.uint64(bytes,it);
+		case "uint8":
+			return this.uint8(bytes,it);
+		default:
+			throw new js__$Boot_HaxeError("can't decode: " + type);
+		}
+	}
+	,string: function(bytes,it) {
+		var prefix = bytes.b[it.offset++];
+		var length = 0;
+		if(prefix < 192) {
+			length = prefix & 31;
+		} else if(prefix == 217) {
+			length = this.uint8(bytes,it);
+		} else if(prefix == 218) {
+			length = this.uint16(bytes,it);
+		} else if(prefix == 219) {
+			length = this.uint32(bytes,it);
+		}
+		var value = bytes.getString(it.offset,length);
+		it.offset += length;
+		return value;
+	}
+	,number: function(bytes,it) {
+		var prefix = bytes.b[it.offset++];
+		if(prefix < 128) {
+			return prefix;
+		} else if(prefix == 202) {
+			return this.float32(bytes,it);
+		} else if(prefix == 203) {
+			return this.float64(bytes,it);
+		} else if(prefix == 204) {
+			return this.uint8(bytes,it);
+		} else if(prefix == 205) {
+			return this.uint16(bytes,it);
+		} else if(prefix == 206) {
+			return this.uint32(bytes,it);
+		} else if(prefix == 207) {
+			return this.uint64(bytes,it);
+		} else if(prefix == 208) {
+			return this.int8(bytes,it);
+		} else if(prefix == 209) {
+			return this.int16(bytes,it);
+		} else if(prefix == 210) {
+			return this.int32(bytes,it);
+		} else if(prefix == 211) {
+			return this.int64(bytes,it);
+		} else if(prefix > 223) {
+			return (255 - prefix + 1) * -1;
+		}
+		return 0;
+	}
+	,boolean: function(bytes,it) {
+		return this.uint8(bytes,it) > 0;
+	}
+	,int8: function(bytes,it) {
+		return this.uint8(bytes,it) << 24 >> 24;
+	}
+	,uint8: function(bytes,it) {
+		return bytes.b[it.offset++];
+	}
+	,int16: function(bytes,it) {
+		return this.uint16(bytes,it) << 16 >> 16;
+	}
+	,uint16: function(bytes,it) {
+		return bytes.b[it.offset++] | bytes.b[it.offset++] << 8;
+	}
+	,int32: function(bytes,it) {
+		var value = bytes.getInt32(it.offset);
+		it.offset += 4;
+		return value;
+	}
+	,uint32: function(bytes,it) {
+		return this.int32(bytes,it) >>> 0;
+	}
+	,int64: function(bytes,it) {
+		var value = bytes.getInt64(it.offset);
+		it.offset += 8;
+		return value;
+	}
+	,uint64: function(bytes,it) {
+		var low = this.uint32(bytes,it);
+		var high = this.uint32(bytes,it) * Math.pow(2,32);
+		var this1 = new haxe__$Int64__$_$_$Int64(high,low);
+		return this1;
+	}
+	,float32: function(bytes,it) {
+		var value = bytes.getFloat(it.offset);
+		it.offset += 4;
+		return value;
+	}
+	,float64: function(bytes,it) {
+		var value = bytes.getDouble(it.offset);
+		it.offset += 8;
+		return value;
+	}
+	,__class__: io_colyseus_serializer_schema_Decoder
+};
+var io_colyseus_serializer_schema_Schema = function() {
+	this._childPrimitiveTypes = new haxe_ds_IntMap();
+	this._childSchemaTypes = new haxe_ds_IntMap();
+	this._types = new haxe_ds_IntMap();
+	this._indexes = new haxe_ds_IntMap();
+};
+$hxClasses["io.colyseus.serializer.schema.Schema"] = io_colyseus_serializer_schema_Schema;
+io_colyseus_serializer_schema_Schema.__name__ = "io.colyseus.serializer.schema.Schema";
+io_colyseus_serializer_schema_Schema.prototype = {
+	onChange: function(changes) {
+	}
+	,onRemove: function() {
+	}
+	,decode: function(bytes,it) {
+		var changes = [];
+		if(it == null) {
+			it = { offset : 0};
+		}
+		var totalBytes = bytes.length;
+		while(it.offset < totalBytes) {
+			var isNil = io_colyseus_serializer_schema_SPEC.nilCheck(bytes,it);
+			if(isNil) {
+				it.offset++;
+			}
+			var index = bytes.b[it.offset++];
+			if(index == io_colyseus_serializer_schema_SPEC.END_OF_STRUCTURE) {
+				break;
+			}
+			var field = this._indexes.h[index];
+			var type = this._types.h[index];
+			var value = null;
+			var hasChange = false;
+			if(field == null) {
+				continue;
+			} else if(isNil) {
+				value = null;
+				hasChange = true;
+			} else if(type == "ref") {
+				var constructor = this._childSchemaTypes.h[index];
+				value = Reflect.getProperty(this,field);
+				if(value == null) {
+					value = Type.createInstance(constructor,[]);
+				}
+				value.decode(bytes,it);
+				hasChange = true;
+			} else if(type == "array") {
+				var isSchemaType = this._childSchemaTypes.h.hasOwnProperty(index);
+				type = isSchemaType ? this._childSchemaTypes.h[index] : this._childPrimitiveTypes.h[index];
+				var valueRef = Reflect.getProperty(this,field);
+				if(valueRef == null) {
+					valueRef = new io_colyseus_serializer_schema_ArraySchema_$Dynamic();
+				}
+				value = valueRef.clone();
+				var newLength = io_colyseus_serializer_schema_Schema.decoder.number(bytes,it);
+				var numChanges = js_Boot.__cast(Math.min(io_colyseus_serializer_schema_Schema.decoder.number(bytes,it),newLength) , Int);
+				var hasRemoval = value.items.length > newLength;
+				hasChange = numChanges > 0 || hasRemoval;
+				var hasIndexChange = false;
+				if(hasRemoval) {
+					var items = js_Boot.__cast(valueRef.items , Array);
+					var _g = newLength;
+					var _g1 = valueRef.items.length;
+					while(_g < _g1) {
+						var i = _g++;
+						var itemRemoved = items[i];
+						if(isSchemaType && itemRemoved.onRemove != null) {
+							itemRemoved.onRemove();
+						}
+						HxOverrides.remove(js_Boot.__cast(value.items , Array),itemRemoved);
+						valueRef.onRemove(itemRemoved,newLength + i);
+					}
+				}
+				var _g2 = 0;
+				var _g11 = numChanges;
+				while(_g2 < _g11) {
+					var i1 = _g2++;
+					var newIndex = io_colyseus_serializer_schema_Schema.decoder.number(bytes,it);
+					var indexChangedFrom = -1;
+					if(io_colyseus_serializer_schema_SPEC.indexChangeCheck(bytes,it)) {
+						it.offset++;
+						indexChangedFrom = io_colyseus_serializer_schema_Schema.decoder.number(bytes,it);
+						hasIndexChange = true;
+					}
+					var isNew = !hasIndexChange && value.items[newIndex] == null || hasIndexChange && indexChangedFrom == -1;
+					if(isSchemaType) {
+						var item = null;
+						if(isNew) {
+							item = Type.createInstance(type,[]);
+						} else if(indexChangedFrom != -1) {
+							item = valueRef.items[indexChangedFrom];
+						} else {
+							item = valueRef.items[newIndex];
+						}
+						if(item == null) {
+							item = Type.createInstance(type,[]);
+							isNew = true;
+						}
+						item.decode(bytes,it);
+						value.items[newIndex] = item;
+					} else {
+						value.items[newIndex] = io_colyseus_serializer_schema_Schema.decoder.decodePrimitiveType(type,bytes,it);
+					}
+					if(isNew) {
+						valueRef.onAdd(value.items[newIndex],newIndex);
+					} else {
+						valueRef.onChange(value.items[newIndex],newIndex);
+					}
+				}
+			} else if(type == "map") {
+				var isSchemaType1 = this._childSchemaTypes.h.hasOwnProperty(index);
+				type = isSchemaType1 ? this._childSchemaTypes.h[index] : this._childPrimitiveTypes.h[index];
+				var valueRef1 = Reflect.getProperty(this,field);
+				if(valueRef1 == null) {
+					valueRef1 = new io_colyseus_serializer_schema_MapSchema_$Dynamic();
+				}
+				value = valueRef1.clone();
+				var length = io_colyseus_serializer_schema_Schema.decoder.number(bytes,it);
+				hasChange = length > 0;
+				var hasIndexChange1 = false;
+				var previousKeys = [];
+				var keysIterator = valueRef1.items.keys();
+				while(keysIterator.hasNext()) previousKeys.push(keysIterator.next());
+				var _g3 = 0;
+				var _g12 = length;
+				while(_g3 < _g12) {
+					var i2 = _g3++;
+					if(it.offset >= bytes.length || bytes.b[it.offset] == io_colyseus_serializer_schema_SPEC.END_OF_STRUCTURE) {
+						break;
+					}
+					var isNilItem = io_colyseus_serializer_schema_SPEC.nilCheck(bytes,it);
+					if(isNilItem) {
+						it.offset++;
+					}
+					var previousKey = "";
+					if(io_colyseus_serializer_schema_SPEC.indexChangeCheck(bytes,it)) {
+						it.offset++;
+						previousKey = previousKeys[io_colyseus_serializer_schema_Schema.decoder.number(bytes,it)];
+						hasIndexChange1 = true;
+					}
+					var hasMapIndex = io_colyseus_serializer_schema_SPEC.numberCheck(bytes,it);
+					var newKey = hasMapIndex ? previousKeys[io_colyseus_serializer_schema_Schema.decoder.number(bytes,it)] : io_colyseus_serializer_schema_Schema.decoder.string(bytes,it);
+					var item1;
+					var isNew1 = !hasIndexChange1 && !valueRef1.items.exists(newKey) || hasIndexChange1 && previousKey == "" && hasMapIndex;
+					if(isNew1 && isSchemaType1) {
+						item1 = Type.createInstance(type,[]);
+					} else if(previousKey != "") {
+						item1 = valueRef1.items.get(previousKey);
+					} else {
+						item1 = valueRef1.items.get(newKey);
+					}
+					if(isNilItem) {
+						if(item1 && isSchemaType1 && item1.onRemove != null) {
+							item1.onRemove();
+						}
+						valueRef1.onRemove(item1,newKey);
+						value.items.remove(newKey);
+						continue;
+					} else if(!isSchemaType1) {
+						var decodedValue = io_colyseus_serializer_schema_Schema.decoder.decodePrimitiveType(type,bytes,it);
+						value.items.set(newKey,decodedValue);
+					} else {
+						item1.decode(bytes,it);
+						value.items.set(newKey,item1);
+					}
+					if(isNew1) {
+						valueRef1.onAdd(item1,newKey);
+					} else {
+						valueRef1.onChange(item1,newKey);
+					}
+				}
+			} else {
+				value = io_colyseus_serializer_schema_Schema.decoder.decodePrimitiveType(type,bytes,it);
+				hasChange = true;
+			}
+			if(hasChange) {
+				changes.push({ field : field, value : value, previousValue : Reflect.getProperty(this,field)});
+			}
+			this[field] = value;
+		}
+		if(changes.length > 0) {
+			this.onChange(changes);
+		}
+	}
+	,toString: function() {
+		var data = [];
+		var field = this._indexes.iterator();
+		while(field.hasNext()) {
+			var field1 = field.next();
+			data.push(field1 + " => " + Std.string(Reflect.getProperty(this,field1)));
+		}
+		return "{ " + data.join(", ") + " }";
+	}
+	,__class__: io_colyseus_serializer_schema_Schema
+};
+var Player = function() {
+	this.y = 0;
+	this.x = 0;
+	io_colyseus_serializer_schema_Schema.call(this);
+	this._indexes.h[0] = "x";
+	this._types.h[0] = "number";
+	this._indexes.h[1] = "y";
+	this._types.h[1] = "number";
+};
+$hxClasses["Player"] = Player;
+Player.__name__ = "Player";
+Player.__super__ = io_colyseus_serializer_schema_Schema;
+Player.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
+	__class__: Player
+});
+var Players = function() { };
+$hxClasses["Players"] = Players;
+Players.__name__ = "Players";
+Players.onAdd = function(player,key) {
+	haxe_Log.trace("PLAYER ADDED AT: ",{ fileName : "src/Players.hx", lineNumber : 4, className : "Players", methodName : "onAdd", customParams : [key]});
+};
+Players.onChange = function(player,key) {
+	haxe_Log.trace("PLAYER CHANGED AT: ",{ fileName : "src/Players.hx", lineNumber : 13, className : "Players", methodName : "onChange", customParams : [key]});
+};
+Players.onRemove = function(player,key) {
+	haxe_Log.trace("PLAYER REMOVED AT: ",{ fileName : "src/Players.hx", lineNumber : 19, className : "Players", methodName : "onRemove", customParams : [key]});
+};
 var Reflect = function() { };
 $hxClasses["Reflect"] = Reflect;
 Reflect.__name__ = "Reflect";
@@ -319,6 +713,25 @@ Reflect.field = function(o,field) {
 	} catch( e ) {
 		var e1 = ((e) instanceof js__$Boot_HaxeError) ? e.val : e;
 		return null;
+	}
+};
+Reflect.getProperty = function(o,field) {
+	var tmp;
+	if(o == null) {
+		return null;
+	} else {
+		var tmp1;
+		if(o.__properties__) {
+			tmp = o.__properties__["get_" + field];
+			tmp1 = tmp;
+		} else {
+			tmp1 = false;
+		}
+		if(tmp1) {
+			return o[tmp]();
+		} else {
+			return o[field];
+		}
 	}
 };
 Reflect.fields = function(o) {
@@ -376,6 +789,40 @@ Reflect.deleteField = function(o,field) {
 	delete(o[field]);
 	return true;
 };
+var Rooms = function() { };
+$hxClasses["Rooms"] = Rooms;
+Rooms.__name__ = "Rooms";
+Rooms.onStateChange = function(state) {
+	haxe_Log.trace("STATE CHANGE: " + Std.string(state),{ fileName : "src/Rooms.hx", lineNumber : 3, className : "Rooms", methodName : "onStateChange"});
+};
+Rooms.onMessage0 = function(message) {
+	haxe_Log.trace("onMessage: 0 => " + message,{ fileName : "src/Rooms.hx", lineNumber : 7, className : "Rooms", methodName : "onMessage0"});
+};
+Rooms.onMessageType = function(message) {
+	haxe_Log.trace("onMessage: 'type' => " + message,{ fileName : "src/Rooms.hx", lineNumber : 11, className : "Rooms", methodName : "onMessageType"});
+};
+Rooms.onMessagePlayerConnected = function(message) {
+	haxe_Log.trace("onMessage: 'PlayerConnected' => " + message,{ fileName : "src/Rooms.hx", lineNumber : 15, className : "Rooms", methodName : "onMessagePlayerConnected"});
+};
+Rooms.onError = function(code,message) {
+	haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Rooms.hx", lineNumber : 19, className : "Rooms", methodName : "onError"});
+};
+Rooms.onLeave = function() {
+	haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Rooms.hx", lineNumber : 23, className : "Rooms", methodName : "onLeave"});
+};
+var State = function() {
+	this.players = new io_colyseus_serializer_schema_MapSchema_$Player();
+	io_colyseus_serializer_schema_Schema.call(this);
+	this._indexes.h[0] = "players";
+	this._types.h[0] = "map";
+	this._childSchemaTypes.h[0] = Player;
+};
+$hxClasses["State"] = State;
+State.__name__ = "State";
+State.__super__ = io_colyseus_serializer_schema_Schema;
+State.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
+	__class__: State
+});
 var Std = function() { };
 $hxClasses["Std"] = Std;
 Std.__name__ = "Std";
@@ -503,6 +950,9 @@ StringTools.rtrim = function(s) {
 StringTools.trim = function(s) {
 	return StringTools.ltrim(StringTools.rtrim(s));
 };
+StringTools.replace = function(s,sub,by) {
+	return s.split(sub).join(by);
+};
 StringTools.hex = function(n,digits) {
 	var s = "";
 	var hexChars = "0123456789ABCDEF";
@@ -518,6 +968,18 @@ StringTools.hex = function(n,digits) {
 	}
 	return s;
 };
+var ValueType = $hxEnums["ValueType"] = { __ename__ : true, __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"]
+	,TNull: {_hx_index:0,__enum__:"ValueType",toString:$estr}
+	,TInt: {_hx_index:1,__enum__:"ValueType",toString:$estr}
+	,TFloat: {_hx_index:2,__enum__:"ValueType",toString:$estr}
+	,TBool: {_hx_index:3,__enum__:"ValueType",toString:$estr}
+	,TObject: {_hx_index:4,__enum__:"ValueType",toString:$estr}
+	,TFunction: {_hx_index:5,__enum__:"ValueType",toString:$estr}
+	,TClass: ($_=function(c) { return {_hx_index:6,c:c,__enum__:"ValueType",toString:$estr}; },$_.__params__ = ["c"],$_)
+	,TEnum: ($_=function(e) { return {_hx_index:7,e:e,__enum__:"ValueType",toString:$estr}; },$_.__params__ = ["e"],$_)
+	,TUnknown: {_hx_index:8,__enum__:"ValueType",toString:$estr}
+};
+ValueType.__empty_constructs__ = [ValueType.TNull,ValueType.TInt,ValueType.TFloat,ValueType.TBool,ValueType.TObject,ValueType.TFunction,ValueType.TUnknown];
 var Type = function() { };
 $hxClasses["Type"] = Type;
 Type.__name__ = "Type";
@@ -546,6 +1008,41 @@ Type.createEnumIndex = function(e,index,params) {
 		throw new js__$Boot_HaxeError(index + " is not a valid enum constructor index");
 	}
 	return Type.createEnum(e,c,params);
+};
+Type.typeof = function(v) {
+	switch(typeof(v)) {
+	case "boolean":
+		return ValueType.TBool;
+	case "function":
+		if(v.__name__ || v.__ename__) {
+			return ValueType.TObject;
+		}
+		return ValueType.TFunction;
+	case "number":
+		if(Math.ceil(v) == v % 2147483648.0) {
+			return ValueType.TInt;
+		}
+		return ValueType.TFloat;
+	case "object":
+		if(v == null) {
+			return ValueType.TNull;
+		}
+		var e = v.__enum__;
+		if(e != null) {
+			return ValueType.TEnum($hxEnums[e]);
+		}
+		var c = js_Boot.getClass(v);
+		if(c != null) {
+			return ValueType.TClass(c);
+		}
+		return ValueType.TObject;
+	case "string":
+		return ValueType.TClass(String);
+	case "undefined":
+		return ValueType.TNull;
+	default:
+		return ValueType.TUnknown;
+	}
 };
 Type.enumEq = function(a,b) {
 	if(a == b) {
@@ -5150,6 +5647,7 @@ h2d_Object.prototype = {
 	,constraintSize: function(maxWidth,maxHeight) {
 	}
 	,__class__: h2d_Object
+	,__properties__: {set_filter:"set_filter",set_visible:"set_visible",set_rotation:"set_rotation",set_scaleY:"set_scaleY",set_scaleX:"set_scaleX",set_y:"set_y",set_x:"set_x",get_numChildren:"get_numChildren"}
 };
 var h2d_Drawable = function(parent) {
 	h2d_Object.call(this,parent);
@@ -5311,6 +5809,7 @@ h2d_Drawable.prototype = $extend(h2d_Object.prototype,{
 		return;
 	}
 	,__class__: h2d_Drawable
+	,__properties__: $extend(h2d_Object.prototype.__properties__,{set_colorAdd:"set_colorAdd",get_colorAdd:"get_colorAdd",set_colorMatrix:"set_colorMatrix",get_colorMatrix:"get_colorMatrix",set_colorKey:"set_colorKey",set_tileWrap:"set_tileWrap"})
 });
 var h2d_Bitmap = function(tile,parent) {
 	h2d_Drawable.call(this,parent);
@@ -5383,6 +5882,7 @@ h2d_Bitmap.prototype = $extend(h2d_Drawable.prototype,{
 		this.tile.height = oh;
 	}
 	,__class__: h2d_Bitmap
+	,__properties__: $extend(h2d_Drawable.prototype.__properties__,{set_height:"set_height",set_width:"set_width",set_tile:"set_tile"})
 });
 var h2d_BlendMode = $hxEnums["h2d.BlendMode"] = { __ename__ : true, __constructs__ : ["None","Alpha","Add","AlphaAdd","SoftAdd","Multiply","AlphaMultiply","Erase","Screen","Sub","Max","Min"]
 	,None: {_hx_index:0,__enum__:"h2d.BlendMode",toString:$estr}
@@ -5551,6 +6051,7 @@ hxd_Interactive.__name__ = "hxd.Interactive";
 hxd_Interactive.__isInterface__ = true;
 hxd_Interactive.prototype = {
 	__class__: hxd_Interactive
+	,__properties__: {set_cursor:"set_cursor"}
 };
 var h2d_Interactive = function(width,height,parent,shape) {
 	this.shapeY = 0;
@@ -5808,6 +6309,7 @@ h2d_Interactive.prototype = $extend(h2d_Drawable.prototype,{
 	,onTextInput: function(e) {
 	}
 	,__class__: h2d_Interactive
+	,__properties__: $extend(h2d_Drawable.prototype.__properties__,{set_cursor:"set_cursor"})
 });
 var h2d_Layers = function(parent) {
 	h2d_Object.call(this,parent);
@@ -6167,6 +6669,7 @@ h2d_Mask.prototype = $extend(h2d_Object.prototype,{
 		}
 	}
 	,__class__: h2d_Mask
+	,__properties__: $extend(h2d_Object.prototype.__properties__,{set_scrollY:"set_scrollY",set_scrollX:"set_scrollX"})
 });
 var h3d_impl_RenderContext = function() {
 	this.engine = h3d_Engine.CURRENT;
@@ -8105,6 +8608,7 @@ h2d_Scene.prototype = $extend(h2d_Layers.prototype,{
 		return new h2d_Bitmap(target);
 	}
 	,__class__: h2d_Scene
+	,__properties__: $extend(h2d_Layers.prototype.__properties__,{set_renderer:"set_renderer",get_renderer:"get_renderer",set_defaultSmooth:"set_defaultSmooth",get_defaultSmooth:"get_defaultSmooth",set_scaleMode:"set_scaleMode",set_zoom:"set_zoom",get_zoom:"get_zoom",get_mouseY:"get_mouseY",get_mouseX:"get_mouseX"})
 });
 var h2d_Align = $hxEnums["h2d.Align"] = { __ename__ : true, __constructs__ : ["Left","Right","Center","MultilineRight","MultilineCenter"]
 	,Left: {_hx_index:0,__enum__:"h2d.Align",toString:$estr}
@@ -8648,6 +9152,7 @@ h2d_Text.prototype = $extend(h2d_Drawable.prototype,{
 		this.addBounds(relativeTo,out,x,y,w,h);
 	}
 	,__class__: h2d_Text
+	,__properties__: $extend(h2d_Drawable.prototype.__properties__,{set_lineSpacing:"set_lineSpacing",set_letterSpacing:"set_letterSpacing",set_textAlign:"set_textAlign",get_textHeight:"get_textHeight",get_textWidth:"get_textWidth",set_maxWidth:"set_maxWidth",set_textColor:"set_textColor",set_text:"set_text",set_font:"set_font"})
 });
 var h2d_Tile = function(tex,x,y,w,h,dx,dy) {
 	if(dy == null) {
@@ -8991,6 +9496,7 @@ h2d_Tile.prototype = {
 		this.innerTex.uploadBitmap(bmp);
 	}
 	,__class__: h2d_Tile
+	,__properties__: {get_iheight:"get_iheight",get_iwidth:"get_iwidth",get_iy:"get_iy",get_ix:"get_ix"}
 };
 var hxd_impl__$Serializable_NoSerializeSupport = function() { };
 $hxClasses["hxd.impl._Serializable.NoSerializeSupport"] = hxd_impl__$Serializable_NoSerializeSupport;
@@ -11423,6 +11929,7 @@ h2d_col_Bounds.prototype = {
 		return "{" + Std.string(new h2d_col_Point(this.xMin,this.yMin)) + "," + Std.string(new h2d_col_Point(this.xMax - this.xMin,this.yMax - this.yMin)) + "}";
 	}
 	,__class__: h2d_col_Bounds
+	,__properties__: {set_height:"set_height",get_height:"get_height",set_width:"set_width",get_width:"get_width",set_y:"set_y",get_y:"get_y",set_x:"set_x",get_x:"get_x"}
 };
 var h2d_col_Collider = function() { };
 $hxClasses["h2d.col.Collider"] = h2d_col_Collider;
@@ -11686,6 +12193,7 @@ h2d_col_IBounds.prototype = {
 		return "{" + Std.string(new h2d_col_IPoint(this.xMin,this.yMin)) + "," + Std.string(new h2d_col_IPoint(this.xMax - this.xMin,this.yMax - this.yMin)) + "}";
 	}
 	,__class__: h2d_col_IBounds
+	,__properties__: {set_height:"set_height",get_height:"get_height",set_width:"set_width",get_width:"get_width",set_y:"set_y",get_y:"get_y",set_x:"set_x",get_x:"get_x"}
 };
 var h2d_col_IPoint = function(x,y) {
 	if(y == null) {
@@ -12030,6 +12538,7 @@ h2d_filter_Filter.prototype = {
 		return input;
 	}
 	,__class__: h2d_filter_Filter
+	,__properties__: {set_enable:"set_enable",get_enable:"get_enable"}
 };
 var h3d_BufferFlag = $hxEnums["h3d.BufferFlag"] = { __ename__ : true, __constructs__ : ["Dynamic","Triangles","Quads","Managed","RawFormat","NoAlloc","UniformBuffer"]
 	,Dynamic: {_hx_index:0,__enum__:"h3d.BufferFlag",toString:$estr}
@@ -13302,6 +13811,7 @@ h3d_Engine.prototype = {
 		return Math.ceil(this.realFps * 100) / 100;
 	}
 	,__class__: h3d_Engine
+	,__properties__: {get_fps:"get_fps",set_fullScreen:"set_fullScreen",set_debug:"set_debug"}
 };
 var h3d_Indexes = function(count,is32) {
 	if(is32 == null) {
@@ -14536,6 +15046,7 @@ h3d_Matrix.prototype = {
 		}
 	}
 	,__class__: h3d_Matrix
+	,__properties__: {set_tz:"set_tz",get_tz:"get_tz",set_ty:"set_ty",get_ty:"get_ty",set_tx:"set_tx",get_tx:"get_tx"}
 };
 var h3d_Quat = function(x,y,z,w) {
 	if(w == null) {
@@ -15231,6 +15742,7 @@ h3d_Vector.prototype = {
 		return new h3d_Vector(h,s,l,this.w);
 	}
 	,__class__: h3d_Vector
+	,__properties__: {set_a:"set_a",get_a:"get_a",set_b:"set_b",get_b:"get_b",set_g:"set_g",get_g:"get_g",set_r:"set_r",get_r:"get_r"}
 };
 var h3d_anim_AnimatedObject = function(name) {
 	this.objectName = name;
@@ -17493,6 +18005,7 @@ h3d_col_Bounds.prototype = {
 		return new h3d_col_Sphere((this.xMin + this.xMax) * 0.5,(this.yMin + this.yMax) * 0.5,(this.zMin + this.zMax) * 0.5,Math.sqrt(dx * dx + dy * dy + dz * dz) * 0.5);
 	}
 	,__class__: h3d_col_Bounds
+	,__properties__: {set_zSize:"set_zSize",get_zSize:"get_zSize",set_ySize:"set_ySize",get_ySize:"get_ySize",set_xSize:"set_xSize",get_xSize:"get_xSize"}
 };
 var h3d_col_OptimizedCollider = function(a,b) {
 	this.a = a;
@@ -23084,6 +23597,7 @@ hxd_impl_AnyProps.prototype = {
 	,refreshProps: function() {
 	}
 	,__class__: hxd_impl_AnyProps
+	,__properties__: {set_props:"set_props"}
 };
 var h3d_mat_BaseMaterial = function(shader) {
 	if(shader != null) {
@@ -23172,6 +23686,7 @@ h3d_mat_BaseMaterial.prototype = $extend(hxd_impl_AnyProps.prototype,{
 		return m;
 	}
 	,__class__: h3d_mat_BaseMaterial
+	,__properties__: $extend(hxd_impl_AnyProps.prototype.__properties__,{get_mainPass:"get_mainPass"})
 });
 var h3d_mat_Face = $hxEnums["h3d.mat.Face"] = { __ename__ : true, __constructs__ : ["None","Back","Front","Both"]
 	,None: {_hx_index:0,__enum__:"h3d.mat.Face",toString:$estr}
@@ -23262,6 +23777,7 @@ h3d_mat_TextureFlags.__empty_constructs__ = [h3d_mat_TextureFlags.Target,h3d_mat
 var h3d_mat_Defaults = function() { };
 $hxClasses["h3d.mat.Defaults"] = h3d_mat_Defaults;
 h3d_mat_Defaults.__name__ = "h3d.mat.Defaults";
+h3d_mat_Defaults.__properties__ = {set_shadowShader:"set_shadowShader",get_shadowShader:"get_shadowShader"};
 h3d_mat_Defaults.get_shadowShader = function() {
 	var s = h3d_mat_Defaults.shadowShader;
 	if(s == null) {
@@ -23582,6 +24098,7 @@ h3d_mat_Material.prototype = $extend(h3d_mat_BaseMaterial.prototype,{
 		}
 	}
 	,__class__: h3d_mat_Material
+	,__properties__: $extend(h3d_mat_BaseMaterial.prototype.__properties__,{set_blendMode:"set_blendMode",set_specularPower:"set_specularPower",get_specularPower:"get_specularPower",set_specularAmount:"set_specularAmount",get_specularAmount:"get_specularAmount",set_color:"set_color",get_color:"get_color",set_normalMap:"set_normalMap",get_normalMap:"get_normalMap",set_specularTexture:"set_specularTexture",get_specularTexture:"get_specularTexture",set_texture:"set_texture",get_texture:"get_texture",set_staticShadows:"set_staticShadows",set_receiveShadows:"set_receiveShadows",set_castShadows:"set_castShadows",set_shadows:"set_shadows",get_shadows:"get_shadows"})
 });
 var h3d_mat_MaterialDatabase = function() {
 	this.db = new haxe_ds_StringMap();
@@ -24171,6 +24688,7 @@ h3d_mat_Pass.prototype = {
 		this.set_reserved((this.bits >> 29 & 1) != 0);
 	}
 	,__class__: h3d_mat_Pass
+	,__properties__: {set_reserved:"set_reserved",set_wireframe:"set_wireframe",set_blendAlphaOp:"set_blendAlphaOp",set_blendOp:"set_blendOp",set_blendAlphaDst:"set_blendAlphaDst",set_blendAlphaSrc:"set_blendAlphaSrc",set_blendDst:"set_blendDst",set_blendSrc:"set_blendSrc",set_depthTest:"set_depthTest",set_depthWrite:"set_depthWrite",set_culling:"set_culling",set_batchMode:"set_batchMode",set_isStatic:"set_isStatic",set_dynamicParameters:"set_dynamicParameters",set_enableLights:"set_enableLights"}
 };
 var h3d_mat_Stencil = function() {
 	this.opBits = 0;
@@ -24316,6 +24834,7 @@ h3d_mat_Stencil.prototype = {
 		this.set_reference(this.maskBits >> 16 & 255);
 	}
 	,__class__: h3d_mat_Stencil
+	,__properties__: {set_backDPfail:"set_backDPfail",set_backSTfail:"set_backSTfail",set_backPass:"set_backPass",set_backTest:"set_backTest",set_frontDPfail:"set_frontDPfail",set_frontSTfail:"set_frontSTfail",set_frontPass:"set_frontPass",set_frontTest:"set_frontTest",set_reference:"set_reference",set_writeMask:"set_writeMask",set_readMask:"set_readMask"}
 };
 var hxd_PixelFormat = $hxEnums["hxd.PixelFormat"] = { __ename__ : true, __constructs__ : ["ARGB","BGRA","RGBA","RGBA16F","RGBA32F","R8","R16F","R32F","RG8","RG16F","RG32F","RGB8","RGB16F","RGB32F","SRGB","SRGB_ALPHA","RGB10A2","RG11B10UF","S3TC"]
 	,ARGB: {_hx_index:0,__enum__:"hxd.PixelFormat",toString:$estr}
@@ -24868,6 +25387,7 @@ h3d_mat_Texture.prototype = {
 		return pix;
 	}
 	,__class__: h3d_mat_Texture
+	,__properties__: {get_layerCount:"get_layerCount",set_wrap:"set_wrap",set_filter:"set_filter",set_mipMap:"set_mipMap",set_lastFrame:"set_lastFrame",get_lastFrame:"get_lastFrame"}
 };
 var h3d_mat_TextureArray = function(w,h,layers,flags,format) {
 	this.layers = layers;
@@ -25010,6 +25530,7 @@ h3d_pass_ScreenFx.prototype = {
 	,dispose: function() {
 	}
 	,__class__: h3d_pass_ScreenFx
+	,__properties__: {get_engine:"get_engine"}
 };
 var h3d_pass_Blur = function(radius,gain,linear,quality) {
 	if(quality == null) {
@@ -25234,6 +25755,7 @@ h3d_pass_Blur.prototype = $extend(h3d_pass_ScreenFx.prototype,{
 		output.depthBuffer = outDepth;
 	}
 	,__class__: h3d_pass_Blur
+	,__properties__: $extend(h3d_pass_ScreenFx.prototype.__properties__,{set_quality:"set_quality",set_linear:"set_linear",set_gain:"set_gain",set_radius:"set_radius"})
 });
 var hxsl_Shader = function() {
 	this.priority = 0;
@@ -25385,6 +25907,7 @@ h3d_shader_ScreenShader.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_ScreenShader
+	,__properties__: {set_flipY:"set_flipY",get_flipY:"get_flipY"}
 });
 var h3d_pass__$Border_BorderShader = function() {
 	this.color__ = new h3d_Vector();
@@ -25428,6 +25951,7 @@ h3d_pass__$Border_BorderShader.prototype = $extend(h3d_shader_ScreenShader.proto
 		return s;
 	}
 	,__class__: h3d_pass__$Border_BorderShader
+	,__properties__: $extend(h3d_shader_ScreenShader.prototype.__properties__,{set_color:"set_color",get_color:"get_color"})
 });
 var h3d_pass_Border = function(width,height,size) {
 	if(size == null) {
@@ -25840,6 +26364,7 @@ h3d_pass__$Copy_ArrayCopyShader.prototype = $extend(h3d_shader_ScreenShader.prot
 		return s;
 	}
 	,__class__: h3d_pass__$Copy_ArrayCopyShader
+	,__properties__: $extend(h3d_shader_ScreenShader.prototype.__properties__,{set_layer:"set_layer",get_layer:"get_layer",set_texture:"set_texture",get_texture:"get_texture"})
 });
 var h3d_pass_ArrayCopy = function() {
 	h3d_pass_ScreenFx.call(this,new h3d_pass__$Copy_ArrayCopyShader());
@@ -25932,6 +26457,7 @@ h3d_pass__$Copy_CopyShader.prototype = $extend(h3d_shader_ScreenShader.prototype
 		return s;
 	}
 	,__class__: h3d_pass__$Copy_CopyShader
+	,__properties__: $extend(h3d_shader_ScreenShader.prototype.__properties__,{set_texture:"set_texture",get_texture:"get_texture"})
 });
 var h3d_pass_Copy = function() {
 	h3d_pass_ScreenFx.call(this,new h3d_pass__$Copy_CopyShader());
@@ -26032,6 +26558,7 @@ h3d_pass__$CubeCopy_CubeCopyShader.prototype = $extend(h3d_shader_ScreenShader.p
 		return s;
 	}
 	,__class__: h3d_pass__$CubeCopy_CubeCopyShader
+	,__properties__: $extend(h3d_shader_ScreenShader.prototype.__properties__,{set_mat:"set_mat",get_mat:"get_mat",set_texture:"set_texture",get_texture:"get_texture"})
 });
 var h3d_pass_CubeCopy = function() {
 	this.cubeDir = [h3d_Matrix.L([0,0,-1,0,0,-1,0,0,1,0,0,0]),h3d_Matrix.L([0,0,1,0,0,-1,0,0,-1,0,0,0]),h3d_Matrix.L([1,0,0,0,0,0,1,0,0,1,0,0]),h3d_Matrix.L([1,0,0,0,0,0,-1,0,0,-1,0,0]),h3d_Matrix.L([1,0,0,0,0,-1,0,0,0,0,1,0]),h3d_Matrix.L([-1,0,0,0,0,-1,0,0,0,0,-1,0])];
@@ -26385,6 +26912,7 @@ h3d_pass_Default.prototype = $extend(h3d_pass_Base.prototype,{
 		this.manager.globals.map.h[this.pixelSize_id] = v10;
 	}
 	,__class__: h3d_pass_Default
+	,__properties__: {set_globalModelViewInverse:"set_globalModelViewInverse",get_globalModelViewInverse:"get_globalModelViewInverse",set_globalModelView:"set_globalModelView",get_globalModelView:"get_globalModelView",set_pixelSize:"set_pixelSize",get_pixelSize:"get_pixelSize",set_globalTime:"set_globalTime",get_globalTime:"get_globalTime",set_cameraInverseViewProj:"set_cameraInverseViewProj",get_cameraInverseViewProj:"get_cameraInverseViewProj",set_cameraViewProj:"set_cameraViewProj",get_cameraViewProj:"get_cameraViewProj",set_cameraProjFlip:"set_cameraProjFlip",get_cameraProjFlip:"get_cameraProjFlip",set_cameraProjDiag:"set_cameraProjDiag",get_cameraProjDiag:"get_cameraProjDiag",set_cameraPos:"set_cameraPos",get_cameraPos:"get_cameraPos",set_cameraProj:"set_cameraProj",get_cameraProj:"get_cameraProj",set_cameraFar:"set_cameraFar",get_cameraFar:"get_cameraFar",set_cameraNear:"set_cameraNear",get_cameraNear:"get_cameraNear",set_cameraView:"set_cameraView",get_cameraView:"get_cameraView",get_globals:"get_globals"}
 });
 var h3d_pass_Shadows = function(light) {
 	this.pcfScale = 1.0;
@@ -26628,6 +27156,7 @@ h3d_pass_Shadows.prototype = $extend(h3d_pass_Default.prototype,{
 		passes.lastDisc = discQueue;
 	}
 	,__class__: h3d_pass_Shadows
+	,__properties__: $extend(h3d_pass_Default.prototype.__properties__,{set_size:"set_size",set_mode:"set_mode",set_enabled:"set_enabled"})
 });
 var h3d_pass_DirShadowMap = function(light) {
 	this.mergePass = new h3d_pass_ScreenFx(new h3d_shader_MinMaxShader());
@@ -27387,6 +27916,7 @@ h3d_pass__$HardwarePick_FixedColor.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_pass__$HardwarePick_FixedColor
+	,__properties__: {set_viewport:"set_viewport",get_viewport:"get_viewport",set_colorID:"set_colorID",get_colorID:"get_colorID"}
 });
 var h3d_pass_HardwarePick = function() {
 	this.pickedIndex = -1;
@@ -31632,6 +32162,7 @@ h3d_scene_Object.prototype = {
 		return new hxd_impl_ArrayIterator_$h3d_$scene_$Object(this.children);
 	}
 	,__class__: h3d_scene_Object
+	,__properties__: {set_posChanged:"set_posChanged",get_posChanged:"get_posChanged",set_cullingColliderInherited:"set_cullingColliderInherited",get_cullingColliderInherited:"get_cullingColliderInherited",set_cullingCollider:"set_cullingCollider",set_lightCameraCenter:"set_lightCameraCenter",get_lightCameraCenter:"get_lightCameraCenter",set_ignoreParentTransform:"set_ignoreParentTransform",get_ignoreParentTransform:"get_ignoreParentTransform",set_allowSerialize:"set_allowSerialize",get_allowSerialize:"get_allowSerialize",set_ignoreCollide:"set_ignoreCollide",get_ignoreCollide:"get_ignoreCollide",set_ignoreBounds:"set_ignoreBounds",get_ignoreBounds:"get_ignoreBounds",set_inheritCulled:"set_inheritCulled",get_inheritCulled:"get_inheritCulled",set_alwaysSync:"set_alwaysSync",get_alwaysSync:"get_alwaysSync",set_culled:"set_culled",get_culled:"get_culled",set_defaultTransform:"set_defaultTransform",set_followPositionOnly:"set_followPositionOnly",get_followPositionOnly:"get_followPositionOnly",set_follow:"set_follow",set_allocated:"set_allocated",get_allocated:"get_allocated",set_visible:"set_visible",get_visible:"get_visible",set_scaleZ:"set_scaleZ",set_scaleY:"set_scaleY",set_scaleX:"set_scaleX",set_z:"set_z",set_y:"set_y",set_x:"set_x",get_numChildren:"get_numChildren"}
 };
 var h3d_scene_Mesh = function(primitive,material,parent) {
 	h3d_scene_Object.call(this,parent);
@@ -31743,6 +32274,7 @@ h3d_scene_Mesh.prototype = $extend(h3d_scene_Object.prototype,{
 		return this.primitive = prim;
 	}
 	,__class__: h3d_scene_Mesh
+	,__properties__: $extend(h3d_scene_Object.prototype.__properties__,{set_primitive:"set_primitive"})
 });
 var h3d_scene_Graphics = function(parent) {
 	this.lineSize = 0.;
@@ -32137,6 +32669,7 @@ h3d_scene_Graphics.prototype = $extend(h3d_scene_Mesh.prototype,{
 		this.curZ = z;
 	}
 	,__class__: h3d_scene_Graphics
+	,__properties__: $extend(h3d_scene_Mesh.prototype.__properties__,{set_is3D:"set_is3D"})
 });
 var h3d_scene_Interactive = function(shape,parent) {
 	this.hitPoint = new h3d_Vector();
@@ -32297,6 +32830,7 @@ h3d_scene_Interactive.prototype = $extend(h3d_scene_Object.prototype,{
 	,onTextInput: function(e) {
 	}
 	,__class__: h3d_scene_Interactive
+	,__properties__: $extend(h3d_scene_Object.prototype.__properties__,{set_cursor:"set_cursor"})
 });
 var h3d_scene_Light = function(shader,parent) {
 	this.priority = 0;
@@ -32330,6 +32864,7 @@ h3d_scene_Light.prototype = $extend(h3d_scene_Object.prototype,{
 		return null;
 	}
 	,__class__: h3d_scene_Light
+	,__properties__: $extend(h3d_scene_Object.prototype.__properties__,{set_enableSpecular:"set_enableSpecular",get_enableSpecular:"get_enableSpecular",set_color:"set_color",get_color:"get_color"})
 });
 var h3d_scene_LightSystem = function() {
 	this.drawPasses = 0;
@@ -33724,6 +34259,7 @@ h3d_scene_Scene.prototype = $extend(h3d_scene_Object.prototype,{
 		throw new js__$Boot_HaxeError("You need -lib hxbit to serialize the scene data");
 	}
 	,__class__: h3d_scene_Scene
+	,__properties__: $extend(h3d_scene_Object.prototype.__properties__,{set_renderer:"set_renderer"})
 });
 var h3d_scene_Joint = function(skin,j) {
 	h3d_scene_Object.call(this,null);
@@ -34432,6 +34968,7 @@ h3d_scene_fwd_LightSystem.prototype = $extend(h3d_scene_LightSystem.prototype,{
 		return shaders;
 	}
 	,__class__: h3d_scene_fwd_LightSystem
+	,__properties__: {set_additiveLighting:"set_additiveLighting",get_additiveLighting:"get_additiveLighting"}
 });
 var h3d_scene_fwd_DepthPass = function() {
 	this.enableSky = false;
@@ -34515,6 +35052,7 @@ h3d_scene_fwd_Renderer.prototype = $extend(h3d_scene_Renderer.prototype,{
 		this.renderPass(this.defaultPass,this.get("additive"));
 	}
 	,__class__: h3d_scene_fwd_Renderer
+	,__properties__: $extend(h3d_scene_Renderer.prototype.__properties__,{get_def:"get_def"})
 });
 var h3d_shader_AmbientLight = function() {
 	hxsl_Shader.call(this);
@@ -34553,6 +35091,7 @@ h3d_shader_AmbientLight.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_AmbientLight
+	,__properties__: {set_additive:"set_additive",get_additive:"get_additive"}
 });
 var h3d_shader_Base2d = function() {
 	this.viewport__ = new h3d_Vector();
@@ -34734,6 +35273,7 @@ h3d_shader_Base2d.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_Base2d
+	,__properties__: {set_viewport:"set_viewport",get_viewport:"get_viewport",set_halfPixelInverse:"set_halfPixelInverse",get_halfPixelInverse:"get_halfPixelInverse",set_pixelAlign:"set_pixelAlign",get_pixelAlign:"get_pixelAlign",set_killAlpha:"set_killAlpha",get_killAlpha:"get_killAlpha",set_uvPos:"set_uvPos",get_uvPos:"get_uvPos",set_hasUVPos:"set_hasUVPos",get_hasUVPos:"get_hasUVPos",set_filterMatrixB:"set_filterMatrixB",get_filterMatrixB:"get_filterMatrixB",set_filterMatrixA:"set_filterMatrixA",get_filterMatrixA:"get_filterMatrixA",set_absoluteMatrixB:"set_absoluteMatrixB",get_absoluteMatrixB:"get_absoluteMatrixB",set_absoluteMatrixA:"set_absoluteMatrixA",get_absoluteMatrixA:"get_absoluteMatrixA",set_color:"set_color",get_color:"get_color",set_isRelative:"set_isRelative",get_isRelative:"get_isRelative",set_texture:"set_texture",get_texture:"get_texture",set_zValue:"set_zValue",get_zValue:"get_zValue"}
 });
 var h3d_shader_BaseMesh = function() {
 	this.specularColor__ = new h3d_Vector();
@@ -34844,6 +35384,7 @@ h3d_shader_BaseMesh.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_BaseMesh
+	,__properties__: {set_specularColor:"set_specularColor",get_specularColor:"get_specularColor",set_specularAmount:"set_specularAmount",get_specularAmount:"get_specularAmount",set_specularPower:"set_specularPower",get_specularPower:"get_specularPower",set_color:"set_color",get_color:"get_color"}
 });
 var h3d_shader_Blur = function() {
 	this.cubeDir__ = new h3d_Matrix();
@@ -35067,6 +35608,7 @@ h3d_shader_Blur.prototype = $extend(h3d_shader_ScreenShader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_Blur
+	,__properties__: $extend(h3d_shader_ScreenShader.prototype.__properties__,{set_cubeDir:"set_cubeDir",get_cubeDir:"get_cubeDir",set_cubeTexture:"set_cubeTexture",get_cubeTexture:"get_cubeTexture",set_isCube:"set_isCube",get_isCube:"get_isCube",set_normalTexture:"set_normalTexture",get_normalTexture:"get_normalTexture",set_hasNormal:"set_hasNormal",get_hasNormal:"get_hasNormal",set_isDepthDependant:"set_isDepthDependant",get_isDepthDependant:"get_isDepthDependant",set_fixedColor:"set_fixedColor",get_fixedColor:"get_fixedColor",set_smoothFixedColor:"set_smoothFixedColor",get_smoothFixedColor:"get_smoothFixedColor",set_hasFixedColor:"set_hasFixedColor",get_hasFixedColor:"get_hasFixedColor",set_pixel:"set_pixel",get_pixel:"get_pixel",set_offsets:"set_offsets",get_offsets:"get_offsets",set_values:"set_values",get_values:"get_values",set_isDepth:"set_isDepth",get_isDepth:"get_isDepth",set_Quality:"set_Quality",get_Quality:"get_Quality",set_depthTexture:"set_depthTexture",get_depthTexture:"get_depthTexture",set_texture:"set_texture",get_texture:"get_texture",set_cameraInverseViewProj:"set_cameraInverseViewProj",get_cameraInverseViewProj:"get_cameraInverseViewProj"})
 });
 var h3d_shader_ShaderBuffers = function(s) {
 	this.globals = new Float32Array(s.globalsSize << 2);
@@ -35162,6 +35704,7 @@ h3d_shader_ColorAdd.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_ColorAdd
+	,__properties__: {set_color:"set_color",get_color:"get_color"}
 });
 var h3d_shader_ColorKey = function(v) {
 	if(v == null) {
@@ -35205,6 +35748,7 @@ h3d_shader_ColorKey.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_ColorKey
+	,__properties__: {set_colorKey:"set_colorKey",get_colorKey:"get_colorKey"}
 });
 var h3d_shader_ColorMatrix = function(m) {
 	this.matrix__ = new h3d_Matrix();
@@ -35245,6 +35789,7 @@ h3d_shader_ColorMatrix.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_ColorMatrix
+	,__properties__: {set_matrix:"set_matrix",get_matrix:"get_matrix"}
 });
 var h3d_shader_DirShadow = function() {
 	this.poissonDiskVeryHigh__ = [];
@@ -35447,6 +35992,7 @@ h3d_shader_DirShadow.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_DirShadow
+	,__properties__: {set_poissonDiskVeryHigh:"set_poissonDiskVeryHigh",get_poissonDiskVeryHigh:"get_poissonDiskVeryHigh",set_poissonDiskHigh:"set_poissonDiskHigh",get_poissonDiskHigh:"get_poissonDiskHigh",set_poissonDiskLow:"set_poissonDiskLow",get_poissonDiskLow:"get_poissonDiskLow",set_shadowBias:"set_shadowBias",get_shadowBias:"get_shadowBias",set_shadowProj:"set_shadowProj",get_shadowProj:"get_shadowProj",set_shadowMapChannel:"set_shadowMapChannel",get_shadowMapChannel:"get_shadowMapChannel",set_shadowMap:"set_shadowMap",get_shadowMap:"get_shadowMap",set_shadowRes:"set_shadowRes",get_shadowRes:"get_shadowRes",set_pcfScale:"set_pcfScale",get_pcfScale:"get_pcfScale",set_pcfQuality:"set_pcfQuality",get_pcfQuality:"get_pcfQuality",set_USE_PCF:"set_USE_PCF",get_USE_PCF:"get_USE_PCF",set_shadowPower:"set_shadowPower",get_shadowPower:"get_shadowPower",set_USE_ESM:"set_USE_ESM",get_USE_ESM:"get_USE_ESM",set_enable:"set_enable",get_enable:"get_enable"}
 });
 var h3d_shader_GenTexture = function() {
 	this.color__ = new h3d_Vector();
@@ -35506,6 +36052,7 @@ h3d_shader_GenTexture.prototype = $extend(h3d_shader_ScreenShader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_GenTexture
+	,__properties__: $extend(h3d_shader_ScreenShader.prototype.__properties__,{set_color:"set_color",get_color:"get_color",set_mode:"set_mode",get_mode:"get_mode"})
 });
 var h3d_shader_LineShader = function(width,lengthScale) {
 	if(lengthScale == null) {
@@ -35568,6 +36115,7 @@ h3d_shader_LineShader.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_LineShader
+	,__properties__: {set_width:"set_width",get_width:"get_width",set_lengthScale:"set_lengthScale",get_lengthScale:"get_lengthScale"}
 });
 var h3d_shader_MinMaxShader = function() {
 	h3d_shader_ScreenShader.call(this);
@@ -35632,6 +36180,7 @@ h3d_shader_MinMaxShader.prototype = $extend(h3d_shader_ScreenShader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_MinMaxShader
+	,__properties__: $extend(h3d_shader_ScreenShader.prototype.__properties__,{set_isMax:"set_isMax",get_isMax:"get_isMax",set_texB:"set_texB",get_texB:"get_texB",set_texA:"set_texA",get_texA:"get_texA"})
 });
 var h3d_shader_CubeMinMaxShader = function() {
 	this.mat__ = new h3d_Matrix();
@@ -35706,6 +36255,7 @@ h3d_shader_CubeMinMaxShader.prototype = $extend(h3d_shader_ScreenShader.prototyp
 		return s;
 	}
 	,__class__: h3d_shader_CubeMinMaxShader
+	,__properties__: $extend(h3d_shader_ScreenShader.prototype.__properties__,{set_mat:"set_mat",get_mat:"get_mat",set_isMax:"set_isMax",get_isMax:"get_isMax",set_texB:"set_texB",get_texB:"get_texB",set_texA:"set_texA",get_texA:"get_texA"})
 });
 var h3d_shader_NormalMap = function(texture) {
 	hxsl_Shader.call(this);
@@ -35741,6 +36291,7 @@ h3d_shader_NormalMap.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_NormalMap
+	,__properties__: {set_texture:"set_texture",get_texture:"get_texture"}
 });
 var h3d_shader_Shadow = function() {
 	hxsl_Shader.call(this);
@@ -35830,6 +36381,7 @@ h3d_shader_SignedDistanceField.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_SignedDistanceField
+	,__properties__: {set_smoothing:"set_smoothing",get_smoothing:"get_smoothing",set_alphaCutoff:"set_alphaCutoff",get_alphaCutoff:"get_alphaCutoff",set_channel:"set_channel",get_channel:"get_channel"}
 });
 var h3d_shader_SkinBase = function() {
 	this.bonesMatrixes__ = [];
@@ -35885,6 +36437,7 @@ h3d_shader_SkinBase.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_SkinBase
+	,__properties__: {set_bonesMatrixes:"set_bonesMatrixes",get_bonesMatrixes:"get_bonesMatrixes",set_MaxBones:"set_MaxBones",get_MaxBones:"get_MaxBones"}
 });
 var h3d_shader_Skin = function() {
 	h3d_shader_SkinBase.call(this);
@@ -35996,6 +36549,7 @@ h3d_shader_SpecularTexture.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_SpecularTexture
+	,__properties__: {set_texture:"set_texture",get_texture:"get_texture"}
 });
 var h3d_shader_Texture = function(tex) {
 	this.killAlphaThreshold__ = 0;
@@ -36086,6 +36640,7 @@ h3d_shader_Texture.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_Texture
+	,__properties__: {set_texture:"set_texture",get_texture:"get_texture",set_killAlphaThreshold:"set_killAlphaThreshold",get_killAlphaThreshold:"get_killAlphaThreshold",set_specularAlpha:"set_specularAlpha",get_specularAlpha:"get_specularAlpha",set_killAlpha:"set_killAlpha",get_killAlpha:"get_killAlpha",set_additive:"set_additive",get_additive:"get_additive"}
 });
 var h3d_shader_UVDelta = function(dx,dy,sx,sy) {
 	if(sy == null) {
@@ -36171,6 +36726,7 @@ h3d_shader_UVDelta.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_UVDelta
+	,__properties__: {set_uvScale:"set_uvScale",get_uvScale:"get_uvScale",set_uvDelta:"set_uvDelta",get_uvDelta:"get_uvDelta"}
 });
 var h3d_shader_VertexColorAlpha = function() {
 	hxsl_Shader.call(this);
@@ -36209,6 +36765,7 @@ h3d_shader_VertexColorAlpha.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_VertexColorAlpha
+	,__properties__: {set_additive:"set_additive",get_additive:"get_additive"}
 });
 var h3d_shader_VolumeDecal = function(objectWidth,objectHeight) {
 	this.isCentered__ = true;
@@ -36327,11 +36884,15 @@ h3d_shader_VolumeDecal.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: h3d_shader_VolumeDecal
+	,__properties__: {set_isCentered:"set_isCentered",get_isCentered:"get_isCentered",set_tangent:"set_tangent",get_tangent:"get_tangent",set_normal:"set_normal",get_normal:"get_normal",set_scale:"set_scale",get_scale:"get_scale"}
 });
 var haxe_IMap = function() { };
 $hxClasses["haxe.IMap"] = haxe_IMap;
 haxe_IMap.__name__ = "haxe.IMap";
 haxe_IMap.__isInterface__ = true;
+haxe_IMap.prototype = {
+	__class__: haxe_IMap
+};
 var haxe_EntryPoint = function() { };
 $hxClasses["haxe.EntryPoint"] = haxe_EntryPoint;
 haxe_EntryPoint.__name__ = "haxe.EntryPoint";
@@ -36354,6 +36915,15 @@ haxe_EntryPoint.run = function() {
 	var $window = window;
 	var rqf = $window.requestAnimationFrame || $window.webkitRequestAnimationFrame || $window.mozRequestAnimationFrame;
 	rqf(haxe_EntryPoint.run);
+};
+var haxe__$Int64__$_$_$Int64 = function(high,low) {
+	this.high = high;
+	this.low = low;
+};
+$hxClasses["haxe._Int64.___Int64"] = haxe__$Int64__$_$_$Int64;
+haxe__$Int64__$_$_$Int64.__name__ = "haxe._Int64.___Int64";
+haxe__$Int64__$_$_$Int64.prototype = {
+	__class__: haxe__$Int64__$_$_$Int64
 };
 var haxe_Log = function() { };
 $hxClasses["haxe.Log"] = haxe_Log;
@@ -36990,7 +37560,10 @@ haxe_io_Bytes.ofData = function(b) {
 	return new haxe_io_Bytes(b);
 };
 haxe_io_Bytes.prototype = {
-	blit: function(pos,src,srcpos,len) {
+	get: function(pos) {
+		return this.b[pos];
+	}
+	,blit: function(pos,src,srcpos,len) {
 		if(pos < 0 || srcpos < 0 || len < 0 || pos + len > this.length || srcpos + len > src.length) {
 			throw new js__$Boot_HaxeError(haxe_io_Error.OutsideBounds);
 		}
@@ -37007,6 +37580,18 @@ haxe_io_Bytes.prototype = {
 			var i = _g++;
 			this.b[pos++] = value;
 		}
+	}
+	,sub: function(pos,len) {
+		if(pos < 0 || len < 0 || pos + len > this.length) {
+			throw new js__$Boot_HaxeError(haxe_io_Error.OutsideBounds);
+		}
+		return new haxe_io_Bytes(this.b.buffer.slice(pos + this.b.byteOffset,pos + this.b.byteOffset + len));
+	}
+	,getDouble: function(pos) {
+		if(this.data == null) {
+			this.data = new DataView(this.b.buffer,this.b.byteOffset,this.b.byteLength);
+		}
+		return this.data.getFloat64(pos,true);
 	}
 	,getFloat: function(pos) {
 		if(this.data == null) {
@@ -37043,6 +37628,10 @@ haxe_io_Bytes.prototype = {
 			this.data = new DataView(this.b.buffer,this.b.byteOffset,this.b.byteLength);
 		}
 		this.data.setInt32(pos,v,true);
+	}
+	,getInt64: function(pos) {
+		var this1 = new haxe__$Int64__$_$_$Int64(this.getInt32(pos + 4),this.getInt32(pos));
+		return this1;
 	}
 	,getString: function(pos,len,encoding) {
 		if(pos < 0 || len < 0 || pos + len > this.length) {
@@ -37539,9 +38128,42 @@ haxe_ds_BalancedTree.prototype = {
 		}
 		return null;
 	}
+	,remove: function(key) {
+		try {
+			this.root = this.removeLoop(key,this.root);
+			return true;
+		} catch( e ) {
+			var e1 = ((e) instanceof js__$Boot_HaxeError) ? e.val : e;
+			if(typeof(e1) == "string") {
+				var e2 = e1;
+				return false;
+			} else {
+				throw e;
+			}
+		}
+	}
+	,exists: function(key) {
+		var node = this.root;
+		while(node != null) {
+			var c = this.compare(key,node.key);
+			if(c == 0) {
+				return true;
+			} else if(c < 0) {
+				node = node.left;
+			} else {
+				node = node.right;
+			}
+		}
+		return false;
+	}
 	,iterator: function() {
 		var ret = [];
 		this.iteratorLoop(this.root,ret);
+		return HxOverrides.iter(ret);
+	}
+	,keys: function() {
+		var ret = [];
+		this.keysLoop(this.root,ret);
 		return HxOverrides.iter(ret);
 	}
 	,setLoop: function(k,v,node) {
@@ -37559,11 +38181,57 @@ haxe_ds_BalancedTree.prototype = {
 			return this.balance(node.left,node.key,node.value,nr);
 		}
 	}
+	,removeLoop: function(k,node) {
+		if(node == null) {
+			throw new js__$Boot_HaxeError("Not_found");
+		}
+		var c = this.compare(k,node.key);
+		if(c == 0) {
+			return this.merge(node.left,node.right);
+		} else if(c < 0) {
+			return this.balance(this.removeLoop(k,node.left),node.key,node.value,node.right);
+		} else {
+			return this.balance(node.left,node.key,node.value,this.removeLoop(k,node.right));
+		}
+	}
 	,iteratorLoop: function(node,acc) {
 		if(node != null) {
 			this.iteratorLoop(node.left,acc);
 			acc.push(node.value);
 			this.iteratorLoop(node.right,acc);
+		}
+	}
+	,keysLoop: function(node,acc) {
+		if(node != null) {
+			this.keysLoop(node.left,acc);
+			acc.push(node.key);
+			this.keysLoop(node.right,acc);
+		}
+	}
+	,merge: function(t1,t2) {
+		if(t1 == null) {
+			return t2;
+		}
+		if(t2 == null) {
+			return t1;
+		}
+		var t = this.minBinding(t2);
+		return this.balance(t1,t.key,t.value,this.removeMinBinding(t2));
+	}
+	,minBinding: function(t) {
+		if(t == null) {
+			throw new js__$Boot_HaxeError("Not_found");
+		} else if(t.left == null) {
+			return t;
+		} else {
+			return this.minBinding(t.left);
+		}
+	}
+	,removeMinBinding: function(t) {
+		if(t.left == null) {
+			return t.right;
+		} else {
+			return this.balance(this.removeMinBinding(t.left),t.key,t.value,t.right);
 		}
 	}
 	,balance: function(l,k,v,r) {
@@ -37677,7 +38345,16 @@ $hxClasses["haxe.ds.IntMap"] = haxe_ds_IntMap;
 haxe_ds_IntMap.__name__ = "haxe.ds.IntMap";
 haxe_ds_IntMap.__interfaces__ = [haxe_IMap];
 haxe_ds_IntMap.prototype = {
-	remove: function(key) {
+	set: function(key,value) {
+		this.h[key] = value;
+	}
+	,get: function(key) {
+		return this.h[key];
+	}
+	,exists: function(key) {
+		return this.h.hasOwnProperty(key);
+	}
+	,remove: function(key) {
 		if(!this.h.hasOwnProperty(key)) {
 			return false;
 		}
@@ -37770,6 +38447,12 @@ haxe_ds_ObjectMap.prototype = {
 		this.h[id] = value;
 		this.h.__keys__[id] = key;
 	}
+	,get: function(key) {
+		return this.h[key.__id__];
+	}
+	,exists: function(key) {
+		return this.h.__keys__[key.__id__] != null;
+	}
 	,remove: function(key) {
 		var id = key.__id__;
 		if(this.h.__keys__[id] == null) {
@@ -37820,7 +38503,26 @@ $hxClasses["haxe.ds.StringMap"] = haxe_ds_StringMap;
 haxe_ds_StringMap.__name__ = "haxe.ds.StringMap";
 haxe_ds_StringMap.__interfaces__ = [haxe_IMap];
 haxe_ds_StringMap.prototype = {
-	setReserved: function(key,value) {
+	set: function(key,value) {
+		if(__map_reserved[key] != null) {
+			this.setReserved(key,value);
+		} else {
+			this.h[key] = value;
+		}
+	}
+	,get: function(key) {
+		if(__map_reserved[key] != null) {
+			return this.getReserved(key);
+		}
+		return this.h[key];
+	}
+	,exists: function(key) {
+		if(__map_reserved[key] != null) {
+			return this.existsReserved(key);
+		}
+		return this.h.hasOwnProperty(key);
+	}
+	,setReserved: function(key,value) {
 		if(this.rh == null) {
 			this.rh = { };
 		}
@@ -37913,6 +38615,201 @@ haxe_ds__$Vector_Vector_$Impl_$.blit = function(src,srcPos,dest,destPos,len) {
 		}
 	}
 };
+var haxe_http_HttpBase = function(url) {
+	this.url = url;
+	this.headers = [];
+	this.params = [];
+	this.emptyOnData = $bind(this,this.onData);
+};
+$hxClasses["haxe.http.HttpBase"] = haxe_http_HttpBase;
+haxe_http_HttpBase.__name__ = "haxe.http.HttpBase";
+haxe_http_HttpBase.prototype = {
+	setHeader: function(name,value) {
+		var _g = 0;
+		var _g1 = this.headers.length;
+		while(_g < _g1) {
+			var i = _g++;
+			if(this.headers[i].name == name) {
+				this.headers[i] = { name : name, value : value};
+				return;
+			}
+		}
+		this.headers.push({ name : name, value : value});
+	}
+	,setPostData: function(data) {
+		this.postData = data;
+		this.postBytes = null;
+	}
+	,onData: function(data) {
+	}
+	,onBytes: function(data) {
+	}
+	,onError: function(msg) {
+	}
+	,onStatus: function(status) {
+	}
+	,hasOnData: function() {
+		return !Reflect.compareMethods($bind(this,this.onData),this.emptyOnData);
+	}
+	,success: function(data) {
+		this.responseBytes = data;
+		this.responseAsString = null;
+		if(this.hasOnData()) {
+			this.onData(this.get_responseData());
+		}
+		this.onBytes(this.responseBytes);
+	}
+	,get_responseData: function() {
+		if(this.responseAsString == null && this.responseBytes != null) {
+			this.responseAsString = this.responseBytes.getString(0,this.responseBytes.length,haxe_io_Encoding.UTF8);
+		}
+		return this.responseAsString;
+	}
+	,__class__: haxe_http_HttpBase
+	,__properties__: {get_responseData:"get_responseData"}
+};
+var haxe_http_HttpJs = function(url) {
+	this.async = true;
+	this.withCredentials = false;
+	haxe_http_HttpBase.call(this,url);
+};
+$hxClasses["haxe.http.HttpJs"] = haxe_http_HttpJs;
+haxe_http_HttpJs.__name__ = "haxe.http.HttpJs";
+haxe_http_HttpJs.__super__ = haxe_http_HttpBase;
+haxe_http_HttpJs.prototype = $extend(haxe_http_HttpBase.prototype,{
+	request: function(post) {
+		var _gthis = this;
+		this.responseAsString = null;
+		this.responseBytes = null;
+		var r = this.req = js_Browser.createXMLHttpRequest();
+		var onreadystatechange = function(_) {
+			if(r.readyState != 4) {
+				return;
+			}
+			var s;
+			try {
+				s = r.status;
+			} catch( e ) {
+				var e1 = ((e) instanceof js__$Boot_HaxeError) ? e.val : e;
+				s = null;
+			}
+			if(s == 0 && typeof(window) != "undefined") {
+				var protocol = window.location.protocol.toLowerCase();
+				var rlocalProtocol = new EReg("^(?:about|app|app-storage|.+-extension|file|res|widget):$","");
+				var isLocal = rlocalProtocol.match(protocol);
+				if(isLocal) {
+					s = r.response != null ? 200 : 404;
+				}
+			}
+			if(s == undefined) {
+				s = null;
+			}
+			if(s != null) {
+				_gthis.onStatus(s);
+			}
+			if(s != null && s >= 200 && s < 400) {
+				_gthis.req = null;
+				var onreadystatechange1 = haxe_io_Bytes.ofData(r.response);
+				_gthis.success(onreadystatechange1);
+			} else if(s == null) {
+				_gthis.req = null;
+				_gthis.onError("Failed to connect or resolve host");
+			} else if(s == null) {
+				_gthis.req = null;
+				_gthis.responseBytes = haxe_io_Bytes.ofData(r.response);
+				_gthis.onError("Http Error #" + r.status);
+			} else {
+				switch(s) {
+				case 12007:
+					_gthis.req = null;
+					_gthis.onError("Unknown host");
+					break;
+				case 12029:
+					_gthis.req = null;
+					_gthis.onError("Failed to connect to host");
+					break;
+				default:
+					_gthis.req = null;
+					_gthis.responseBytes = haxe_io_Bytes.ofData(r.response);
+					_gthis.onError("Http Error #" + r.status);
+				}
+			}
+		};
+		if(this.async) {
+			r.onreadystatechange = onreadystatechange;
+		}
+		var uri;
+		var _g = this.postBytes;
+		var _g1 = this.postData;
+		if(_g1 == null) {
+			if(_g == null) {
+				uri = null;
+			} else {
+				var bytes = _g;
+				uri = new Blob([bytes.b.bufferValue]);
+			}
+		} else if(_g == null) {
+			var str = _g1;
+			uri = str;
+		} else {
+			uri = null;
+		}
+		if(uri != null) {
+			post = true;
+		} else {
+			var _g2 = 0;
+			var _g3 = this.params;
+			while(_g2 < _g3.length) {
+				var p = _g3[_g2];
+				++_g2;
+				if(uri == null) {
+					uri = "";
+				} else {
+					uri = Std.string(uri) + "&";
+				}
+				var s1 = p.name;
+				var value = Std.string(uri) + encodeURIComponent(s1) + "=";
+				var s2 = p.value;
+				uri = value + encodeURIComponent(s2);
+			}
+		}
+		try {
+			if(post) {
+				r.open("POST",this.url,this.async);
+			} else if(uri != null) {
+				var question = this.url.split("?").length <= 1;
+				r.open("GET",this.url + (question ? "?" : "&") + Std.string(uri),this.async);
+				uri = null;
+			} else {
+				r.open("GET",this.url,this.async);
+			}
+			r.responseType = "arraybuffer";
+		} catch( e2 ) {
+			var e3 = ((e2) instanceof js__$Boot_HaxeError) ? e2.val : e2;
+			this.req = null;
+			this.onError(e3.toString());
+			return;
+		}
+		r.withCredentials = this.withCredentials;
+		if(!Lambda.exists(this.headers,function(h) {
+			return h.name == "Content-Type";
+		}) && post && this.postData == null) {
+			r.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+		}
+		var _g21 = 0;
+		var _g31 = this.headers;
+		while(_g21 < _g31.length) {
+			var h1 = _g31[_g21];
+			++_g21;
+			r.setRequestHeader(h1.name,h1.value);
+		}
+		r.send(uri);
+		if(!this.async) {
+			onreadystatechange(null);
+		}
+	}
+	,__class__: haxe_http_HttpJs
+});
 var haxe_io_BytesBuffer = function() {
 	this.pos = 0;
 	this.size = 0;
@@ -38076,6 +38973,13 @@ haxe_io_Input.prototype = {
 			return haxe_io_FPHelper.i64ToDouble(i1,i2);
 		}
 	}
+	,readInt8: function() {
+		var n = this.readByte();
+		if(n >= 128) {
+			return n - 256;
+		}
+		return n;
+	}
 	,readInt16: function() {
 		var ch1 = this.readByte();
 		var ch2 = this.readByte();
@@ -38121,6 +39025,7 @@ haxe_io_Input.prototype = {
 		return b.getString(0,len,encoding);
 	}
 	,__class__: haxe_io_Input
+	,__properties__: {set_bigEndian:"set_bigEndian"}
 };
 var haxe_io_BytesInput = function(b,pos,len) {
 	if(pos == null) {
@@ -38180,6 +39085,7 @@ haxe_io_BytesInput.prototype = $extend(haxe_io_Input.prototype,{
 		return len;
 	}
 	,__class__: haxe_io_BytesInput
+	,__properties__: $extend(haxe_io_Input.prototype.__properties__,{set_position:"set_position"})
 });
 var haxe_io_Output = function() { };
 $hxClasses["haxe.io.Output"] = haxe_io_Output;
@@ -38228,6 +39134,43 @@ haxe_io_Output.prototype = {
 			len -= k;
 		}
 	}
+	,writeFloat: function(x) {
+		this.writeInt32(haxe_io_FPHelper.floatToI32(x));
+	}
+	,writeDouble: function(x) {
+		var i64 = haxe_io_FPHelper.doubleToI64(x);
+		if(this.bigEndian) {
+			this.writeInt32(i64.high);
+			this.writeInt32(i64.low);
+		} else {
+			this.writeInt32(i64.low);
+			this.writeInt32(i64.high);
+		}
+	}
+	,writeInt8: function(x) {
+		if(x < -128 || x >= 128) {
+			throw new js__$Boot_HaxeError(haxe_io_Error.Overflow);
+		}
+		this.writeByte(x & 255);
+	}
+	,writeInt16: function(x) {
+		if(x < -32768 || x >= 32768) {
+			throw new js__$Boot_HaxeError(haxe_io_Error.Overflow);
+		}
+		this.writeUInt16(x & 65535);
+	}
+	,writeUInt16: function(x) {
+		if(x < 0 || x >= 65536) {
+			throw new js__$Boot_HaxeError(haxe_io_Error.Overflow);
+		}
+		if(this.bigEndian) {
+			this.writeByte(x >> 8);
+			this.writeByte(x & 255);
+		} else {
+			this.writeByte(x & 255);
+			this.writeByte(x >> 8);
+		}
+	}
 	,writeInt32: function(x) {
 		if(this.bigEndian) {
 			this.writeByte(x >>> 24);
@@ -38246,6 +39189,7 @@ haxe_io_Output.prototype = {
 		this.writeFullBytes(b,0,b.length);
 	}
 	,__class__: haxe_io_Output
+	,__properties__: {set_bigEndian:"set_bigEndian"}
 };
 var haxe_io_BytesOutput = function() {
 	this.b = new haxe_io_BytesBuffer();
@@ -38290,10 +39234,21 @@ haxe_io_FPHelper.i32ToFloat = function(i) {
 	haxe_io_FPHelper.helper.setInt32(0,i,true);
 	return haxe_io_FPHelper.helper.getFloat32(0,true);
 };
+haxe_io_FPHelper.floatToI32 = function(f) {
+	haxe_io_FPHelper.helper.setFloat32(0,f,true);
+	return haxe_io_FPHelper.helper.getInt32(0,true);
+};
 haxe_io_FPHelper.i64ToDouble = function(low,high) {
 	haxe_io_FPHelper.helper.setInt32(0,low,true);
 	haxe_io_FPHelper.helper.setInt32(4,high,true);
 	return haxe_io_FPHelper.helper.getFloat64(0,true);
+};
+haxe_io_FPHelper.doubleToI64 = function(v) {
+	var i64 = haxe_io_FPHelper.i64tmp;
+	haxe_io_FPHelper.helper.setFloat64(0,v,true);
+	i64.low = haxe_io_FPHelper.helper.getInt32(0,true);
+	i64.high = haxe_io_FPHelper.helper.getInt32(4,true);
+	return i64;
 };
 var haxe_io_Path = function(path) {
 	switch(path) {
@@ -38498,6 +39453,117 @@ var haxe_macro_Unop = $hxEnums["haxe.macro.Unop"] = { __ename__ : true, __constr
 	,OpNegBits: {_hx_index:4,__enum__:"haxe.macro.Unop",toString:$estr}
 };
 haxe_macro_Unop.__empty_constructs__ = [haxe_macro_Unop.OpIncrement,haxe_macro_Unop.OpDecrement,haxe_macro_Unop.OpNot,haxe_macro_Unop.OpNeg,haxe_macro_Unop.OpNegBits];
+var haxe_net_ReadyState = $hxEnums["haxe.net.ReadyState"] = { __ename__ : true, __constructs__ : ["Connecting","Open","Closing","Closed"]
+	,Connecting: {_hx_index:0,__enum__:"haxe.net.ReadyState",toString:$estr}
+	,Open: {_hx_index:1,__enum__:"haxe.net.ReadyState",toString:$estr}
+	,Closing: {_hx_index:2,__enum__:"haxe.net.ReadyState",toString:$estr}
+	,Closed: {_hx_index:3,__enum__:"haxe.net.ReadyState",toString:$estr}
+};
+haxe_net_ReadyState.__empty_constructs__ = [haxe_net_ReadyState.Connecting,haxe_net_ReadyState.Open,haxe_net_ReadyState.Closing,haxe_net_ReadyState.Closed];
+var haxe_net_WebSocket = function() {
+};
+$hxClasses["haxe.net.WebSocket"] = haxe_net_WebSocket;
+haxe_net_WebSocket.__name__ = "haxe.net.WebSocket";
+haxe_net_WebSocket.create = function(url,protocols,origin,debug) {
+	if(debug == null) {
+		debug = false;
+	}
+	return new haxe_net_impl_WebSocketJs(url,protocols);
+};
+haxe_net_WebSocket.defer = function(callback) {
+	haxe_Timer.delay(callback,0);
+};
+haxe_net_WebSocket.prototype = {
+	process: function() {
+	}
+	,sendString: function(message) {
+	}
+	,sendBytes: function(message) {
+	}
+	,close: function() {
+	}
+	,get_readyState: function() {
+		throw new js__$Boot_HaxeError("Not implemented");
+	}
+	,onopen: function() {
+	}
+	,onerror: function(message) {
+	}
+	,onmessageString: function(message) {
+	}
+	,onmessageBytes: function(message) {
+	}
+	,onclose: function() {
+	}
+	,__class__: haxe_net_WebSocket
+	,__properties__: {get_readyState:"get_readyState"}
+};
+var haxe_net_impl_WebSocketJs = function(url,protocols) {
+	var _gthis = this;
+	haxe_net_WebSocket.call(this);
+	if(protocols != null) {
+		this.impl = new WebSocket(url,protocols);
+	} else {
+		this.impl = new WebSocket(url);
+	}
+	this.impl.onopen = function(e) {
+		_gthis.onopen();
+	};
+	this.impl.onclose = function(e1) {
+		_gthis.onclose();
+	};
+	this.impl.onerror = function(e2) {
+		_gthis.onerror("error");
+	};
+	this.impl.onmessage = function(e3) {
+		var m = e3.data;
+		if(typeof(m) == "string") {
+			_gthis.onmessageString(m);
+		} else if(((m) instanceof ArrayBuffer)) {
+			_gthis.onmessageBytes(haxe_io_Bytes.ofData(js_Boot.__cast(m , ArrayBuffer)));
+		} else if(((m) instanceof Blob)) {
+			var arrayBuffer;
+			var fileReader = new FileReader();
+			fileReader.onload = function() {
+				arrayBuffer = fileReader.result;
+				_gthis.onmessageBytes(haxe_io_Bytes.ofData(arrayBuffer));
+			};
+			fileReader.readAsArrayBuffer(js_Boot.__cast(m , Blob));
+		} else {
+			haxe_Log.trace("Unhandled websocket onmessage " + m,{ fileName : "haxe/net/impl/WebSocketJs.hx", lineNumber : 47, className : "haxe.net.impl.WebSocketJs", methodName : "new"});
+		}
+	};
+};
+$hxClasses["haxe.net.impl.WebSocketJs"] = haxe_net_impl_WebSocketJs;
+haxe_net_impl_WebSocketJs.__name__ = "haxe.net.impl.WebSocketJs";
+haxe_net_impl_WebSocketJs.__super__ = haxe_net_WebSocket;
+haxe_net_impl_WebSocketJs.prototype = $extend(haxe_net_WebSocket.prototype,{
+	sendString: function(message) {
+		this.impl.send(message);
+	}
+	,sendBytes: function(message) {
+		message = message.sub(0,message.length);
+		this.impl.send(message.b.bufferValue);
+	}
+	,close: function() {
+		this.impl.close();
+	}
+	,get_readyState: function() {
+		switch(this.impl.readyState) {
+		case 0:
+			return haxe_net_ReadyState.Connecting;
+		case 1:
+			return haxe_net_ReadyState.Open;
+		case 2:
+			return haxe_net_ReadyState.Closing;
+		case 3:
+			return haxe_net_ReadyState.Closed;
+		default:
+			throw new js__$Boot_HaxeError("Unexpected websocket state");
+		}
+	}
+	,__class__: haxe_net_impl_WebSocketJs
+});
 var haxe_xml__$Access_NodeAccess_$Impl_$ = {};
 $hxClasses["haxe.xml._Access.NodeAccess_Impl_"] = haxe_xml__$Access_NodeAccess_$Impl_$;
 haxe_xml__$Access_NodeAccess_$Impl_$.__name__ = "haxe.xml._Access.NodeAccess_Impl_";
@@ -39979,6 +41045,7 @@ hxd_BitmapData.prototype = {
 		return png;
 	}
 	,__class__: hxd_BitmapData
+	,__properties__: {get_height:"get_height",get_width:"get_width"}
 };
 var hxd_Charset = function() {
 	var _gthis = this;
@@ -40242,6 +41309,7 @@ hxd_Event.prototype = {
 var hxd__$FloatBuffer_Float32Expand_$Impl_$ = {};
 $hxClasses["hxd._FloatBuffer.Float32Expand_Impl_"] = hxd__$FloatBuffer_Float32Expand_$Impl_$;
 hxd__$FloatBuffer_Float32Expand_$Impl_$.__name__ = "hxd._FloatBuffer.Float32Expand_Impl_";
+hxd__$FloatBuffer_Float32Expand_$Impl_$.__properties__ = {set_length:"set_length",get_length:"get_length"};
 hxd__$FloatBuffer_Float32Expand_$Impl_$._new = function(length) {
 	var this1 = { pos : 0, array : new Float32Array(new ArrayBuffer(length << 2))};
 	return this1;
@@ -40308,6 +41376,7 @@ hxd__$FloatBuffer_InnerIterator.prototype = {
 var hxd__$FloatBuffer_FloatBuffer_$Impl_$ = {};
 $hxClasses["hxd._FloatBuffer.FloatBuffer_Impl_"] = hxd__$FloatBuffer_FloatBuffer_$Impl_$;
 hxd__$FloatBuffer_FloatBuffer_$Impl_$.__name__ = "hxd._FloatBuffer.FloatBuffer_Impl_";
+hxd__$FloatBuffer_FloatBuffer_$Impl_$.__properties__ = {get_length:"get_length"};
 hxd__$FloatBuffer_FloatBuffer_$Impl_$._new = function(length) {
 	if(length == null) {
 		length = 0;
@@ -40386,6 +41455,7 @@ hxd__$IndexBuffer_InnerIterator.prototype = {
 var hxd__$IndexBuffer_IndexBuffer_$Impl_$ = {};
 $hxClasses["hxd._IndexBuffer.IndexBuffer_Impl_"] = hxd__$IndexBuffer_IndexBuffer_$Impl_$;
 hxd__$IndexBuffer_IndexBuffer_$Impl_$.__name__ = "hxd._IndexBuffer.IndexBuffer_Impl_";
+hxd__$IndexBuffer_IndexBuffer_$Impl_$.__properties__ = {get_length:"get_length"};
 hxd__$IndexBuffer_IndexBuffer_$Impl_$._new = function(length) {
 	if(length == null) {
 		length = 0;
@@ -40599,6 +41669,7 @@ hxd_Key.getKeyName = function(keyCode) {
 var hxd_Math = function() { };
 $hxClasses["hxd.Math"] = hxd_Math;
 hxd_Math.__name__ = "hxd.Math";
+hxd_Math.__properties__ = {get_NaN:"get_NaN",get_NEGATIVE_INFINITY:"get_NEGATIVE_INFINITY",get_POSITIVE_INFINITY:"get_POSITIVE_INFINITY"};
 hxd_Math.get_POSITIVE_INFINITY = function() {
 	return Infinity;
 };
@@ -41526,6 +42597,7 @@ hxd_Pixels.prototype = {
 		return p;
 	}
 	,__class__: hxd_Pixels
+	,__properties__: {set_innerFormat:"set_innerFormat",get_format:"get_format"}
 };
 var hxd_SceneEvents = function($window) {
 	this.defaultCursor = hxd_Cursor.Default;
@@ -41967,6 +43039,7 @@ hxd_SceneEvents.prototype = {
 		}
 	}
 	,__class__: hxd_SceneEvents
+	,__properties__: {set_defaultCursor:"set_defaultCursor"}
 };
 var hxd_Platform = $hxEnums["hxd.Platform"] = { __ename__ : true, __constructs__ : ["IOS","Android","WebGL","PC","Console","FlashPlayer"]
 	,IOS: {_hx_index:0,__enum__:"hxd.Platform",toString:$estr}
@@ -41986,6 +43059,7 @@ hxd_SystemValue.__empty_constructs__ = [hxd_SystemValue.IsTouch,hxd_SystemValue.
 var hxd_Timer = function() { };
 $hxClasses["hxd.Timer"] = hxd_Timer;
 hxd_Timer.__name__ = "hxd.Timer";
+hxd_Timer.__properties__ = {set_tmod:"set_tmod",get_tmod:"get_tmod"};
 hxd_Timer.update = function() {
 	hxd_Timer.frameCount++;
 	var newTime = Date.now() / 1000;
@@ -42391,10 +43465,12 @@ hxd_Window.prototype = {
 		return window.document.title = t;
 	}
 	,__class__: hxd_Window
+	,__properties__: {set_displayMode:"set_displayMode",get_displayMode:"get_displayMode",set_title:"set_title",get_title:"get_title",get_isFocused:"get_isFocused",set_vsync:"set_vsync",get_vsync:"get_vsync",set_mouseLock:"set_mouseLock",get_mouseLock:"get_mouseLock",get_mouseY:"get_mouseY",get_mouseX:"get_mouseX",get_height:"get_height",get_width:"get_width"}
 };
 var hxd_System = function() { };
 $hxClasses["hxd.System"] = hxd_System;
 hxd_System.__name__ = "hxd.System";
+hxd_System.__properties__ = {set_allowTimeout:"set_allowTimeout",get_allowTimeout:"get_allowTimeout",get_screenDPI:"get_screenDPI",get_platform:"get_platform",get_lang:"get_lang",get_height:"get_height",get_width:"get_width"};
 hxd_System.timeoutTick = function() {
 };
 hxd_System.getCurrentLoop = function() {
@@ -43081,6 +44157,7 @@ hxd_fmt_hmd_Position.prototype = {
 		return m;
 	}
 	,__class__: hxd_fmt_hmd_Position
+	,__properties__: {get_qw:"get_qw"}
 };
 var hxd_fmt_hmd_GeometryFormat = function(name,format) {
 	this.name = name;
@@ -43108,6 +44185,7 @@ hxd_fmt_hmd_Geometry.prototype = {
 		return k;
 	}
 	,__class__: hxd_fmt_hmd_Geometry
+	,__properties__: {get_indexCount:"get_indexCount"}
 };
 var hxd_fmt_hmd_Material = function() {
 };
@@ -44535,6 +45613,7 @@ hxd_fs_FileEntry.prototype = {
 		}
 	}
 	,__class__: hxd_fs_FileEntry
+	,__properties__: {get_isAvailable:"get_isAvailable",get_isDirectory:"get_isDirectory",get_size:"get_size",get_extension:"get_extension",get_directory:"get_directory",get_path:"get_path"}
 };
 var hxd_fs_BytesFileEntry = function(path,bytes) {
 	this.fullPath = path;
@@ -44915,6 +45994,7 @@ hxd_res_Resource.prototype = {
 		}
 	}
 	,__class__: hxd_res_Resource
+	,__properties__: {get_name:"get_name"}
 };
 var hxd_res_Any = function(loader,entry) {
 	hxd_res_Resource.call(this,entry);
@@ -45046,6 +46126,7 @@ hxd_res_Embed.__name__ = "hxd.res.Embed";
 var hxd_res__$Image_ImageFormat_$Impl_$ = {};
 $hxClasses["hxd.res._Image.ImageFormat_Impl_"] = hxd_res__$Image_ImageFormat_$Impl_$;
 hxd_res__$Image_ImageFormat_$Impl_$.__name__ = "hxd.res._Image.ImageFormat_Impl_";
+hxd_res__$Image_ImageFormat_$Impl_$.__properties__ = {get_useAsyncDecode:"get_useAsyncDecode"};
 hxd_res__$Image_ImageFormat_$Impl_$.get_useAsyncDecode = function(this1) {
 	return this1 == 0;
 };
@@ -47789,6 +48870,7 @@ hxd_snd_ChannelBase.prototype = {
 		HxOverrides.remove(this.effects,e);
 	}
 	,__class__: hxd_snd_ChannelBase
+	,__properties__: {set_volume:"set_volume"}
 };
 var hxd_snd_Channel = function() {
 	this.queue = [];
@@ -47885,6 +48967,7 @@ hxd_snd_Channel.prototype = $extend(hxd_snd_ChannelBase.prototype,{
 		return this.manager == null;
 	}
 	,__class__: hxd_snd_Channel
+	,__properties__: $extend(hxd_snd_ChannelBase.prototype.__properties__,{set_pause:"set_pause",set_position:"set_position"})
 });
 var hxd_snd_ChannelGroup = function(name) {
 	hxd_snd_ChannelBase.call(this);
@@ -48123,6 +49206,7 @@ hxd_snd_Data.prototype = {
 		return this.samples / this.samplingRate;
 	}
 	,__class__: hxd_snd_Data
+	,__properties__: {get_duration:"get_duration"}
 };
 var hxd_snd_EffectDriver = function() {
 };
@@ -49528,6 +50612,7 @@ hxd_snd_webaudio_BufferPlayback.prototype = {
 		this.node = null;
 	}
 	,__class__: hxd_snd_webaudio_BufferPlayback
+	,__properties__: {get_currentSample:"get_currentSample"}
 };
 var hxd_snd_webaudio_Context = function() { };
 $hxClasses["hxd.snd.webaudio.Context"] = hxd_snd_webaudio_Context;
@@ -49936,6 +51021,7 @@ hxd_snd_webaudio_Driver.prototype = {
 		return hxd_snd_webaudio_Context.destination;
 	}
 	,__class__: hxd_snd_webaudio_Driver
+	,__properties__: {set_destination:"set_destination",get_destination:"get_destination",get_masterGain:"get_masterGain"}
 };
 var hxd_snd_webaudio_LowPassDriver = function() {
 	this.pool = [];
@@ -51069,6 +52155,7 @@ hxsl_BatchShader.prototype = $extend(hxsl_Shader.prototype,{
 		return s;
 	}
 	,__class__: hxsl_BatchShader
+	,__properties__: {set_Batch_Buffer:"set_Batch_Buffer",get_Batch_Buffer:"get_Batch_Buffer",set_Batch_Count:"set_Batch_Count",get_Batch_Count:"get_Batch_Count"}
 });
 var hxsl_SearchMap = function() {
 };
@@ -57482,6 +58569,7 @@ hxsl_GlslOut.prototype = {
 		return this.decls.join("\n");
 	}
 	,__class__: hxsl_GlslOut
+	,__properties__: {get_isES2:"get_isES2",get_isES:"get_isES"}
 };
 var hxsl__$Linker_AllocatedVar = function() {
 };
@@ -60426,6 +61514,1055 @@ hxsl_ChannelTools.__name__ = "hxsl.ChannelTools";
 hxsl_ChannelTools.isPackedFormat = function(c) {
 	return c.format == h3d_mat_Texture.nativeFormat;
 };
+var io_colyseus_Auth = function(endpoint) {
+	this.endpoint = StringTools.replace(endpoint,"ws","http");
+};
+$hxClasses["io.colyseus.Auth"] = io_colyseus_Auth;
+io_colyseus_Auth.__name__ = "io.colyseus.Auth";
+io_colyseus_Auth.prototype = {
+	hasToken: function() {
+		return this.token != null;
+	}
+	,login: function() {
+		var query = new haxe_ds_StringMap();
+		this.request("POST","/auth",query);
+	}
+	,getDeviceId: function() {
+		return "";
+	}
+	,getPlatform: function() {
+		return "";
+	}
+	,request: function(method,segments,query,body) {
+		if(query == null) {
+			query = new haxe_ds_StringMap();
+		}
+		var queryString = [];
+		var field = query.keys();
+		while(field.hasNext()) {
+			var field1 = field.next();
+			queryString.push(field1 + "=" + (__map_reserved[field1] != null ? query.getReserved(field1) : query.h[field1]));
+		}
+		if(this.hasToken()) {
+			var v = this.token;
+			if(__map_reserved["token"] != null) {
+				query.setReserved("token",v);
+			} else {
+				query.h["token"] = v;
+			}
+		}
+		var req = new haxe_http_HttpJs(this.endpoint + segments + "?" + queryString.join("&"));
+		var responseBytes = new haxe_io_BytesOutput();
+		if(this.hasToken()) {
+			req.setHeader("authorization","Bearer " + this.token);
+		}
+		if(body != null) {
+			req.setPostData(body);
+			req.setHeader("Content-Type","application/json");
+		}
+		req.setHeader("Accept","application/json");
+		req.onData = function(json) {
+			haxe_Log.trace("RESPONSE:" + json,{ fileName : "io/colyseus/Auth.hx", lineNumber : 64, className : "io.colyseus.Auth", methodName : "request"});
+		};
+		req.onError = function(err) {
+			haxe_Log.trace("onError",{ fileName : "io/colyseus/Auth.hx", lineNumber : 68, className : "io.colyseus.Auth", methodName : "request"});
+			haxe_Log.trace(err,{ fileName : "io/colyseus/Auth.hx", lineNumber : 69, className : "io.colyseus.Auth", methodName : "request"});
+		};
+		req.setHeader("X-HTTP-Method-Override",method);
+		req.request(true);
+	}
+	,__class__: io_colyseus_Auth
+};
+var io_colyseus_RoomAvailable = function() { };
+$hxClasses["io.colyseus.RoomAvailable"] = io_colyseus_RoomAvailable;
+io_colyseus_RoomAvailable.__name__ = "io.colyseus.RoomAvailable";
+io_colyseus_RoomAvailable.__isInterface__ = true;
+io_colyseus_RoomAvailable.prototype = {
+	__class__: io_colyseus_RoomAvailable
+};
+var io_colyseus_DummyState = function() { };
+$hxClasses["io.colyseus.DummyState"] = io_colyseus_DummyState;
+io_colyseus_DummyState.__name__ = "io.colyseus.DummyState";
+var io_colyseus_Client = function(endpoint) {
+	this.endpoint = endpoint;
+	this.auth = new io_colyseus_Auth(this.endpoint);
+};
+$hxClasses["io.colyseus.Client"] = io_colyseus_Client;
+io_colyseus_Client.__name__ = "io.colyseus.Client";
+io_colyseus_Client.prototype = {
+	joinOrCreate_State: function(roomName,options,stateClass,callback) {
+		this.createMatchMakeRequest_joinOrCreate_T("joinOrCreate",roomName,options,stateClass,callback);
+	}
+	,createMatchMakeRequest_reconnect_T: function(method,roomName,options,stateClass,callback) {
+		var _gthis = this;
+		if(this.auth.hasToken()) {
+			var value = this.auth.token;
+			if(__map_reserved["token"] != null) {
+				options.setReserved("token",value);
+			} else {
+				options.h["token"] = value;
+			}
+		}
+		this.request("POST","/matchmake/" + method + "/" + roomName,JSON.stringify(options),function(err,response) {
+			if(err != null) {
+				callback(err,null);
+				return;
+			} else {
+				_gthis.consumeSeatReservation_createMatchMakeRequest_T(response,stateClass,callback);
+			}
+		});
+	}
+	,createMatchMakeRequest_joinById_T: function(method,roomName,options,stateClass,callback) {
+		var _gthis = this;
+		if(this.auth.hasToken()) {
+			var value = this.auth.token;
+			if(__map_reserved["token"] != null) {
+				options.setReserved("token",value);
+			} else {
+				options.h["token"] = value;
+			}
+		}
+		this.request("POST","/matchmake/" + method + "/" + roomName,JSON.stringify(options),function(err,response) {
+			if(err != null) {
+				callback(err,null);
+				return;
+			} else {
+				_gthis.consumeSeatReservation_createMatchMakeRequest_T(response,stateClass,callback);
+			}
+		});
+	}
+	,createMatchMakeRequest_join_T: function(method,roomName,options,stateClass,callback) {
+		var _gthis = this;
+		if(this.auth.hasToken()) {
+			var value = this.auth.token;
+			if(__map_reserved["token"] != null) {
+				options.setReserved("token",value);
+			} else {
+				options.h["token"] = value;
+			}
+		}
+		this.request("POST","/matchmake/" + method + "/" + roomName,JSON.stringify(options),function(err,response) {
+			if(err != null) {
+				callback(err,null);
+				return;
+			} else {
+				_gthis.consumeSeatReservation_createMatchMakeRequest_T(response,stateClass,callback);
+			}
+		});
+	}
+	,createMatchMakeRequest_create_T: function(method,roomName,options,stateClass,callback) {
+		var _gthis = this;
+		if(this.auth.hasToken()) {
+			var value = this.auth.token;
+			if(__map_reserved["token"] != null) {
+				options.setReserved("token",value);
+			} else {
+				options.h["token"] = value;
+			}
+		}
+		this.request("POST","/matchmake/" + method + "/" + roomName,JSON.stringify(options),function(err,response) {
+			if(err != null) {
+				callback(err,null);
+				return;
+			} else {
+				_gthis.consumeSeatReservation_createMatchMakeRequest_T(response,stateClass,callback);
+			}
+		});
+	}
+	,createMatchMakeRequest_joinOrCreate_T: function(method,roomName,options,stateClass,callback) {
+		var _gthis = this;
+		if(this.auth.hasToken()) {
+			var value = this.auth.token;
+			if(__map_reserved["token"] != null) {
+				options.setReserved("token",value);
+			} else {
+				options.h["token"] = value;
+			}
+		}
+		this.request("POST","/matchmake/" + method + "/" + roomName,JSON.stringify(options),function(err,response) {
+			if(err != null) {
+				callback(err,null);
+				return;
+			} else {
+				_gthis.consumeSeatReservation_createMatchMakeRequest_T(response,stateClass,callback);
+			}
+		});
+	}
+	,consumeSeatReservation_createMatchMakeRequest_T: function(response,stateClass,callback) {
+		var room = new io_colyseus_Room(response.room.name,stateClass);
+		room.id = response.room.roomId;
+		room.sessionId = response.sessionId;
+		var onError = function(code,message) {
+			callback(new io_colyseus_error_MatchMakeError(code,message),null);
+		};
+		var onJoin = function() {
+			HxOverrides.remove(room.onError,onError);
+			callback(null,room);
+		};
+		room.onError.push(onError);
+		room.onJoin.push(onJoin);
+		var tmp = Std.string(response.room.processId) + "/" + room.id;
+		var _g = new haxe_ds_StringMap();
+		var value = room.sessionId;
+		if(__map_reserved["sessionId"] != null) {
+			_g.setReserved("sessionId",value);
+		} else {
+			_g.h["sessionId"] = value;
+		}
+		var tmp1 = this.createConnection(tmp,_g);
+		room.connect(tmp1);
+	}
+	,getAvailableRooms: function(roomName,callback) {
+		this.request("GET","/matchmake/" + roomName,null,callback);
+	}
+	,createConnection: function(path,options) {
+		if(path == null) {
+			path = "";
+		}
+		var params = [];
+		var name = options.keys();
+		while(name.hasNext()) {
+			var name1 = name.next();
+			params.push(name1 + "=" + Std.string(__map_reserved[name1] != null ? options.getReserved(name1) : options.h[name1]));
+		}
+		return new io_colyseus_Connection(this.endpoint + "/" + path + "?" + params.join("&"));
+	}
+	,request: function(method,segments,body,callback) {
+		var req = new haxe_http_HttpJs("http" + this.endpoint.substring(2) + segments);
+		if(body != null) {
+			req.setPostData(body);
+			req.setHeader("Content-Type","application/json");
+		}
+		req.setHeader("Accept","application/json");
+		var responseStatus;
+		req.onStatus = function(status) {
+			responseStatus = status;
+		};
+		req.onData = function(json) {
+			var response = JSON.parse(json);
+			if(response.error) {
+				var code = response.code;
+				var message = response.error;
+				callback(new io_colyseus_error_MatchMakeError(code,message),null);
+			} else {
+				callback(null,response);
+			}
+		};
+		req.onError = function(err) {
+			callback(new io_colyseus_error_MatchMakeError(0,err),null);
+		};
+		req.request(method == "POST");
+	}
+	,__class__: io_colyseus_Client
+};
+var io_colyseus_Connection = function(url) {
+	this.reconnectionEnabled = false;
+	var _gthis = this;
+	this.ws = haxe_net_WebSocket.create(url);
+	this.ws.onopen = function() {
+		_gthis.onOpen();
+	};
+	this.ws.onmessageBytes = function(bytes) {
+		_gthis.onMessage(bytes);
+	};
+	this.ws.onclose = function() {
+		_gthis.onClose();
+	};
+	this.ws.onerror = function(message) {
+		_gthis.onError(message);
+	};
+};
+$hxClasses["io.colyseus.Connection"] = io_colyseus_Connection;
+io_colyseus_Connection.__name__ = "io.colyseus.Connection";
+io_colyseus_Connection.prototype = {
+	onOpen: function() {
+	}
+	,onMessage: function(bytes) {
+	}
+	,onClose: function() {
+	}
+	,onError: function(message) {
+	}
+	,send: function(data) {
+		this.ws.sendBytes(data);
+		return;
+	}
+	,close: function() {
+		this.ws.close();
+	}
+	,__class__: io_colyseus_Connection
+};
+var io_colyseus_Protocol = function() { };
+$hxClasses["io.colyseus.Protocol"] = io_colyseus_Protocol;
+io_colyseus_Protocol.__name__ = "io.colyseus.Protocol";
+var io_colyseus_Room = function(name,cls) {
+	this.serializer = null;
+	this.serializerId = null;
+	this.onMessageHandlers = new haxe_ds_StringMap();
+	var this1 = [];
+	this.onLeave = this1;
+	var this11 = [];
+	this.onError = this11;
+	var this12 = [];
+	this.onStateChange = this12;
+	var this13 = [];
+	this.onJoin = this13;
+	this.id = null;
+	this.name = name;
+	this.tmpStateClass = cls;
+};
+$hxClasses["io.colyseus.Room"] = io_colyseus_Room;
+io_colyseus_Room.__name__ = "io.colyseus.Room";
+io_colyseus_Room.prototype = {
+	connect: function(connection) {
+		var _gthis = this;
+		this.connection = connection;
+		this.connection.reconnectionEnabled = false;
+		this.connection.onMessage = function(bytes) {
+			_gthis.onMessageCallback(bytes);
+		};
+		this.connection.onClose = function() {
+			_gthis.teardown();
+			var _g = 0;
+			var _g1 = _gthis.onLeave;
+			while(_g < _g1.length) {
+				var fn = _g1[_g];
+				++_g;
+				fn();
+			}
+		};
+		this.connection.onError = function(e) {
+			var _g2 = 0;
+			var _g11 = _gthis.onError;
+			while(_g2 < _g11.length) {
+				var fn1 = _g11[_g2];
+				++_g2;
+				fn1(0,e);
+			}
+		};
+	}
+	,leave: function(consented) {
+		if(consented == null) {
+			consented = true;
+		}
+		this.teardown();
+		if(this.connection != null) {
+			if(consented) {
+				var bytes = new haxe_io_BytesOutput();
+				bytes.writeByte(io_colyseus_Protocol.LEAVE_ROOM);
+				this.connection.send(bytes.getBytes());
+			} else {
+				this.connection.close();
+			}
+		} else {
+			var _g = 0;
+			var _g1 = this.onLeave;
+			while(_g < _g1.length) {
+				var fn = _g1[_g];
+				++_g;
+				fn();
+			}
+		}
+	}
+	,send: function(type,message) {
+		var bytesToSend = new haxe_io_BytesOutput();
+		bytesToSend.writeByte(io_colyseus_Protocol.ROOM_DATA);
+		if(typeof(type) == "string") {
+			var encodedType = haxe_io_Bytes.ofString(type);
+			bytesToSend.writeByte(encodedType.length | 160);
+			bytesToSend.writeBytes(encodedType,0,encodedType.length);
+		} else {
+			bytesToSend.writeByte(type);
+		}
+		if(message != null) {
+			var encodedMessage = new org_msgpack_Encoder(message).o.getBytes();
+			bytesToSend.writeBytes(encodedMessage,0,encodedMessage.length);
+		}
+		this.connection.send(bytesToSend.getBytes());
+	}
+	,onMessage: function(type,callback) {
+		var this1 = this.onMessageHandlers;
+		var k = this.getMessageHandlerKey(type);
+		var _this = this1;
+		if(__map_reserved[k] != null) {
+			_this.setReserved(k,callback);
+		} else {
+			_this.h[k] = callback;
+		}
+		return this;
+	}
+	,get_state: function() {
+		return this.serializer.getState();
+	}
+	,teardown: function() {
+		if(this.serializer != null) {
+			this.serializer.teardown();
+		}
+	}
+	,onMessageCallback: function(data) {
+		var code = data.b[0];
+		var it = { offset : 1};
+		if(code == io_colyseus_Protocol.JOIN_ROOM) {
+			this.serializerId = data.getString(it.offset + 1,data.b[it.offset]);
+			it.offset += this.serializerId.length + 1;
+			if(this.serializerId == "schema") {
+				this.serializer = new io_colyseus_serializer_SchemaSerializer(this.tmpStateClass);
+			} else {
+				throw new js__$Boot_HaxeError("FossilDelta serializer has been deprecated! Use SchemaSerializer instead.");
+			}
+			if(data.length > it.offset) {
+				this.serializer.handshake(data,it.offset);
+			}
+			var _g = 0;
+			var _g1 = this.onJoin;
+			while(_g < _g1.length) {
+				var fn = _g1[_g];
+				++_g;
+				fn();
+			}
+			var bytes = new haxe_io_BytesOutput();
+			bytes.writeByte(io_colyseus_Protocol.JOIN_ROOM);
+			this.connection.send(bytes.getBytes());
+		} else if(code == io_colyseus_Protocol.ERROR) {
+			var errorCode = io_colyseus_serializer_schema_Schema.decoder.number(data,it);
+			var message = io_colyseus_serializer_schema_Schema.decoder.string(data,it);
+			haxe_Log.trace("Room error: code => " + errorCode + ", message => " + message,{ fileName : "io/colyseus/Room.hx", lineNumber : 150, className : "io.colyseus.Room", methodName : "onMessageCallback"});
+			var _g2 = 0;
+			var _g11 = this.onError;
+			while(_g2 < _g11.length) {
+				var fn1 = _g11[_g2];
+				++_g2;
+				fn1(errorCode,message);
+			}
+		} else if(code == io_colyseus_Protocol.LEAVE_ROOM) {
+			this.leave();
+		} else if(code == io_colyseus_Protocol.ROOM_STATE) {
+			this.setState(data.sub(it.offset,data.length - 1));
+		} else if(code == io_colyseus_Protocol.ROOM_STATE_PATCH) {
+			this.patch(data.sub(it.offset,data.length - 1));
+		} else if(code == io_colyseus_Protocol.ROOM_DATA) {
+			var type = io_colyseus_serializer_schema_SPEC.stringCheck(data,it) ? io_colyseus_serializer_schema_Schema.decoder.string(data,it) : io_colyseus_serializer_schema_Schema.decoder.number(data,it);
+			var message1;
+			if(data.length > it.offset) {
+				var b = data.sub(it.offset,data.length - it.offset);
+				var option = null;
+				if(option == null) {
+					option = org_msgpack_DecodeOption.AsObject;
+				}
+				message1 = new org_msgpack_Decoder(b,option).o;
+			} else {
+				message1 = null;
+			}
+			this.dispatchMessage(type,message1);
+		}
+	}
+	,setState: function(encodedState) {
+		this.serializer.setState(encodedState);
+		var e = this.onStateChange;
+		var arg = this.serializer.getState();
+		var _g = 0;
+		var _g1 = e;
+		while(_g < _g1.length) {
+			var fn = _g1[_g];
+			++_g;
+			fn(arg);
+		}
+	}
+	,patch: function(binaryPatch) {
+		this.serializer.patch(binaryPatch);
+		var e = this.onStateChange;
+		var arg = this.serializer.getState();
+		var _g = 0;
+		var _g1 = e;
+		while(_g < _g1.length) {
+			var fn = _g1[_g];
+			++_g;
+			fn(arg);
+		}
+	}
+	,dispatchMessage: function(type,message) {
+		var messageType = this.getMessageHandlerKey(type);
+		var _this = this.onMessageHandlers;
+		if((__map_reserved[messageType] != null ? _this.getReserved(messageType) : _this.h[messageType]) != null) {
+			var _this1 = this.onMessageHandlers;
+			(__map_reserved[messageType] != null ? _this1.getReserved(messageType) : _this1.h[messageType])(message);
+		} else {
+			haxe_Log.trace("onMessage not registered for type " + Std.string(type),{ fileName : "io/colyseus/Room.hx", lineNumber : 195, className : "io.colyseus.Room", methodName : "dispatchMessage"});
+		}
+	}
+	,getMessageHandlerKey: function(type) {
+		if(typeof(type) == "string") {
+			return type;
+		} else if(typeof(type) == "number" && ((type | 0) === type)) {
+			return "i" + Std.string(type);
+		} else {
+			var c = js_Boot.getClass(type);
+			return "$" + c.__name__;
+		}
+	}
+	,__class__: io_colyseus_Room
+	,__properties__: {get_state:"get_state"}
+};
+var io_colyseus_error_MatchMakeError = function(code,message) {
+	this.code = code;
+	this.message = message;
+};
+$hxClasses["io.colyseus.error.MatchMakeError"] = io_colyseus_error_MatchMakeError;
+io_colyseus_error_MatchMakeError.__name__ = "io.colyseus.error.MatchMakeError";
+io_colyseus_error_MatchMakeError.prototype = {
+	__class__: io_colyseus_error_MatchMakeError
+};
+var io_colyseus_events__$EventHandler_EventHandler_$Impl_$ = {};
+$hxClasses["io.colyseus.events._EventHandler.EventHandler_Impl_"] = io_colyseus_events__$EventHandler_EventHandler_$Impl_$;
+io_colyseus_events__$EventHandler_EventHandler_$Impl_$.__name__ = "io.colyseus.events._EventHandler.EventHandler_Impl_";
+io_colyseus_events__$EventHandler_EventHandler_$Impl_$.__properties__ = {get_handlers:"get_handlers"};
+io_colyseus_events__$EventHandler_EventHandler_$Impl_$.get_handlers = function(this1) {
+	return this1;
+};
+io_colyseus_events__$EventHandler_EventHandler_$Impl_$._new = function() {
+	var this1 = [];
+	return this1;
+};
+io_colyseus_events__$EventHandler_EventHandler_$Impl_$.add = function(this1,fn) {
+	this1.push(fn);
+};
+io_colyseus_events__$EventHandler_EventHandler_$Impl_$.remove = function(this1,fn) {
+	HxOverrides.remove(this1,fn);
+};
+var io_colyseus_events_EventHandlerDispatcher0 = function() { };
+$hxClasses["io.colyseus.events.EventHandlerDispatcher0"] = io_colyseus_events_EventHandlerDispatcher0;
+io_colyseus_events_EventHandlerDispatcher0.__name__ = "io.colyseus.events.EventHandlerDispatcher0";
+io_colyseus_events_EventHandlerDispatcher0.dispatch = function(e) {
+	var _g = 0;
+	var _g1 = e;
+	while(_g < _g1.length) {
+		var fn = _g1[_g];
+		++_g;
+		fn();
+	}
+};
+var io_colyseus_events_EventHandlerDispatcher1 = function() { };
+$hxClasses["io.colyseus.events.EventHandlerDispatcher1"] = io_colyseus_events_EventHandlerDispatcher1;
+io_colyseus_events_EventHandlerDispatcher1.__name__ = "io.colyseus.events.EventHandlerDispatcher1";
+io_colyseus_events_EventHandlerDispatcher1.dispatch = function(e,arg) {
+	var _g = 0;
+	var _g1 = e;
+	while(_g < _g1.length) {
+		var fn = _g1[_g];
+		++_g;
+		fn(arg);
+	}
+};
+var io_colyseus_events_EventHandlerDispatcher2 = function() { };
+$hxClasses["io.colyseus.events.EventHandlerDispatcher2"] = io_colyseus_events_EventHandlerDispatcher2;
+io_colyseus_events_EventHandlerDispatcher2.__name__ = "io.colyseus.events.EventHandlerDispatcher2";
+io_colyseus_events_EventHandlerDispatcher2.dispatch = function(e,arg1,arg2) {
+	var _g = 0;
+	var _g1 = e;
+	while(_g < _g1.length) {
+		var fn = _g1[_g];
+		++_g;
+		fn(arg1,arg2);
+	}
+};
+var io_colyseus_serializer_Serializer = function() { };
+$hxClasses["io.colyseus.serializer.Serializer"] = io_colyseus_serializer_Serializer;
+io_colyseus_serializer_Serializer.__name__ = "io.colyseus.serializer.Serializer";
+io_colyseus_serializer_Serializer.__isInterface__ = true;
+io_colyseus_serializer_Serializer.prototype = {
+	__class__: io_colyseus_serializer_Serializer
+};
+var io_colyseus_serializer_SchemaSerializer = function(cl) {
+	this.state = Type.createInstance(cl,[]);
+};
+$hxClasses["io.colyseus.serializer.SchemaSerializer"] = io_colyseus_serializer_SchemaSerializer;
+io_colyseus_serializer_SchemaSerializer.__name__ = "io.colyseus.serializer.SchemaSerializer";
+io_colyseus_serializer_SchemaSerializer.__interfaces__ = [io_colyseus_serializer_Serializer];
+io_colyseus_serializer_SchemaSerializer.prototype = {
+	setState: function(data) {
+		(js_Boot.__cast(this.state , io_colyseus_serializer_schema_Schema)).decode(data);
+	}
+	,getState: function() {
+		return this.state;
+	}
+	,patch: function(data) {
+		(js_Boot.__cast(this.state , io_colyseus_serializer_schema_Schema)).decode(data);
+	}
+	,teardown: function() {
+	}
+	,handshake: function(bytes,offset) {
+	}
+	,__class__: io_colyseus_serializer_SchemaSerializer
+};
+var io_colyseus_serializer_schema_ArraySchema_$Dynamic = function() {
+	this.items = [];
+};
+$hxClasses["io.colyseus.serializer.schema.ArraySchema_Dynamic"] = io_colyseus_serializer_schema_ArraySchema_$Dynamic;
+io_colyseus_serializer_schema_ArraySchema_$Dynamic.__name__ = "io.colyseus.serializer.schema.ArraySchema_Dynamic";
+io_colyseus_serializer_schema_ArraySchema_$Dynamic.prototype = {
+	get_length: function() {
+		return this.items.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_ArraySchema_$Dynamic();
+		cloned.items = this.items.slice();
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return HxOverrides.iter(this.items);
+	}
+	,toString: function() {
+		var data = [];
+		var _g = 0;
+		var _g1 = this.items;
+		while(_g < _g1.length) {
+			var item = _g1[_g];
+			++_g;
+			data.push("" + Std.string(item));
+		}
+		return "ArraySchema(" + Lambda.count(this.items) + ") { " + data.join(", ") + " } ";
+	}
+	,__class__: io_colyseus_serializer_schema_ArraySchema_$Dynamic
+	,__properties__: {get_length:"get_length"}
+};
+var io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionField = function() {
+	this.items = [];
+};
+$hxClasses["io.colyseus.serializer.schema.ArraySchema_io_colyseus_serializer_schema_ReflectionField"] = io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionField;
+io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionField.__name__ = "io.colyseus.serializer.schema.ArraySchema_io_colyseus_serializer_schema_ReflectionField";
+io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionField.prototype = {
+	get_length: function() {
+		return this.items.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionField();
+		cloned.items = this.items.slice();
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return HxOverrides.iter(this.items);
+	}
+	,toString: function() {
+		var data = [];
+		var _g = 0;
+		var _g1 = this.items;
+		while(_g < _g1.length) {
+			var item = _g1[_g];
+			++_g;
+			data.push("" + Std.string(item));
+		}
+		return "ArraySchema(" + Lambda.count(this.items) + ") { " + data.join(", ") + " } ";
+	}
+	,__class__: io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionField
+	,__properties__: {get_length:"get_length"}
+};
+var io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionType = function() {
+	this.items = [];
+};
+$hxClasses["io.colyseus.serializer.schema.ArraySchema_io_colyseus_serializer_schema_ReflectionType"] = io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionType;
+io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionType.__name__ = "io.colyseus.serializer.schema.ArraySchema_io_colyseus_serializer_schema_ReflectionType";
+io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionType.prototype = {
+	get_length: function() {
+		return this.items.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionType();
+		cloned.items = this.items.slice();
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return HxOverrides.iter(this.items);
+	}
+	,toString: function() {
+		var data = [];
+		var _g = 0;
+		var _g1 = this.items;
+		while(_g < _g1.length) {
+			var item = _g1[_g];
+			++_g;
+			data.push("" + Std.string(item));
+		}
+		return "ArraySchema(" + Lambda.count(this.items) + ") { " + data.join(", ") + " } ";
+	}
+	,__class__: io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionType
+	,__properties__: {get_length:"get_length"}
+};
+var io_colyseus_serializer_schema_MapSchema_$Dynamic = function() {
+	this.items = new io_colyseus_serializer_schema_OrderedMap(new haxe_ds_StringMap());
+};
+$hxClasses["io.colyseus.serializer.schema.MapSchema_Dynamic"] = io_colyseus_serializer_schema_MapSchema_$Dynamic;
+io_colyseus_serializer_schema_MapSchema_$Dynamic.__name__ = "io.colyseus.serializer.schema.MapSchema_Dynamic";
+io_colyseus_serializer_schema_MapSchema_$Dynamic.prototype = {
+	get_length: function() {
+		return this.items._keys.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_MapSchema_$Dynamic();
+		var key = HxOverrides.iter(this.items._keys);
+		while(key.hasNext()) {
+			var key1 = key.next();
+			cloned.items.set(key1,this.items.get(key1));
+		}
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return this.items.iterator();
+	}
+	,get: function(key) {
+		return this.items.get(key);
+	}
+	,arrayWrite: function(key,value) {
+		this.items.set(key,value);
+		return value;
+	}
+	,toString: function() {
+		var data = [];
+		var key = HxOverrides.iter(this.items._keys);
+		while(key.hasNext()) {
+			var key1 = key.next();
+			data.push(key1 + " => " + Std.string(this.items.get(key1)));
+		}
+		return "MapSchema (" + Lambda.count(this.items) + ") { " + data.join(", ") + " }";
+	}
+	,__class__: io_colyseus_serializer_schema_MapSchema_$Dynamic
+	,__properties__: {get_length:"get_length"}
+};
+var io_colyseus_serializer_schema_MapSchema_$Player = function() {
+	this.items = new io_colyseus_serializer_schema_OrderedMap(new haxe_ds_StringMap());
+};
+$hxClasses["io.colyseus.serializer.schema.MapSchema_Player"] = io_colyseus_serializer_schema_MapSchema_$Player;
+io_colyseus_serializer_schema_MapSchema_$Player.__name__ = "io.colyseus.serializer.schema.MapSchema_Player";
+io_colyseus_serializer_schema_MapSchema_$Player.prototype = {
+	get_length: function() {
+		return this.items._keys.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_MapSchema_$Player();
+		var key = HxOverrides.iter(this.items._keys);
+		while(key.hasNext()) {
+			var key1 = key.next();
+			cloned.items.set(key1,this.items.get(key1));
+		}
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return this.items.iterator();
+	}
+	,get: function(key) {
+		return this.items.get(key);
+	}
+	,arrayWrite: function(key,value) {
+		this.items.set(key,value);
+		return value;
+	}
+	,toString: function() {
+		var data = [];
+		var key = HxOverrides.iter(this.items._keys);
+		while(key.hasNext()) {
+			var key1 = key.next();
+			data.push(key1 + " => " + Std.string(this.items.get(key1)));
+		}
+		return "MapSchema (" + Lambda.count(this.items) + ") { " + data.join(", ") + " }";
+	}
+	,__class__: io_colyseus_serializer_schema_MapSchema_$Player
+	,__properties__: {get_length:"get_length"}
+};
+var io_colyseus_serializer_schema_Decorator = function() { };
+$hxClasses["io.colyseus.serializer.schema.Decorator"] = io_colyseus_serializer_schema_Decorator;
+io_colyseus_serializer_schema_Decorator.__name__ = "io.colyseus.serializer.schema.Decorator";
+var io_colyseus_serializer_schema_SPEC = function() { };
+$hxClasses["io.colyseus.serializer.schema.SPEC"] = io_colyseus_serializer_schema_SPEC;
+io_colyseus_serializer_schema_SPEC.__name__ = "io.colyseus.serializer.schema.SPEC";
+io_colyseus_serializer_schema_SPEC.numberCheck = function(bytes,it) {
+	var prefix = bytes.b[it.offset];
+	if(prefix >= 128) {
+		if(prefix >= 202) {
+			return prefix <= 211;
+		} else {
+			return false;
+		}
+	} else {
+		return true;
+	}
+};
+io_colyseus_serializer_schema_SPEC.arrayCheck = function(bytes,it) {
+	return bytes.b[it.offset] < 160;
+};
+io_colyseus_serializer_schema_SPEC.nilCheck = function(bytes,it) {
+	return bytes.b[it.offset] == io_colyseus_serializer_schema_SPEC.NIL;
+};
+io_colyseus_serializer_schema_SPEC.indexChangeCheck = function(bytes,it) {
+	return bytes.b[it.offset] == io_colyseus_serializer_schema_SPEC.INDEX_CHANGE;
+};
+io_colyseus_serializer_schema_SPEC.stringCheck = function(bytes,it) {
+	var prefix = bytes.get(it.offset);
+	if(!(prefix < 192 && prefix > 160 || prefix == 217 || prefix == 218)) {
+		return prefix == 219;
+	} else {
+		return true;
+	}
+};
+var io_colyseus_serializer_schema_ArraySchema = function() {
+	this.items = [];
+};
+$hxClasses["io.colyseus.serializer.schema.ArraySchema"] = io_colyseus_serializer_schema_ArraySchema;
+io_colyseus_serializer_schema_ArraySchema.__name__ = "io.colyseus.serializer.schema.ArraySchema";
+io_colyseus_serializer_schema_ArraySchema.prototype = {
+	get_length: function() {
+		return this.items.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_ArraySchema();
+		cloned.items = this.items.slice();
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return HxOverrides.iter(this.items);
+	}
+	,toString: function() {
+		var data = [];
+		var _g = 0;
+		var _g1 = this.items;
+		while(_g < _g1.length) {
+			var item = _g1[_g];
+			++_g;
+			data.push("" + Std.string(item));
+		}
+		return "ArraySchema(" + Lambda.count(this.items) + ") { " + data.join(", ") + " } ";
+	}
+	,__class__: io_colyseus_serializer_schema_ArraySchema
+	,__properties__: {get_length:"get_length"}
+};
+var io_colyseus_serializer_schema_OrderedMapIterator = function(omap) {
+	this.index = 0;
+	this.map = omap;
+};
+$hxClasses["io.colyseus.serializer.schema.OrderedMapIterator"] = io_colyseus_serializer_schema_OrderedMapIterator;
+io_colyseus_serializer_schema_OrderedMapIterator.__name__ = "io.colyseus.serializer.schema.OrderedMapIterator";
+io_colyseus_serializer_schema_OrderedMapIterator.prototype = {
+	hasNext: function() {
+		return this.index < this.map._keys.length;
+	}
+	,next: function() {
+		return this.map.get(this.map._keys[this.index++]);
+	}
+	,__class__: io_colyseus_serializer_schema_OrderedMapIterator
+};
+var io_colyseus_serializer_schema_OrderedMap = function(_map) {
+	this.idx = 0;
+	this._keys = [];
+	this.map = _map;
+};
+$hxClasses["io.colyseus.serializer.schema.OrderedMap"] = io_colyseus_serializer_schema_OrderedMap;
+io_colyseus_serializer_schema_OrderedMap.__name__ = "io.colyseus.serializer.schema.OrderedMap";
+io_colyseus_serializer_schema_OrderedMap.prototype = {
+	set: function(key,value) {
+		if(!this.map.exists(key)) {
+			this._keys.push(key);
+		}
+		this.map.set(key,value);
+	}
+	,toString: function() {
+		var _ret = "";
+		var _cnt = 0;
+		var _len = this._keys.length;
+		var _g = 0;
+		var _g1 = this._keys;
+		while(_g < _g1.length) {
+			var k = _g1[_g];
+			++_g;
+			_ret += "" + Std.string(k) + " => " + Std.string(this.map.get(k)) + (_cnt++ < _len - 1 ? ", " : "");
+		}
+		return "{" + _ret + "}";
+	}
+	,iterator: function() {
+		return new io_colyseus_serializer_schema_OrderedMapIterator(this);
+	}
+	,remove: function(key) {
+		if(this.map.remove(key)) {
+			return HxOverrides.remove(this._keys,key);
+		} else {
+			return false;
+		}
+	}
+	,exists: function(key) {
+		return this.map.exists(key);
+	}
+	,get: function(key) {
+		return this.map.get(key);
+	}
+	,keys: function() {
+		return HxOverrides.iter(this._keys);
+	}
+	,__class__: io_colyseus_serializer_schema_OrderedMap
+};
+var io_colyseus_serializer_schema_MapSchema = function() {
+	this.items = new io_colyseus_serializer_schema_OrderedMap(new haxe_ds_StringMap());
+};
+$hxClasses["io.colyseus.serializer.schema.MapSchema"] = io_colyseus_serializer_schema_MapSchema;
+io_colyseus_serializer_schema_MapSchema.__name__ = "io.colyseus.serializer.schema.MapSchema";
+io_colyseus_serializer_schema_MapSchema.prototype = {
+	get_length: function() {
+		return this.items._keys.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_MapSchema();
+		var key = HxOverrides.iter(this.items._keys);
+		while(key.hasNext()) {
+			var key1 = key.next();
+			cloned.items.set(key1,this.items.get(key1));
+		}
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return this.items.iterator();
+	}
+	,get: function(key) {
+		return this.items.get(key);
+	}
+	,arrayWrite: function(key,value) {
+		this.items.set(key,value);
+		return value;
+	}
+	,toString: function() {
+		var data = [];
+		var key = HxOverrides.iter(this.items._keys);
+		while(key.hasNext()) {
+			var key1 = key.next();
+			data.push(key1 + " => " + Std.string(this.items.get(key1)));
+		}
+		return "MapSchema (" + Lambda.count(this.items) + ") { " + data.join(", ") + " }";
+	}
+	,__class__: io_colyseus_serializer_schema_MapSchema
+	,__properties__: {get_length:"get_length"}
+};
+var io_colyseus_serializer_schema_Context = function() {
+	this.schemas = [];
+	this.typeIds = new haxe_ds_IntMap();
+};
+$hxClasses["io.colyseus.serializer.schema.Context"] = io_colyseus_serializer_schema_Context;
+io_colyseus_serializer_schema_Context.__name__ = "io.colyseus.serializer.schema.Context";
+io_colyseus_serializer_schema_Context.prototype = {
+	add: function(schema,typeid) {
+		if(typeid == null) {
+			typeid = this.schemas.length;
+		}
+		this.typeIds.h[typeid] = schema;
+		this.schemas.push(schema);
+	}
+	,get: function(typeid) {
+		return this.typeIds.h[typeid];
+	}
+	,__class__: io_colyseus_serializer_schema_Context
+};
+var io_colyseus_serializer_schema_ReflectionField = function() {
+	io_colyseus_serializer_schema_Schema.call(this);
+	this._indexes.h[0] = "name";
+	this._types.h[0] = "string";
+	this._indexes.h[1] = "type";
+	this._types.h[1] = "string";
+	this._indexes.h[2] = "referencedType";
+	this._types.h[2] = "uint8";
+};
+$hxClasses["io.colyseus.serializer.schema.ReflectionField"] = io_colyseus_serializer_schema_ReflectionField;
+io_colyseus_serializer_schema_ReflectionField.__name__ = "io.colyseus.serializer.schema.ReflectionField";
+io_colyseus_serializer_schema_ReflectionField.__super__ = io_colyseus_serializer_schema_Schema;
+io_colyseus_serializer_schema_ReflectionField.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
+	__class__: io_colyseus_serializer_schema_ReflectionField
+});
+var io_colyseus_serializer_schema_ReflectionType = function() {
+	this.fields = new io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionField();
+	io_colyseus_serializer_schema_Schema.call(this);
+	this._indexes.h[0] = "id";
+	this._types.h[0] = "uint8";
+	this._indexes.h[1] = "fields";
+	this._types.h[1] = "array";
+	this._childSchemaTypes.h[1] = io_colyseus_serializer_schema_ReflectionField;
+};
+$hxClasses["io.colyseus.serializer.schema.ReflectionType"] = io_colyseus_serializer_schema_ReflectionType;
+io_colyseus_serializer_schema_ReflectionType.__name__ = "io.colyseus.serializer.schema.ReflectionType";
+io_colyseus_serializer_schema_ReflectionType.__super__ = io_colyseus_serializer_schema_Schema;
+io_colyseus_serializer_schema_ReflectionType.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
+	__class__: io_colyseus_serializer_schema_ReflectionType
+});
+var io_colyseus_serializer_schema_Reflection = function() {
+	this.types = new io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionType();
+	io_colyseus_serializer_schema_Schema.call(this);
+	this._indexes.h[0] = "types";
+	this._types.h[0] = "array";
+	this._childSchemaTypes.h[0] = io_colyseus_serializer_schema_ReflectionType;
+	this._indexes.h[1] = "rootType";
+	this._types.h[1] = "uint8";
+};
+$hxClasses["io.colyseus.serializer.schema.Reflection"] = io_colyseus_serializer_schema_Reflection;
+io_colyseus_serializer_schema_Reflection.__name__ = "io.colyseus.serializer.schema.Reflection";
+io_colyseus_serializer_schema_Reflection.__super__ = io_colyseus_serializer_schema_Schema;
+io_colyseus_serializer_schema_Reflection.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
+	__class__: io_colyseus_serializer_schema_Reflection
+});
 var js__$Boot_HaxeError = function(val) {
 	Error.call(this);
 	this.val = val;
@@ -60446,6 +62583,18 @@ js__$Boot_HaxeError.__super__ = Error;
 js__$Boot_HaxeError.prototype = $extend(Error.prototype,{
 	__class__: js__$Boot_HaxeError
 });
+var js_Browser = function() { };
+$hxClasses["js.Browser"] = js_Browser;
+js_Browser.__name__ = "js.Browser";
+js_Browser.createXMLHttpRequest = function() {
+	if(typeof XMLHttpRequest != "undefined") {
+		return new XMLHttpRequest();
+	}
+	if(typeof ActiveXObject != "undefined") {
+		return new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	throw new js__$Boot_HaxeError("Unable to create XMLHttpRequest object.");
+};
 var js_html__$CanvasElement_CanvasUtil = function() { };
 $hxClasses["js.html._CanvasElement.CanvasUtil"] = js_html__$CanvasElement_CanvasUtil;
 js_html__$CanvasElement_CanvasUtil.__name__ = "js.html._CanvasElement.CanvasUtil";
@@ -60462,7 +62611,550 @@ js_html__$CanvasElement_CanvasUtil.getContextWebGL = function(canvas,attribs) {
 	}
 	return null;
 };
+var js_lib__$ArrayBuffer_ArrayBufferCompat = function() { };
+$hxClasses["js.lib._ArrayBuffer.ArrayBufferCompat"] = js_lib__$ArrayBuffer_ArrayBufferCompat;
+js_lib__$ArrayBuffer_ArrayBufferCompat.__name__ = "js.lib._ArrayBuffer.ArrayBufferCompat";
+js_lib__$ArrayBuffer_ArrayBufferCompat.sliceImpl = function(begin,end) {
+	var u = new Uint8Array(this,begin,end == null ? null : end - begin);
+	var resultArray = new Uint8Array(u.byteLength);
+	resultArray.set(u);
+	return resultArray.buffer;
+};
 Math.__name__ = "Math";
+var org_msgpack_DecodeOption = $hxEnums["org.msgpack.DecodeOption"] = { __ename__ : true, __constructs__ : ["AsMap","AsObject"]
+	,AsMap: {_hx_index:0,__enum__:"org.msgpack.DecodeOption",toString:$estr}
+	,AsObject: {_hx_index:1,__enum__:"org.msgpack.DecodeOption",toString:$estr}
+};
+org_msgpack_DecodeOption.__empty_constructs__ = [org_msgpack_DecodeOption.AsMap,org_msgpack_DecodeOption.AsObject];
+var org_msgpack__$Decoder_Pair = function(k,v) {
+	this.k = k;
+	this.v = v;
+};
+$hxClasses["org.msgpack._Decoder.Pair"] = org_msgpack__$Decoder_Pair;
+org_msgpack__$Decoder_Pair.__name__ = "org.msgpack._Decoder.Pair";
+org_msgpack__$Decoder_Pair.prototype = {
+	__class__: org_msgpack__$Decoder_Pair
+};
+var org_msgpack_Decoder = function(b,option) {
+	var i = new haxe_io_BytesInput(b);
+	i.set_bigEndian(true);
+	this.o = this.decode(i,option);
+};
+$hxClasses["org.msgpack.Decoder"] = org_msgpack_Decoder;
+org_msgpack_Decoder.__name__ = "org.msgpack.Decoder";
+org_msgpack_Decoder.prototype = {
+	decode: function(i,option) {
+		try {
+			var b = i.readByte();
+			switch(b) {
+			case 192:
+				return null;
+			case 194:
+				return false;
+			case 195:
+				return true;
+			case 196:
+				return i.read(i.readByte());
+			case 197:
+				return i.read(i.readUInt16());
+			case 198:
+				return i.read(i.readInt32());
+			case 202:
+				return i.readFloat();
+			case 203:
+				return i.readDouble();
+			case 204:
+				return i.readByte();
+			case 205:
+				return i.readUInt16();
+			case 206:
+				return i.readInt32();
+			case 207:
+				return this.readUInt64(i);
+			case 208:
+				return i.readInt8();
+			case 209:
+				return i.readInt16();
+			case 210:
+				return i.readInt32();
+			case 211:
+				return this.readInt64(i);
+			case 217:
+				return i.readString(i.readByte());
+			case 218:
+				return i.readString(i.readUInt16());
+			case 219:
+				return i.readString(i.readInt32());
+			case 220:
+				return this.readArray(i,i.readUInt16(),option);
+			case 221:
+				return this.readArray(i,i.readInt32(),option);
+			case 222:
+				return this.readMap(i,i.readUInt16(),option);
+			case 223:
+				return this.readMap(i,i.readInt32(),option);
+			default:
+				if(b < 128) {
+					return b;
+				} else if(b < 144) {
+					return this.readMap(i,15 & b,option);
+				} else if(b < 160) {
+					return this.readArray(i,15 & b,option);
+				} else if(b < 192) {
+					return i.readString(31 & b);
+				} else if(b > 223) {
+					return -256 | b;
+				}
+			}
+		} catch( e ) {
+			var e1 = ((e) instanceof js__$Boot_HaxeError) ? e.val : e;
+			if(((e1) instanceof haxe_io_Eof)) {
+				var e2 = e1;
+			} else {
+				throw e;
+			}
+		}
+		return null;
+	}
+	,readInt64: function(i) {
+		var high = i.readInt32();
+		var low = i.readInt32();
+		var this1 = new haxe__$Int64__$_$_$Int64(high,low);
+		return this1;
+	}
+	,readUInt64: function(i) {
+		var high = i.readInt32() * Math.pow(2,32);
+		var low = i.readInt32();
+		return high + low;
+	}
+	,readArray: function(i,length,option) {
+		var a = [];
+		var _g = 0;
+		var _g1 = length;
+		while(_g < _g1) {
+			var x = _g++;
+			a.push(this.decode(i,option));
+		}
+		return a;
+	}
+	,readMap: function(i,length,option) {
+		switch(option._hx_index) {
+		case 0:
+			var pairs = [];
+			var _g = 0;
+			var _g1 = length;
+			while(_g < _g1) {
+				var n = _g++;
+				var k = this.decode(i,option);
+				var v = this.decode(i,option);
+				pairs.push(new org_msgpack__$Decoder_Pair(k,v));
+			}
+			if(pairs.length == 0) {
+				return new haxe_ds_StringMap();
+			}
+			var _g2 = Type.typeof(pairs[0].k);
+			switch(_g2._hx_index) {
+			case 1:
+				var out = new haxe_ds_IntMap();
+				var _g21 = 0;
+				while(_g21 < pairs.length) {
+					var p = pairs[_g21];
+					++_g21;
+					if(Type.typeof(p.k)._hx_index != 1) {
+						throw new js__$Boot_HaxeError("Error: Mixed key type when decoding IntMap");
+					}
+					if(out.h.hasOwnProperty(p.k)) {
+						throw new js__$Boot_HaxeError("Error: Duplicate keys found => " + Std.string(p.k));
+					}
+					out.h[p.k] = p.v;
+				}
+				return out;
+			case 6:
+				var c = _g2.c;
+				if(c.__name__ == "String") {
+					var out1 = new haxe_ds_StringMap();
+					var _g22 = 0;
+					while(_g22 < pairs.length) {
+						var p1 = pairs[_g22];
+						++_g22;
+						var _g23 = Type.typeof(p1.k);
+						if(_g23._hx_index == 6) {
+							var c1 = _g23.c;
+							if(c1.__name__ != "String") {
+								throw new js__$Boot_HaxeError("Error: Mixed key type when decoding StringMap");
+							}
+						} else {
+							throw new js__$Boot_HaxeError("Error: Mixed key type when decoding StringMap");
+						}
+						var key = p1.k;
+						if(__map_reserved[key] != null ? out1.existsReserved(key) : out1.h.hasOwnProperty(key)) {
+							throw new js__$Boot_HaxeError("Error: Duplicate keys found => " + Std.string(p1.k));
+						}
+						var key1 = p1.k;
+						var value = p1.v;
+						if(__map_reserved[key1] != null) {
+							out1.setReserved(key1,value);
+						} else {
+							out1.h[key1] = value;
+						}
+					}
+					return out1;
+				} else {
+					throw new js__$Boot_HaxeError("Error: Unsupported key Type");
+				}
+				break;
+			default:
+				throw new js__$Boot_HaxeError("Error: Unsupported key Type");
+			}
+			break;
+		case 1:
+			var out2 = { };
+			var _g3 = 0;
+			var _g11 = length;
+			while(_g3 < _g11) {
+				var n1 = _g3++;
+				var k1 = this.decode(i,option);
+				var v1 = this.decode(i,option);
+				out2[Std.string(k1)] = v1;
+			}
+			return out2;
+		}
+	}
+	,getResult: function() {
+		return this.o;
+	}
+	,__class__: org_msgpack_Decoder
+};
+var org_msgpack_Encoder = function(d) {
+	this.o = new haxe_io_BytesOutput();
+	this.o.set_bigEndian(true);
+	this.encode(d);
+};
+$hxClasses["org.msgpack.Encoder"] = org_msgpack_Encoder;
+org_msgpack_Encoder.__name__ = "org.msgpack.Encoder";
+org_msgpack_Encoder.prototype = {
+	encode: function(d) {
+		var _g = Type.typeof(d);
+		switch(_g._hx_index) {
+		case 0:
+			this.o.writeByte(192);
+			break;
+		case 1:
+			var d1 = d;
+			if(d1 < -32) {
+				if(d1 < -32768) {
+					this.o.writeByte(210);
+					this.o.writeInt32(d1);
+				} else if(d1 < -128) {
+					this.o.writeByte(209);
+					this.o.writeInt16(d1);
+				} else {
+					this.o.writeByte(208);
+					this.o.writeInt8(d1);
+				}
+			} else if(d1 < 128) {
+				this.o.writeByte(d1 & 255);
+			} else if(d1 < 256) {
+				this.o.writeByte(204);
+				this.o.writeByte(d1);
+			} else if(d1 < 65536) {
+				this.o.writeByte(205);
+				this.o.writeUInt16(d1);
+			} else {
+				this.o.writeByte(206);
+				this.o.writeInt32(d1);
+			}
+			break;
+		case 2:
+			var d2 = d;
+			var a = Math.abs(d2);
+			if(a > 1.40129846432481707e-45 && a < 3.40282346638528860e+38) {
+				this.o.writeByte(202);
+				this.o.writeFloat(d2);
+			} else {
+				this.o.writeByte(203);
+				this.o.writeDouble(d2);
+			}
+			break;
+		case 3:
+			this.o.writeByte(d ? 195 : 194);
+			break;
+		case 4:
+			var f = Reflect.fields(d);
+			var length = Lambda.count(f);
+			if(length < 16) {
+				this.o.writeByte(128 | length);
+			} else if(length < 65536) {
+				this.o.writeByte(222);
+				this.o.writeUInt16(length);
+			} else {
+				this.o.writeByte(223);
+				this.o.writeInt32(length);
+			}
+			var _g1 = 0;
+			while(_g1 < f.length) {
+				var k = f[_g1];
+				++_g1;
+				this.encode(k);
+				this.encode(Reflect.field(d,k));
+			}
+			break;
+		case 5:
+			throw new js__$Boot_HaxeError("Error: Function not supported");
+		case 6:
+			var c = _g.c;
+			switch(c.__name__) {
+			case "Array":
+				var d3 = d;
+				var length1 = d3.length;
+				if(length1 < 16) {
+					this.o.writeByte(144 | length1);
+				} else if(length1 < 65536) {
+					this.o.writeByte(220);
+					this.o.writeUInt16(length1);
+				} else {
+					this.o.writeByte(221);
+					this.o.writeInt32(length1);
+				}
+				var _g2 = 0;
+				while(_g2 < d3.length) {
+					var e = d3[_g2];
+					++_g2;
+					this.encode(e);
+				}
+				break;
+			case "String":
+				var b = d;
+				var length2 = b.length;
+				if(length2 < 32) {
+					this.o.writeByte(160 | length2);
+				} else if(length2 < 256) {
+					this.o.writeByte(217);
+					this.o.writeByte(length2);
+				} else if(length2 < 65536) {
+					this.o.writeByte(218);
+					this.o.writeUInt16(length2);
+				} else {
+					this.o.writeByte(219);
+					this.o.writeInt32(length2);
+				}
+				this.o.writeString(b);
+				break;
+			case "haxe._Int64.___Int64":
+				var d4 = d;
+				this.o.writeByte(211);
+				this.o.writeInt32(d4.high);
+				this.o.writeInt32(d4.low);
+				break;
+			case "haxe.ds.IntMap":case "haxe.ds.StringMap":case "haxe.ds.UnsafeStringMap":
+				var d5 = d;
+				var length3 = 0;
+				var k1 = d5.keys();
+				while(k1.hasNext()) {
+					var k2 = k1.next();
+					++length3;
+				}
+				if(length3 < 16) {
+					this.o.writeByte(128 | length3);
+				} else if(length3 < 65536) {
+					this.o.writeByte(222);
+					this.o.writeUInt16(length3);
+				} else {
+					this.o.writeByte(223);
+					this.o.writeInt32(length3);
+				}
+				var k3 = d5.keys();
+				while(k3.hasNext()) {
+					var k4 = k3.next();
+					this.encode(k4);
+					this.encode(d5.get(k4));
+				}
+				break;
+			case "haxe.io.Bytes":
+				var b1 = d;
+				var length4 = b1.length;
+				if(length4 < 256) {
+					this.o.writeByte(196);
+					this.o.writeByte(length4);
+				} else if(length4 < 65536) {
+					this.o.writeByte(197);
+					this.o.writeUInt16(length4);
+				} else {
+					this.o.writeByte(198);
+					this.o.writeInt32(length4);
+				}
+				this.o.write(b1);
+				break;
+			default:
+				throw new js__$Boot_HaxeError("Error: " + c.__name__ + " not supported");
+			}
+			break;
+		case 7:
+			var e1 = _g.e;
+			throw new js__$Boot_HaxeError("Error: Enum not supported");
+		case 8:
+			throw new js__$Boot_HaxeError("Error: Unknown Data Type");
+		}
+	}
+	,writeInt64: function(d) {
+		this.o.writeByte(211);
+		this.o.writeInt32(d.high);
+		this.o.writeInt32(d.low);
+	}
+	,writeInt: function(d) {
+		if(d < -32) {
+			if(d < -32768) {
+				this.o.writeByte(210);
+				this.o.writeInt32(d);
+			} else if(d < -128) {
+				this.o.writeByte(209);
+				this.o.writeInt16(d);
+			} else {
+				this.o.writeByte(208);
+				this.o.writeInt8(d);
+			}
+		} else if(d < 128) {
+			this.o.writeByte(d & 255);
+		} else if(d < 256) {
+			this.o.writeByte(204);
+			this.o.writeByte(d);
+		} else if(d < 65536) {
+			this.o.writeByte(205);
+			this.o.writeUInt16(d);
+		} else {
+			this.o.writeByte(206);
+			this.o.writeInt32(d);
+		}
+	}
+	,writeFloat: function(d) {
+		var a = Math.abs(d);
+		if(a > 1.40129846432481707e-45 && a < 3.40282346638528860e+38) {
+			this.o.writeByte(202);
+			this.o.writeFloat(d);
+		} else {
+			this.o.writeByte(203);
+			this.o.writeDouble(d);
+		}
+	}
+	,writeBinary: function(b) {
+		var length = b.length;
+		if(length < 256) {
+			this.o.writeByte(196);
+			this.o.writeByte(length);
+		} else if(length < 65536) {
+			this.o.writeByte(197);
+			this.o.writeUInt16(length);
+		} else {
+			this.o.writeByte(198);
+			this.o.writeInt32(length);
+		}
+		this.o.write(b);
+	}
+	,writeString: function(b) {
+		var length = b.length;
+		if(length < 32) {
+			this.o.writeByte(160 | length);
+		} else if(length < 256) {
+			this.o.writeByte(217);
+			this.o.writeByte(length);
+		} else if(length < 65536) {
+			this.o.writeByte(218);
+			this.o.writeUInt16(length);
+		} else {
+			this.o.writeByte(219);
+			this.o.writeInt32(length);
+		}
+		this.o.writeString(b);
+	}
+	,writeArray: function(d) {
+		var length = d.length;
+		if(length < 16) {
+			this.o.writeByte(144 | length);
+		} else if(length < 65536) {
+			this.o.writeByte(220);
+			this.o.writeUInt16(length);
+		} else {
+			this.o.writeByte(221);
+			this.o.writeInt32(length);
+		}
+		var _g = 0;
+		while(_g < d.length) {
+			var e = d[_g];
+			++_g;
+			this.encode(e);
+		}
+	}
+	,writeMapLength: function(length) {
+		if(length < 16) {
+			this.o.writeByte(128 | length);
+		} else if(length < 65536) {
+			this.o.writeByte(222);
+			this.o.writeUInt16(length);
+		} else {
+			this.o.writeByte(223);
+			this.o.writeInt32(length);
+		}
+	}
+	,writeMap: function(d) {
+		var length = 0;
+		var k = d.keys();
+		while(k.hasNext()) {
+			var k1 = k.next();
+			++length;
+		}
+		if(length < 16) {
+			this.o.writeByte(128 | length);
+		} else if(length < 65536) {
+			this.o.writeByte(222);
+			this.o.writeUInt16(length);
+		} else {
+			this.o.writeByte(223);
+			this.o.writeInt32(length);
+		}
+		var k2 = d.keys();
+		while(k2.hasNext()) {
+			var k3 = k2.next();
+			this.encode(k3);
+			this.encode(d.get(k3));
+		}
+	}
+	,writeObject: function(d) {
+		var f = Reflect.fields(d);
+		var length = Lambda.count(f);
+		if(length < 16) {
+			this.o.writeByte(128 | length);
+		} else if(length < 65536) {
+			this.o.writeByte(222);
+			this.o.writeUInt16(length);
+		} else {
+			this.o.writeByte(223);
+			this.o.writeInt32(length);
+		}
+		var _g = 0;
+		while(_g < f.length) {
+			var k = f[_g];
+			++_g;
+			this.encode(k);
+			this.encode(Reflect.field(d,k));
+		}
+	}
+	,getBytes: function() {
+		return this.o.getBytes();
+	}
+	,__class__: org_msgpack_Encoder
+};
+var org_msgpack_MsgPack = function() { };
+$hxClasses["org.msgpack.MsgPack"] = org_msgpack_MsgPack;
+org_msgpack_MsgPack.__name__ = "org.msgpack.MsgPack";
+org_msgpack_MsgPack.encode = function(d) {
+	return new org_msgpack_Encoder(d).o.getBytes();
+};
+org_msgpack_MsgPack.decode = function(b,option) {
+	if(option == null) {
+		option = org_msgpack_DecodeOption.AsObject;
+	}
+	return new org_msgpack_Decoder(b,option).o;
+};
 function $getIterator(o) { if( o instanceof Array ) return HxOverrides.iter(o); else return o.iterator(); }
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $global.$haxeUID++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = m.bind(o); o.hx__closures__[m.__id__] = f; } return f; }
 $global.$haxeUID |= 0;
@@ -60505,6 +63197,10 @@ js_Boot.__toStr = ({ }).toString;
 Object.defineProperty(js__$Boot_HaxeError.prototype,"message",{ get : function() {
 	return String(this.val);
 }});
+if(ArrayBuffer.prototype.slice == null) {
+	ArrayBuffer.prototype.slice = js_lib__$ArrayBuffer_ArrayBufferCompat.sliceImpl;
+}
+io_colyseus_serializer_schema_Schema.decoder = new io_colyseus_serializer_schema_Decoder();
 Xml.Element = 0;
 Xml.PCData = 1;
 Xml.CData = 2;
@@ -60724,6 +63420,12 @@ haxe_Unserializer.DEFAULT_RESOLVER = new haxe__$Unserializer_DefaultResolver();
 haxe_Unserializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";
 haxe_crypto_Base64.CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 haxe_crypto_Base64.BYTES = haxe_io_Bytes.ofString(haxe_crypto_Base64.CHARS);
+haxe_io_FPHelper.i64tmp = (function($this) {
+	var $r;
+	var this1 = new haxe__$Int64__$_$_$Int64(0,0);
+	$r = this1;
+	return $r;
+}(this));
 haxe_io_FPHelper.helper = new DataView(new ArrayBuffer(8));
 haxe_xml_Parser.escapes = (function($this) {
 	var $r;
@@ -61056,6 +63758,24 @@ hxsl_Serializer.PRECS = hxsl_Prec.__empty_constructs__.slice();
 hxsl_Serializer.FKIND = hxsl_FunctionKind.__empty_constructs__.slice();
 hxsl_Serializer.SIGN = 9139229;
 hxsl_SharedShader.UNROLL_LOOPS = false;
+io_colyseus_Connection.isRunnerInitialized = false;
+io_colyseus_Protocol.USER_ID = 1;
+io_colyseus_Protocol.JOIN_REQUEST = 9;
+io_colyseus_Protocol.JOIN_ROOM = 10;
+io_colyseus_Protocol.ERROR = 11;
+io_colyseus_Protocol.LEAVE_ROOM = 12;
+io_colyseus_Protocol.ROOM_DATA = 13;
+io_colyseus_Protocol.ROOM_STATE = 14;
+io_colyseus_Protocol.ROOM_STATE_PATCH = 15;
+io_colyseus_Protocol.ROOM_LIST = 20;
+io_colyseus_Protocol.BAD_REQUEST = 50;
+io_colyseus_serializer_schema_SPEC.END_OF_STRUCTURE = 193;
+io_colyseus_serializer_schema_SPEC.NIL = 192;
+io_colyseus_serializer_schema_SPEC.INDEX_CHANGE = 212;
+org_msgpack_Encoder.FLOAT_SINGLE_MIN = 1.40129846432481707e-45;
+org_msgpack_Encoder.FLOAT_SINGLE_MAX = 3.40282346638528860e+38;
+org_msgpack_Encoder.FLOAT_DOUBLE_MIN = 4.94065645841246544e-324;
+org_msgpack_Encoder.FLOAT_DOUBLE_MAX = 1.79769313486231570e+308;
 {
 	Main.main();
 	haxe_EntryPoint.run();

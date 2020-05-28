@@ -1,4 +1,6 @@
--lib heaps
--js bin/hello.js
 -main Main
+-lib heaps
+-lib colyseus
+-js bin/hello.js
+-cp src
 -debug
