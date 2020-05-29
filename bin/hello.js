@@ -330,22 +330,43 @@ var Main = function() {
 $hxClasses["Main"] = Main;
 Main.__name__ = "Main";
 Main.main = function() {
-	new Main();
+	Main.instance = new Main();
 };
 Main.__super__ = hxd_App;
 Main.prototype = $extend(hxd_App.prototype,{
 	init: function() {
-		this.scene = new scenes_Connecting();
-		this.setScene(this.scene);
+		this.goToScene(scenes_Connecting);
 		hxd_Window.getInstance().addEventTarget($bind(this,this.onEvent));
+	}
+	,goToScene: function(scene) {
+		switch(scene) {
+		case scenes_Connecting:
+			this.scene = new scenes_Connecting();
+			this.setScene(this.scene);
+			break;
+		case scenes_InputAlias:
+			this.scene = new scenes_InputAlias();
+			this.setScene(this.scene,true);
+			break;
+		case scenes_Lobby:
+			this.scene = new scenes_Lobby(this.client,this.room);
+			this.setScene(this.scene,true);
+			break;
+		default:
+			haxe_Log.trace("WARN! No handler for scenee = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 39, className : "Main", methodName : "goToScene"});
+		}
+		return this.scene;
 	}
 	,onJoinOrCreate: function(err,room) {
 		if(err != null) {
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 27, className : "Main", methodName : "onJoinOrCreate"});
+			var tf = new h2d_Text(hxd_res_DefaultFont.get(),this.scene);
+			tf.set_text(err.message);
+			tf.posChanged = true;
+			tf.y = 20;
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 51, className : "Main", methodName : "onJoinOrCreate"});
 			return;
 		}
-		this.scene = new scenes_InputAlias();
-		this.setScene(this.scene,true);
+		this.goToScene(scenes_InputAlias);
 		this.room = room;
 		this.room.onStateChange.push(Rooms.onStateChange);
 		this.room.onMessage(0,Rooms.onMessage0);
@@ -362,13 +383,13 @@ Main.prototype = $extend(hxd_App.prototype,{
 	,onEvent: function(event) {
 		switch(event.kind._hx_index) {
 		case 8:
-			haxe_Log.trace("DOWN keyCode: " + event.keyCode,{ fileName : "src/Main.hx", lineNumber : 71, className : "Main", methodName : "onEvent"});
+			haxe_Log.trace("DOWN keyCode: " + event.keyCode,{ fileName : "src/Main.hx", lineNumber : 94, className : "Main", methodName : "onEvent"});
 			break;
 		case 9:
 			if(this.room == null) {
 				return;
 			}
-			haxe_Log.trace("UP keyCode: " + event.keyCode,{ fileName : "src/Main.hx", lineNumber : 74, className : "Main", methodName : "onEvent"});
+			haxe_Log.trace("UP keyCode: " + event.keyCode,{ fileName : "src/Main.hx", lineNumber : 97, className : "Main", methodName : "onEvent"});
 			this.room.send("updateTest",event.keyCode == null ? "null" : "" + event.keyCode);
 			break;
 		default:
@@ -9175,6 +9196,450 @@ h2d_Text.prototype = $extend(h2d_Drawable.prototype,{
 	}
 	,__class__: h2d_Text
 	,__properties__: $extend(h2d_Drawable.prototype.__properties__,{set_lineSpacing:"set_lineSpacing",set_letterSpacing:"set_letterSpacing",set_textAlign:"set_textAlign",get_textHeight:"get_textHeight",get_textWidth:"get_textWidth",set_maxWidth:"set_maxWidth",set_textColor:"set_textColor",set_text:"set_text",set_font:"set_font"})
+});
+var h2d_TextInput = function(font,parent) {
+	this.maxHistorySize = 100;
+	this.lastClick = 0.;
+	this.lastChange = 0.;
+	this.redo = [];
+	this.undo = [];
+	this.scrollX = 0.;
+	this.cursorScroll = 0;
+	this.cursorBlink = 0.;
+	this.canEdit = true;
+	this.cursorBlinkTime = 0.5;
+	this.cursorIndex = -1;
+	var _gthis = this;
+	h2d_Text.call(this,font,parent);
+	this.interactive = new h2d_Interactive(0,0);
+	this.interactive.set_cursor(hxd_Cursor.TextInput);
+	this.interactive.onPush = function(e) {
+		_gthis.onPush(e);
+		if(!e.cancel && e.button == 0) {
+			if(!_gthis.interactive.hasFocus()) {
+				e.kind = hxd_EventKind.EFocus;
+				_gthis.onFocus(e);
+				e.kind = hxd_EventKind.EPush;
+				if(e.cancel) {
+					return;
+				}
+				_gthis.interactive.focus();
+			}
+			_gthis.cursorBlink = 0;
+			var startIndex = _gthis.textPos(e.relX,e.relY);
+			_gthis.cursorIndex = startIndex;
+			_gthis.selectionRange = null;
+			var pt = new h2d_col_Point();
+			var scene = _gthis.getScene();
+			scene.startDrag(function(e1) {
+				pt.x = e1.relX;
+				pt.y = e1.relY;
+				_gthis.globalToLocal(pt);
+				var index = _gthis.textPos(pt.x,pt.y);
+				if(index == startIndex) {
+					_gthis.selectionRange = null;
+				} else if(index < startIndex) {
+					_gthis.selectionRange = { start : index, length : startIndex - index};
+				} else {
+					_gthis.selectionRange = { start : startIndex, length : index - startIndex};
+				}
+				_gthis.selectionSize = 0;
+				_gthis.cursorIndex = index;
+				if(e1.kind == hxd_EventKind.ERelease || _gthis.getScene() != scene) {
+					scene.stopDrag();
+				}
+			});
+		}
+	};
+	this.interactive.onKeyDown = function(e2) {
+		_gthis.onKeyDown(e2);
+		_gthis.handleKey(e2);
+	};
+	this.interactive.onTextInput = function(e3) {
+		_gthis.onTextInput(e3);
+		_gthis.handleKey(e3);
+	};
+	this.interactive.onFocusLost = function(e4) {
+		_gthis.cursorIndex = -1;
+		_gthis.selectionRange = null;
+		_gthis.onFocusLost(e4);
+	};
+	this.interactive.onClick = function(e5) {
+		_gthis.onClick(e5);
+		if(e5.cancel) {
+			return;
+		}
+		var t = Date.now() / 1000;
+		if(t - _gthis.lastClick < 0.3 && _gthis.text.length != 0) {
+			_gthis.selectionRange = { start : 0, length : _gthis.text.length};
+			_gthis.selectionSize = 0;
+			_gthis.cursorIndex = _gthis.text.length;
+		}
+		_gthis.lastClick = t;
+	};
+	this.interactive.onKeyUp = function(e6) {
+		_gthis.onKeyUp(e6);
+	};
+	this.interactive.onRelease = function(e7) {
+		_gthis.onRelease(e7);
+	};
+	this.interactive.onFocus = function(e8) {
+		_gthis.onFocus(e8);
+	};
+	this.interactive.onKeyUp = function(e9) {
+		_gthis.onKeyUp(e9);
+	};
+	this.interactive.onMove = function(e10) {
+		_gthis.onMove(e10);
+	};
+	this.interactive.onOver = function(e11) {
+		_gthis.onOver(e11);
+	};
+	this.interactive.onOut = function(e12) {
+		_gthis.onOut(e12);
+	};
+	this.interactive.set_cursor(hxd_Cursor.TextInput);
+	this.addChildAt(this.interactive,0);
+};
+$hxClasses["h2d.TextInput"] = h2d_TextInput;
+h2d_TextInput.__name__ = "h2d.TextInput";
+h2d_TextInput.__super__ = h2d_Text;
+h2d_TextInput.prototype = $extend(h2d_Text.prototype,{
+	constraintSize: function(width,height) {
+	}
+	,handleKey: function(e) {
+		if(e.cancel || this.cursorIndex < 0) {
+			return;
+		}
+		var oldIndex = this.cursorIndex;
+		var oldText = this.text;
+		switch(e.keyCode) {
+		case 8:
+			if(this.selectionRange != null) {
+				if(!this.canEdit) {
+					return;
+				}
+				this.beforeChange();
+				this.cutSelection();
+				this.onChange();
+			} else if(this.cursorIndex > 0 && this.canEdit) {
+				this.beforeChange();
+				this.cursorIndex--;
+				this.set_text(HxOverrides.substr(this.text,0,this.cursorIndex) + HxOverrides.substr(this.text,this.cursorIndex + 1,null));
+				this.onChange();
+			}
+			break;
+		case 13:case 108:
+			this.cursorIndex = -1;
+			this.interactive.blur();
+			return;
+		case 35:
+			this.cursorIndex = this.text.length;
+			break;
+		case 36:
+			this.cursorIndex = 0;
+			break;
+		case 37:
+			if(this.cursorIndex > 0) {
+				this.cursorIndex--;
+			}
+			break;
+		case 39:
+			if(this.cursorIndex < this.text.length) {
+				this.cursorIndex++;
+			}
+			break;
+		case 46:
+			if(this.selectionRange != null) {
+				if(!this.canEdit) {
+					return;
+				}
+				this.beforeChange();
+				this.cutSelection();
+				this.onChange();
+			} else if(this.cursorIndex < this.text.length && this.canEdit) {
+				this.beforeChange();
+				this.set_text(HxOverrides.substr(this.text,0,this.cursorIndex) + HxOverrides.substr(this.text,this.cursorIndex + 1,null));
+				this.onChange();
+			}
+			break;
+		case 89:
+			if(hxd_Key.isDown(17)) {
+				if(this.redo.length > 0 && this.canEdit) {
+					this.undo.push(this.curHistoryState());
+					this.setState(this.redo.pop());
+				}
+				return;
+			} else {
+				if(e.kind == hxd_EventKind.EKeyDown) {
+					return;
+				}
+				if(e.charCode != 0 && this.canEdit) {
+					if(!this.font.hasChar(e.charCode)) {
+						return;
+					}
+					this.beforeChange();
+					if(this.selectionRange != null) {
+						this.cutSelection();
+					}
+					var code = e.charCode;
+					this.set_text(HxOverrides.substr(this.text,0,this.cursorIndex) + String.fromCodePoint(code) + HxOverrides.substr(this.text,this.cursorIndex,null));
+					this.cursorIndex++;
+					this.onChange();
+				}
+			}
+			break;
+		case 90:
+			if(hxd_Key.isDown(17)) {
+				if(this.undo.length > 0 && this.canEdit) {
+					this.redo.push(this.curHistoryState());
+					this.setState(this.undo.pop());
+				}
+				return;
+			} else {
+				if(e.kind == hxd_EventKind.EKeyDown) {
+					return;
+				}
+				if(e.charCode != 0 && this.canEdit) {
+					if(!this.font.hasChar(e.charCode)) {
+						return;
+					}
+					this.beforeChange();
+					if(this.selectionRange != null) {
+						this.cutSelection();
+					}
+					var code1 = e.charCode;
+					this.set_text(HxOverrides.substr(this.text,0,this.cursorIndex) + String.fromCodePoint(code1) + HxOverrides.substr(this.text,this.cursorIndex,null));
+					this.cursorIndex++;
+					this.onChange();
+				}
+			}
+			break;
+		default:
+			if(e.kind == hxd_EventKind.EKeyDown) {
+				return;
+			}
+			if(e.charCode != 0 && this.canEdit) {
+				if(!this.font.hasChar(e.charCode)) {
+					return;
+				}
+				this.beforeChange();
+				if(this.selectionRange != null) {
+					this.cutSelection();
+				}
+				var code2 = e.charCode;
+				this.set_text(HxOverrides.substr(this.text,0,this.cursorIndex) + String.fromCodePoint(code2) + HxOverrides.substr(this.text,this.cursorIndex,null));
+				this.cursorIndex++;
+				this.onChange();
+			}
+		}
+		this.cursorBlink = 0.;
+		if(hxd_Key.isDown(16) && this.text == oldText) {
+			if(this.cursorIndex == oldIndex) {
+				return;
+			}
+			if(this.selectionRange == null) {
+				this.selectionRange = oldIndex < this.cursorIndex ? { start : oldIndex, length : this.cursorIndex - oldIndex} : { start : this.cursorIndex, length : oldIndex - this.cursorIndex};
+			} else if(oldIndex == this.selectionRange.start) {
+				this.selectionRange.length += oldIndex - this.cursorIndex;
+				this.selectionRange.start = this.cursorIndex;
+			} else {
+				this.selectionRange.length += this.cursorIndex - oldIndex;
+			}
+			if(this.selectionRange.length == 0) {
+				this.selectionRange = null;
+			} else if(this.selectionRange.length < 0) {
+				this.selectionRange.start += this.selectionRange.length;
+				this.selectionRange.length = -this.selectionRange.length;
+			}
+			this.selectionSize = 0;
+		} else {
+			this.selectionRange = null;
+		}
+	}
+	,cutSelection: function() {
+		if(this.selectionRange == null) {
+			return false;
+		}
+		this.cursorIndex = this.selectionRange.start;
+		var end = this.cursorIndex + this.selectionRange.length;
+		this.set_text(HxOverrides.substr(this.text,0,this.cursorIndex) + HxOverrides.substr(this.text,end,null));
+		this.selectionRange = null;
+		return true;
+	}
+	,setState: function(h) {
+		this.set_text(h.t);
+		this.cursorIndex = h.c;
+		this.selectionRange = h.sel;
+		if(this.selectionRange != null) {
+			this.cursorIndex = this.selectionRange.start + this.selectionRange.length;
+		}
+	}
+	,curHistoryState: function() {
+		return { t : this.text, c : this.cursorIndex, sel : this.selectionRange == null ? null : { start : this.selectionRange.start, length : this.selectionRange.length}};
+	}
+	,beforeChange: function() {
+		var t = Date.now() / 1000;
+		if(t - this.lastChange < 1) {
+			this.lastChange = t;
+			return;
+		}
+		this.lastChange = t;
+		this.undo.push(this.curHistoryState());
+		this.redo = [];
+		while(this.undo.length > this.maxHistorySize) this.undo.shift();
+	}
+	,getSelectedText: function() {
+		if(this.selectionRange == null) {
+			return null;
+		} else {
+			return HxOverrides.substr(this.text,this.selectionRange.start,this.selectionRange.length);
+		}
+	}
+	,set_text: function(t) {
+		h2d_Text.prototype.set_text.call(this,t);
+		if(this.cursorIndex > t.length) {
+			this.cursorIndex = t.length;
+		}
+		return t;
+	}
+	,set_font: function(f) {
+		h2d_Text.prototype.set_font.call(this,f);
+		this.cursorTile = h2d_Tile.fromColor(16777215,1,this.font.size);
+		this.cursorTile.dy = 2;
+		this.selectionTile = h2d_Tile.fromColor(3381759,0,Math.ceil(this.font.lineHeight));
+		return f;
+	}
+	,initGlyphs: function(text,rebuild) {
+		if(rebuild == null) {
+			rebuild = true;
+		}
+		h2d_Text.prototype.initGlyphs.call(this,text,rebuild);
+		if(rebuild) {
+			this.calcWidth += this.cursorTile.width;
+			if(this.inputWidth != null && this.calcWidth > this.inputWidth) {
+				this.calcWidth = this.inputWidth;
+			}
+		}
+	}
+	,textPos: function(x,y) {
+		x += this.scrollX;
+		var pos = 0;
+		while(pos < this.text.length) {
+			if(this.calcTextWidth(HxOverrides.substr(this.text,0,pos + 1)) > x) {
+				break;
+			}
+			++pos;
+		}
+		return pos;
+	}
+	,sync: function(ctx) {
+		var tmp = this.inputWidth != null ? this.inputWidth : this.maxWidth != null ? Math.ceil(this.maxWidth) : this.get_textWidth();
+		this.interactive.width = tmp;
+		this.interactive.height = this.font.lineHeight;
+		h2d_Text.prototype.sync.call(this,ctx);
+	}
+	,draw: function(ctx) {
+		if(this.inputWidth != null) {
+			var h = this.localToGlobal(new h2d_col_Point(this.inputWidth,this.font.lineHeight));
+			ctx.setRenderZone(this.absX,this.absY,h.x - this.absX,h.y - this.absY);
+		}
+		if(this.cursorIndex >= 0 && (this.text != this.cursorText || this.cursorIndex != this.cursorXIndex)) {
+			if(this.cursorIndex > this.text.length) {
+				this.cursorIndex = this.text.length;
+			}
+			this.cursorText = this.text;
+			this.cursorXIndex = this.cursorIndex;
+			this.cursorX = this.calcTextWidth(HxOverrides.substr(this.text,0,this.cursorIndex));
+			if(this.inputWidth != null && this.cursorX - this.scrollX >= this.inputWidth) {
+				this.scrollX = this.cursorX - this.inputWidth + 1;
+			} else if(this.cursorX < this.scrollX) {
+				this.scrollX = this.cursorX;
+			}
+		}
+		this.absX -= this.scrollX * this.matA;
+		this.absY -= this.scrollX * this.matC;
+		if(this.selectionRange != null) {
+			if(this.selectionSize == 0) {
+				this.selectionPos = this.calcTextWidth(HxOverrides.substr(this.text,0,this.selectionRange.start));
+				this.selectionSize = this.calcTextWidth(HxOverrides.substr(this.text,this.selectionRange.start,this.selectionRange.length));
+				if(this.selectionRange.start + this.selectionRange.length == this.text.length) {
+					this.selectionSize += this.cursorTile.width;
+				}
+			}
+			this.selectionTile.dx += this.selectionPos;
+			this.selectionTile.width += this.selectionSize;
+			this.emitTile(ctx,this.selectionTile);
+			this.selectionTile.dx -= this.selectionPos;
+			this.selectionTile.width -= this.selectionSize;
+		}
+		h2d_Text.prototype.draw.call(this,ctx);
+		this.absX += this.scrollX * this.matA;
+		this.absY += this.scrollX * this.matC;
+		if(this.cursorIndex >= 0) {
+			this.cursorBlink += ctx.elapsedTime;
+			if(this.cursorBlink % (this.cursorBlinkTime * 2) < this.cursorBlinkTime) {
+				this.cursorTile.dx += this.cursorX - this.scrollX;
+				this.emitTile(ctx,this.cursorTile);
+				this.cursorTile.dx -= this.cursorX - this.scrollX;
+			}
+		}
+		if(this.inputWidth != null) {
+			ctx.hasRenderZone = false;
+			ctx.engine.setRenderZone();
+		}
+	}
+	,focus: function() {
+		this.interactive.focus();
+		if(this.cursorIndex < 0) {
+			this.cursorIndex = 0;
+			if(this.text != "") {
+				this.selectionRange = { start : 0, length : this.text.length};
+			}
+		}
+	}
+	,hasFocus: function() {
+		return this.interactive.hasFocus();
+	}
+	,onOut: function(e) {
+	}
+	,onOver: function(e) {
+	}
+	,onMove: function(e) {
+	}
+	,onClick: function(e) {
+	}
+	,onPush: function(e) {
+	}
+	,onRelease: function(e) {
+	}
+	,onKeyDown: function(e) {
+	}
+	,onKeyUp: function(e) {
+	}
+	,onTextInput: function(e) {
+	}
+	,onFocus: function(e) {
+	}
+	,onFocusLost: function(e) {
+	}
+	,onChange: function() {
+	}
+	,drawRec: function(ctx) {
+		var old = this.interactive.visible;
+		this.interactive.set_visible(false);
+		this.interactive.draw(ctx);
+		h2d_Text.prototype.drawRec.call(this,ctx);
+		this.interactive.set_visible(old);
+	}
+	,get_backgroundColor: function() {
+		return this.interactive.backgroundColor;
+	}
+	,set_backgroundColor: function(v) {
+		return this.interactive.backgroundColor = v;
+	}
+	,__class__: h2d_TextInput
+	,__properties__: $extend(h2d_Text.prototype.__properties__,{set_backgroundColor:"set_backgroundColor",get_backgroundColor:"get_backgroundColor"})
 });
 var h2d_Tile = function(tex,x,y,w,h,dx,dy) {
 	if(dy == null) {
@@ -63188,22 +63653,83 @@ scenes_Connecting.__super__ = h2d_Scene;
 scenes_Connecting.prototype = $extend(h2d_Scene.prototype,{
 	dispose: function() {
 		haxe_Log.trace("Scene:Connecting DISPOSE",{ fileName : "src/scenes/Connecting.hx", lineNumber : 11, className : "scenes.Connecting", methodName : "dispose"});
+		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_Connecting
 });
 var scenes_InputAlias = function() {
 	h2d_Scene.call(this);
-	var tf = new h2d_Text(hxd_res_DefaultFont.get(),this);
+	var font = hxd_res_DefaultFont.get();
+	var tf = new h2d_Text(font,this);
 	tf.set_text("Enter your alias:");
+	var input = new h2d_TextInput(font,this);
+	input.set_backgroundColor(-2139062144);
+	input.set_textColor(11184810);
+	var _g = input;
+	_g.posChanged = true;
+	_g.scaleX *= 2;
+	var _g1 = input;
+	_g1.posChanged = true;
+	_g1.scaleY *= 2;
+	input.posChanged = true;
+	var v = input.y = 50;
+	input.posChanged = true;
+	input.x = v;
+	input.inputWidth = 240;
+	input.onFocus = function(_) {
+		input.set_textColor(16777215);
+	};
+	input.onFocusLost = function(_1) {
+		input.set_textColor(11184810);
+	};
+	input.onChange = function() {
+		while(input.text.length > 32) input.set_text(HxOverrides.substr(input.text,0,-1));
+	};
+	var submitBtn = new h2d_TextInput(font,this);
+	submitBtn.set_text("LOGIN");
+	submitBtn.canEdit = false;
+	submitBtn.set_textColor(11193514);
+	submitBtn.set_backgroundColor(-2139045760);
+	var _g2 = submitBtn;
+	_g2.posChanged = true;
+	_g2.scaleX *= 2;
+	var _g3 = submitBtn;
+	_g3.posChanged = true;
+	_g3.scaleY *= 2;
+	submitBtn.posChanged = true;
+	submitBtn.x = 240;
+	submitBtn.posChanged = true;
+	submitBtn.y = 110;
+	submitBtn.onClick = function(_2) {
+		submitBtn.set_textColor(16777215);
+		Main.instance.goToScene(scenes_Lobby);
+	};
 };
 $hxClasses["scenes.InputAlias"] = scenes_InputAlias;
 scenes_InputAlias.__name__ = "scenes.InputAlias";
 scenes_InputAlias.__super__ = h2d_Scene;
 scenes_InputAlias.prototype = $extend(h2d_Scene.prototype,{
 	dispose: function() {
-		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/InputAlias.hx", lineNumber : 11, className : "scenes.InputAlias", methodName : "dispose"});
+		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/InputAlias.hx", lineNumber : 46, className : "scenes.InputAlias", methodName : "dispose"});
+		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_InputAlias
+});
+var scenes_Lobby = function(client,room) {
+	h2d_Scene.call(this);
+	haxe_Log.trace("Lobby init",{ fileName : "src/scenes/Lobby.hx", lineNumber : 11, className : "scenes.Lobby", methodName : "new"});
+	this.client = client;
+	this.room = room;
+};
+$hxClasses["scenes.Lobby"] = scenes_Lobby;
+scenes_Lobby.__name__ = "scenes.Lobby";
+scenes_Lobby.__super__ = h2d_Scene;
+scenes_Lobby.prototype = $extend(h2d_Scene.prototype,{
+	destroy: function() {
+		haxe_Log.trace("Scene:Lobby DISPOSE",{ fileName : "src/scenes/Lobby.hx", lineNumber : 16, className : "scenes.Lobby", methodName : "destroy"});
+		h2d_Scene.prototype.dispose.call(this);
+	}
+	,__class__: scenes_Lobby
 });
 function $getIterator(o) { if( o instanceof Array ) return HxOverrides.iter(o); else return o.iterator(); }
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $global.$haxeUID++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = m.bind(o); o.hx__closures__[m.__id__] = f; } return f; }

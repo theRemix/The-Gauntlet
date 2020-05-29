@@ -9,5 +9,6 @@ class Connecting extends h2d.Scene{
   }
   public override function dispose(){
     trace("Scene:Connecting DISPOSE");
+    super.dispose();
   }
 }

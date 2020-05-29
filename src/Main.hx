@@ -8,8 +8,7 @@ class Main extends hxd.App {
 
   // heaps
   override function init() {
-    this.scene = new scenes.Connecting();
-    this.setScene(this.scene);
+    this.goToScene(scenes.Connecting);
 
     hxd.Window.getInstance().addEventTarget(onEvent);
   }
@@ -22,14 +21,38 @@ class Main extends hxd.App {
     this.client.joinOrCreate("state_handler", [], State, this.onJoinOrCreate);
   }
 
+  public function goToScene(scene:Class<h2d.Scene>):h2d.Scene {
+    switch(scene){
+      case scenes.Connecting:
+        this.scene = new scenes.Connecting();
+        this.setScene(this.scene);
+
+      case scenes.InputAlias:
+        this.scene = new scenes.InputAlias();
+        this.setScene(this.scene, true);
+
+      case scenes.Lobby:
+        this.scene = new scenes.Lobby(client, room);
+        this.setScene(this.scene, true);
+
+      default:
+        trace('WARN! No handler for scenee = $scene');
+    }
+    return this.scene;
+  }
+
   private inline function onJoinOrCreate(err:io.colyseus.error.MatchMakeError, room) {
     if (err != null) {
+
+      var tf = new h2d.Text(hxd.res.DefaultFont.get(), this.scene);
+      tf.text = err.message;
+      tf.y = 20;
+
       trace("JOIN ERROR: " + err);
       return;
     }
 
-    this.scene = new scenes.InputAlias();
-    this.setScene(this.scene, true);
+    this.goToScene(scenes.InputAlias);
 
     this.room = room;
 
@@ -77,7 +100,8 @@ class Main extends hxd.App {
       }
   }
 
+  public static var instance:Main;
   static function main() {
-      new Main();
+    instance = new Main();
   }
 }

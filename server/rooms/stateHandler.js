@@ -53,10 +53,13 @@ schema.defineTypes(State, {
 });
 
 module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
-    maxClients = 10;
+
+    maxClients = 20;
 
     onCreate (options) {
         console.log("StateHandlerRoom created!", options);
+
+        this.setSeatReservationTime(20)
 
         this.setState(new State());
 
