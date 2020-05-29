@@ -4,17 +4,12 @@ import io.colyseus.Room;
 class Main extends hxd.App {
   private var client:Client;
 	private var room:Room<State>;
-
-  var test:h2d.Text;
+  private var scene:h2d.Scene;
 
   // heaps
   override function init() {
-    var tf = new h2d.Text(hxd.res.DefaultFont.get(), s2d);
-    tf.text = "Hello World !";
-
-    test = new h2d.Text(hxd.res.DefaultFont.get(), s2d);
-    test.text = "test init";
-    test.y = 20;
+    this.scene = new scenes.Connecting();
+    this.setScene(this.scene);
 
     hxd.Window.getInstance().addEventTarget(onEvent);
   }
@@ -33,6 +28,9 @@ class Main extends hxd.App {
       return;
     }
 
+    this.scene = new scenes.InputAlias();
+    this.setScene(this.scene, true);
+
     this.room = room;
 
     this.room.onStateChange += Rooms.onStateChange;
@@ -48,16 +46,21 @@ class Main extends hxd.App {
     this.room.state.players.onChange = Players.onChange;
     this.room.state.players.onRemove = Players.onRemove;
 
-    trace(this.room.state);
-    this.room.state.onChange = function(changes){
-      for(change in changes){
-        trace(change.field == "test");
-        if(change.field == "test"){
-          test.text = change.value;
-        }
-      }
-    }
+    // this.room.state.onChange = onStateChange;
+
   }
+
+  // private inline function onStateChange(changes){
+  //   for(change in changes){
+  //     switch(change.field){
+  //       case State.ALIAS_ENTERED:
+  //         this.scene = new scenes.Lobby();
+  //         this.setScene(this.scene, true);
+  //       default:
+  //         trace('WARN! unhandled change: ${change.field}');
+  //     }
+  //   }
+  // }
 
   override function update(dt:Float) {
 
@@ -67,8 +70,8 @@ class Main extends hxd.App {
       switch(event.kind) {
           case EKeyDown: trace('DOWN keyCode: ${event.keyCode}');
           case EKeyUp:
+            if(this.room == null) return;
             trace('UP keyCode: ${event.keyCode}');
-            test.text = 'sending';
             this.room.send("updateTest", Std.string(event.keyCode));
           case _:
       }
