@@ -5,12 +5,18 @@
   "main": "index.js",
   "scripts": {
     "start": "node .",
-    "dev": "npx nodemon .",
+    "dev": "npx nodemon --watch bin/ --watch server/ server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jon Borgonia <jon@gomagames.com>",
   "license": "MIT",
   "dependencies": {
+    "@colyseus/monitor": "^0.12.2",
+    "colyseus": "^0.13.7",
     "express": "^4.17.1"
+  },
+  "nodemonConfig": {
+    "ext": "*.js",
+    "delay": 500
   }
 }
