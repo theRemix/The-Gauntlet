@@ -707,9 +707,12 @@ io_colyseus_serializer_schema_Schema.prototype = {
 };
 var Player = function() {
 	this.alias = null;
+	this.key = null;
 	io_colyseus_serializer_schema_Schema.call(this);
-	this._indexes.h[0] = "alias";
+	this._indexes.h[0] = "key";
 	this._types.h[0] = "string";
+	this._indexes.h[1] = "alias";
+	this._types.h[1] = "string";
 };
 $hxClasses["Player"] = Player;
 Player.__name__ = "Player";
@@ -823,6 +826,9 @@ var State = function() {
 	this._indexes.h[0] = "players";
 	this._types.h[0] = "map";
 	this._childSchemaTypes.h[0] = Player;
+	this._indexes.h[1] = "gm";
+	this._types.h[1] = "ref";
+	this._childSchemaTypes.h[1] = Player;
 };
 $hxClasses["State"] = State;
 State.__name__ = "State";

@@ -362,16 +362,30 @@ GMain.__name__ = "GMain";
 GMain.main = function() {
 	new GMain();
 };
+GMain.createPlayerTableRow = function(table,player) {
+	var row = window.document.createElement("tr");
+	var key = window.document.createElement("td");
+	var alias = window.document.createElement("td");
+	var pause = window.document.createElement("td");
+	var connect = window.document.createElement("td");
+	row.className = "player_row";
+	key.innerText = player.key;
+	alias.innerText = player.alias;
+	row.append(key,alias,pause,connect);
+	table.appendChild(row);
+};
 GMain.prototype = {
 	init: function(_) {
-		this.servers_container = window.document.querySelector("#servers_container");
-		this.server_address = window.document.querySelector("#server_address");
-		this.players_container = window.document.querySelector("#players_container");
-		this.controls_container = window.document.querySelector("#controls_container");
-		this.status_container = window.document.querySelector("#status_container");
-		this.status = window.document.querySelector("#status");
-		this.server_address_input = js_Boot.__cast(window.document.querySelector("#server_address_input") , HTMLInputElement);
-		this.create_server_btn = window.document.querySelector("#create_server");
+		this.servers_container = window.document.getElementById("servers_container");
+		this.server_address = window.document.getElementById("server_address");
+		this.players_container = window.document.getElementById("players_container");
+		this.players_table_container = window.document.getElementById("players_table_container");
+		this.players_table = window.document.getElementById("players_table");
+		this.controls_container = window.document.getElementById("controls_container");
+		this.status_container = window.document.getElementById("status_container");
+		this.status = window.document.getElementById("status");
+		this.server_address_input = js_Boot.__cast(window.document.getElementById("server_address_input") , HTMLInputElement);
+		this.create_server_btn = window.document.getElementById("create_server");
 		this.servers_container.hidden = true;
 		this.players_container.hidden = true;
 		this.controls_container.hidden = true;
@@ -381,7 +395,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:64:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:68:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.create_server_btn.onclick = function(_) {
@@ -391,14 +405,55 @@ GMain.prototype = {
 			_gthis.status.innerText = "👷 Creating Server";
 			room.send("createServer",_gthis.server_address_input.value);
 		};
+		this.servers_container.hidden = false;
 		this.status.innerText = "✅ Connected to Room Controller!";
 		room.onMessage("SERVER_CREATED",function(address) {
 			_gthis.server_address.innerText = address;
 			_gthis.server_address_input.hidden = true;
 			_gthis.create_server_btn.hidden = true;
 			_gthis.status.innerText = "Server \"" + address + "\" Created";
+			_gthis.switchToCreatedServer();
 		});
-		this.servers_container.hidden = false;
+	}
+	,switchToCreatedServer: function() {
+		this.status.innerText = "🖧  Connecting to Game State room";
+		this.roomClient.joinOrCreate_State(this.server_address.innerText,new haxe_ds_StringMap(),State,$bind(this,this.onGameJoinOrCreate));
+	}
+	,onGameJoinOrCreate: function(err,room) {
+		var _gthis = this;
+		if(err != null) {
+			this.status.innerText = err.message;
+			console.log("src/GMain.hx:99:","JOIN ERROR: " + Std.string(err));
+			return;
+		}
+		this.players_container.hidden = false;
+		this.controls_container.hidden = false;
+		this.status.innerText = "✅ Connected to Game State room!";
+		var updatePlayerList = function(player,key) {
+			var rows = _gthis.players_table.getElementsByClassName("player_row");
+			var _g = 0;
+			while(_g < rows.length) {
+				var row = rows[_g];
+				++_g;
+				_gthis.players_table.removeChild(row);
+			}
+			var player1 = room.get_state().players.items.iterator();
+			while(player1.hasNext()) {
+				var player2 = player1.next();
+				var table = _gthis.players_table;
+				var row1 = window.document.createElement("tr");
+				var key1 = window.document.createElement("td");
+				var alias = window.document.createElement("td");
+				var pause = window.document.createElement("td");
+				var connect = window.document.createElement("td");
+				row1.className = "player_row";
+				key1.innerText = player2.key;
+				alias.innerText = player2.alias;
+				row1.append(key1,alias,pause,connect);
+				table.appendChild(row1);
+			}
+		};
+		room.get_state().players.onAdd = room.get_state().players.onChange = room.get_state().players.onRemove = updatePlayerList;
 	}
 	,__class__: GMain
 };
@@ -451,6 +506,20 @@ Lambda.count = function(it,pred) {
 	return n;
 };
 Math.__name__ = "Math";
+var Player = function() {
+	this.alias = null;
+	this.key = null;
+	io_colyseus_serializer_schema_Schema.call(this);
+	this._indexes.h[0] = "key";
+	this._types.h[0] = "string";
+	this._indexes.h[1] = "alias";
+	this._types.h[1] = "string";
+};
+Player.__name__ = "Player";
+Player.__super__ = io_colyseus_serializer_schema_Schema;
+Player.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
+	__class__: Player
+});
 var Reflect = function() { };
 Reflect.__name__ = "Reflect";
 Reflect.field = function(o,field) {
@@ -512,6 +581,21 @@ Reflect.compareMethods = function(f1,f2) {
 		return false;
 	}
 };
+var State = function() {
+	this.players = new io_colyseus_serializer_schema_MapSchema_$Player();
+	io_colyseus_serializer_schema_Schema.call(this);
+	this._indexes.h[0] = "players";
+	this._types.h[0] = "map";
+	this._childSchemaTypes.h[0] = Player;
+	this._indexes.h[1] = "gm";
+	this._types.h[1] = "ref";
+	this._childSchemaTypes.h[1] = Player;
+};
+State.__name__ = "State";
+State.__super__ = io_colyseus_serializer_schema_Schema;
+State.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
+	__class__: State
+});
 var Std = function() { };
 Std.__name__ = "Std";
 Std.string = function(s) {
@@ -1608,6 +1692,9 @@ io_colyseus_Client.prototype = {
 	joinOrCreate_GState: function(roomName,options,stateClass,callback) {
 		this.createMatchMakeRequest_joinOrCreate_T("joinOrCreate",roomName,options,stateClass,callback);
 	}
+	,joinOrCreate_State: function(roomName,options,stateClass,callback) {
+		this.createMatchMakeRequest_joinOrCreate_T("joinOrCreate",roomName,options,stateClass,callback);
+	}
 	,createMatchMakeRequest_reconnect_T: function(method,roomName,options,stateClass,callback) {
 		var _gthis = this;
 		if(this.auth.hasToken()) {
@@ -2262,6 +2349,54 @@ io_colyseus_serializer_schema_MapSchema_$Dynamic.prototype = {
 		return "MapSchema (" + Lambda.count(this.items) + ") { " + data.join(", ") + " }";
 	}
 	,__class__: io_colyseus_serializer_schema_MapSchema_$Dynamic
+	,__properties__: {get_length:"get_length"}
+};
+var io_colyseus_serializer_schema_MapSchema_$Player = function() {
+	this.items = new io_colyseus_serializer_schema_OrderedMap(new haxe_ds_StringMap());
+};
+io_colyseus_serializer_schema_MapSchema_$Player.__name__ = "io.colyseus.serializer.schema.MapSchema_Player";
+io_colyseus_serializer_schema_MapSchema_$Player.prototype = {
+	get_length: function() {
+		return this.items._keys.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_MapSchema_$Player();
+		var key = HxOverrides.iter(this.items._keys);
+		while(key.hasNext()) {
+			var key1 = key.next();
+			cloned.items.set(key1,this.items.get(key1));
+		}
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return this.items.iterator();
+	}
+	,get: function(key) {
+		return this.items.get(key);
+	}
+	,arrayWrite: function(key,value) {
+		this.items.set(key,value);
+		return value;
+	}
+	,toString: function() {
+		var data = [];
+		var key = HxOverrides.iter(this.items._keys);
+		while(key.hasNext()) {
+			var key1 = key.next();
+			data.push(key1 + " => " + Std.string(this.items.get(key1)));
+		}
+		return "MapSchema (" + Lambda.count(this.items) + ") { " + data.join(", ") + " }";
+	}
+	,__class__: io_colyseus_serializer_schema_MapSchema_$Player
 	,__properties__: {get_length:"get_length"}
 };
 var io_colyseus_serializer_schema_Decorator = function() { };
@@ -3299,6 +3434,9 @@ io_colyseus_serializer_schema_Schema.decoder = new io_colyseus_serializer_schema
 GState.SERVER_CREATED = "SERVER_CREATED";
 GState.CREATE_SERVER = "createServer";
 GState.SET_PLAYER_SCENE = "setPlayerScene";
+State.DISCONNECTED = "DISCONNECTED";
+State.ALIAS_ENTERED = "ALIAS_ENTERED";
+State.SET_ALIAS = "setAlias";
 haxe_io_FPHelper.i64tmp = (function($this) {
 	var $r;
 	var this1 = new haxe__$Int64__$_$_$Int64(0,0);

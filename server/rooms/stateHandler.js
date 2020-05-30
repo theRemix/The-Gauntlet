@@ -5,6 +5,7 @@ const { Schema, MapSchema } = schema
 class Player extends Schema {
 }
 schema.defineTypes(Player, {
+  key: "string",
   alias: "string",
 });
 
@@ -19,7 +20,14 @@ class State extends Schema {
 
   createPlayer (id) {
     this.players[ id ] = new Player();
-    console.log('added player', id)
+    this.players[ id ].key = id;
+
+    // if this is the first player created, make GM
+    if(Object.keys(this.players).length == 1){
+      console.log('setting GM to', id);
+      this.gm = this.players[ id ]
+      this.gm.alias = "GM";
+    }
   }
 
   removePlayer (id) {
@@ -34,6 +42,7 @@ class State extends Schema {
 }
 schema.defineTypes(State, {
   players: { map: Player },
+  gm: Player,
 });
 
 module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
