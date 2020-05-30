@@ -11,8 +11,10 @@
 <body>
   <h1>GM Screen</h1>
   <div id="servers_container">
-    <h2>Servers</h2>
-    <div id="servers"></div>
+    <h2>Server</h2>
+    <h3 id="server_address"></h3>
+    <input type="text" name="server_address" id="server_address_input" placeholder="Input server name" value=""/>
+    <button id="create_server">Create Server</button>
   </div>
   <div id="players_container">
     <h2>Players</h2>
@@ -21,6 +23,10 @@
   <div id="controls_container">
     <h2>Controls</h2>
     <div id="controls"></div>
+  </div>
+  <div id="status_container">
+    <h2>Status</h2>
+    <div id="status"></div>
   </div>
   <script type="text/javascript" src="./gm.js"></script>
 </body>
