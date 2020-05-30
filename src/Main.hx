@@ -8,7 +8,7 @@ class Main extends hxd.App {
 
   // heaps
   override function init() {
-    this.goToScene(scenes.Connecting);
+    this.goToScene(scenes.FormServer);
   }
 
   // colyseus
@@ -16,7 +16,6 @@ class Main extends hxd.App {
     super();
 
     this.client = new Client('ws://localhost:3000');
-    this.client.joinOrCreate("state_handler", [], State, this.onJoinOrCreate);
   }
 
   public function goToScene(scene:Class<h2d.Scene>):h2d.Scene {
@@ -24,6 +23,10 @@ class Main extends hxd.App {
       case scenes.Connecting:
         this.scene = new scenes.Connecting();
         this.setScene(this.scene);
+
+      case scenes.FormServer:
+        this.scene = new scenes.FormServer();
+        this.setScene(this.scene, true);
 
       case scenes.FormAlias:
         this.scene = new scenes.FormAlias();
@@ -39,7 +42,7 @@ class Main extends hxd.App {
     return this.scene;
   }
 
-  private inline function onJoinOrCreate(err:io.colyseus.error.MatchMakeError, room) {
+  public inline function onJoinOrCreate(err:io.colyseus.error.MatchMakeError, room) {
     if (err != null) {
 
       var tf = new h2d.Text(hxd.res.DefaultFont.get(), this.scene);
@@ -50,6 +53,7 @@ class Main extends hxd.App {
       return;
     }
     this.room = room;
+    this.goToScene(scenes.FormAlias);
 
     this.room.onStateChange += Rooms.onStateChange;
     this.room.onError += Rooms.onError;

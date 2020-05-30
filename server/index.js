@@ -4,14 +4,15 @@ const colyseus = require('colyseus')
 const { monitor } = require('@colyseus/monitor')
 const { createServer } = require('http')
 const app = express()
-const { StateHandlerRoom } = require('./rooms/stateHandler')
+const { RoomController } = require('./rooms/roomController')
 
 app.use(express.json())
 
 // (optional) attach web monitoring panel
 app.use('/colyseus', monitor());
 
-app.use(express.static('./bin'))
+app.use(express.static('./bin/player'))
+app.use("/gm", express.static('./bin/gm'))
 
 const gameServer = new colyseus.Server({
   server: createServer(app),
@@ -21,7 +22,8 @@ const gameServer = new colyseus.Server({
 
 // gameServer.define("lobby", colyseus.LobbyRoom).enableRealtimeListing()
 
-gameServer.define("state_handler", StateHandlerRoom).enableRealtimeListing()
+RoomController.gameServer = gameServer
+gameServer.define("room_controller", RoomController).enableRealtimeListing()
 
 
 gameServer.onShutdown(() =>
