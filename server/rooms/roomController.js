@@ -6,10 +6,11 @@ const { StateHandlerRoom } = require('./stateHandler')
 class State extends Schema {
   constructor(){
     super();
+    this.dummy = 0;
   }
 }
 schema.defineTypes(State, {
-
+  dummy: "number"
 });
 
 module.exports.RoomController = class RoomController extends Room {
@@ -26,7 +27,7 @@ module.exports.RoomController = class RoomController extends Room {
     this.onMessage("createServer", (client, address) => {
       console.log("StateHandlerRoom createServer", client.sessionId, ":", address);
       RoomController.gameServer.define(address, StateHandlerRoom).enableRealtimeListing()
-      // client.send("ALIAS_ENTERED");
+      client.send("SERVER_CREATED", address);
     });
   }
 

@@ -1,10 +1,25 @@
 import js.Browser.document;
 import js.html.DOMElement;
 import js.html.InputElement;
+import io.colyseus.Client;
+import io.colyseus.Room;
+import io.colyseus.serializer.schema.Schema;
 
-using StringTools;
+class GState extends Schema {
+  // messages server -> client
+  public static inline var SERVER_CREATED = "SERVER_CREATED";
+
+  // messages client -> server
+  public static inline var CREATE_SERVER = "createServer";
+  public static inline var SET_PLAYER_SCENE = "setPlayerScene";
+
+	@:type("number")
+	public var dummy:Int = 0;
+}
 
 class GMain {
+  var roomClient:Client; // room controller, creates servers
+  var gameClient:Client; // same room as players
 
   var servers_container:DOMElement;
   var server_address:DOMElement;
@@ -19,8 +34,12 @@ class GMain {
 
   function new() {
     document.addEventListener("DOMContentLoaded", init);
+
+    roomClient = new Client('ws://localhost:3000');
+    roomClient.joinOrCreate("room_controller", [], GState, onRoomJoinOrCreate);
   }
 
+  // DOM ready
   function init(_) {
     servers_container = document.querySelector("#servers_container");
     server_address = document.querySelector("#server_address");
@@ -31,22 +50,36 @@ class GMain {
     server_address_input = cast(document.querySelector("#server_address_input"), InputElement);
     create_server_btn = document.querySelector("#create_server");
 
+    servers_container.hidden = true;
     players_container.hidden = true;
     controls_container.hidden = true;
-    status_container.hidden = true;
 
-    server_address_input.onchange = function(e){
-      server_name = e.target.value;
+    status.innerText = "📡 Connecting to Room Controller";
+  }
+
+  // Colyseus ready
+  function onRoomJoinOrCreate(err:io.colyseus.error.MatchMakeError, room:Room<GState>) {
+    if (err != null) {
+      status.innerText = err.message;
+      trace("JOIN ERROR: " + err);
+      return;
     }
 
     create_server_btn.onclick = function(_){
       if(server_name == "") return;
-
-      server_address.innerText = server_address_input.value;
-      server_address_input.hidden = true;
-      create_server_btn.hidden = true;
+      status.innerText = "👷 Creating Server";
+      room.send(GState.CREATE_SERVER, server_address_input.value);
     }
 
+    status.innerText = "✅ Connected to Room Controller!";
+
+    room.onMessage(GState.SERVER_CREATED, function(address){
+      server_address.innerText = address;
+      server_address_input.hidden = true;
+      create_server_btn.hidden = true;
+      status.innerText = 'Server "$address" Created';
+    });
+    servers_container.hidden = false;
   }
 
   static function main() new GMain();
