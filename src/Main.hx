@@ -57,35 +57,6 @@ class Main extends hxd.App {
     this.room.onError += Rooms.onError;
     this.room.onLeave += Rooms.onLeave;
 
-    // this.room.state.movePlayer({ x: 200, y: 200 });
-
-    // this.room.state.players.onAdd = Players.onAdd;
-    // this.room.state.players.onChange = Players.onChange;
-    // this.room.state.players.onRemove = Players.onRemove;
-
-    // this.room.state.listen('')
-    // room.listen("players/:id", (change) => {
-    this.room.state.players.onAdd = function(player, key) {
-      trace("STATE.PLAYER ADD", player, " ADDED AT: ", key);
-      player.onChange = function(changes) {
-        trace("SINGLE PLAYER CHANGED", changes);
-        // changes.forEach(change => {
-        //     console.log(change.field);
-        //     console.log(change.value);
-        //     console.log(change.previousValue);
-        // })
-      };
-      player.onRemove = function() {
-        trace("SINGLE PLAYER REMOVED", player);
-      };
-    }
-    this.room.state.players.onChange = function(player, key) {
-      trace("STATE.PLAYER CHANGED AT", key);
-    };
-    this.room.state.players.onRemove = function(player, key) {
-      trace("STATE.PLAYER REMOVED AT", key);
-    };
-
     // this.room.state.onChange = onStateChange;
 
     this.goToScene(scenes.InputAlias);

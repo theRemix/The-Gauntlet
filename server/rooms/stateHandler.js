@@ -3,7 +3,6 @@ const schema = require("@colyseus/schema")
 const { Schema, MapSchema } = schema
 
 class Player extends Schema {
-  alias = null;
 }
 schema.defineTypes(Player, {
   alias: "string",
@@ -14,7 +13,6 @@ class State extends Schema {
     super();
 
     this.players = new MapSchema();
-    this.test = 'empty';
   }
 
   something = "This attribute won't be sent to the client-side";
@@ -30,17 +28,12 @@ class State extends Schema {
   }
 
   setAlias(id, alias) {
-    console.log(1, this.players[ id ].alias, this.players[ id ])
     this.players[ id ].alias = alias;
-    console.log(2, this.players[ id ].alias, this.players[ id ])
-    // this.players[ id ].alias = 99;
-    // this.test = alias;
   }
 
 }
 schema.defineTypes(State, {
   players: { map: Player },
-  test: "string",
 });
 
 module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {

@@ -370,25 +370,10 @@ Main.prototype = $extend(hxd_App.prototype,{
 		this.room.onStateChange.push(Rooms.onStateChange);
 		this.room.onError.push(Rooms.onError);
 		this.room.onLeave.push(Rooms.onLeave);
-		this.room.get_state().players.onAdd = function(player,key) {
-			haxe_Log.trace("STATE.PLAYER ADD",{ fileName : "src/Main.hx", lineNumber : 69, className : "Main", methodName : "onJoinOrCreate", customParams : [player," ADDED AT: ",key]});
-			player.onChange = function(changes) {
-				haxe_Log.trace("SINGLE PLAYER CHANGED",{ fileName : "src/Main.hx", lineNumber : 71, className : "Main", methodName : "onJoinOrCreate", customParams : [changes]});
-			};
-			player.onRemove = function() {
-				haxe_Log.trace("SINGLE PLAYER REMOVED",{ fileName : "src/Main.hx", lineNumber : 79, className : "Main", methodName : "onJoinOrCreate", customParams : [player]});
-			};
-		};
-		this.room.get_state().players.onChange = function(player1,key1) {
-			haxe_Log.trace("STATE.PLAYER CHANGED AT",{ fileName : "src/Main.hx", lineNumber : 83, className : "Main", methodName : "onJoinOrCreate", customParams : [key1]});
-		};
-		this.room.get_state().players.onRemove = function(player2,key2) {
-			haxe_Log.trace("STATE.PLAYER REMOVED AT",{ fileName : "src/Main.hx", lineNumber : 86, className : "Main", methodName : "onJoinOrCreate", customParams : [key2]});
-		};
 		this.goToScene(scenes_InputAlias);
 	}
 	,onStateChange: function(changes) {
-		haxe_Log.trace("onStateChange",{ fileName : "src/Main.hx", lineNumber : 95, className : "Main", methodName : "onStateChange", customParams : [changes]});
+		haxe_Log.trace("onStateChange",{ fileName : "src/Main.hx", lineNumber : 66, className : "Main", methodName : "onStateChange", customParams : [changes]});
 	}
 	,update: function(dt) {
 	}
@@ -847,8 +832,6 @@ var State = function() {
 	this._indexes.h[0] = "players";
 	this._types.h[0] = "map";
 	this._childSchemaTypes.h[0] = Player;
-	this._indexes.h[1] = "test";
-	this._types.h[1] = "string";
 };
 $hxClasses["State"] = State;
 State.__name__ = "State";
@@ -63721,26 +63704,45 @@ var scenes_Lobby = function() {
 	var font = hxd_res_DefaultFont.get();
 	this.playerListTxt = new h2d_Text(font,this);
 	this.playerListTxt.set_text("Users connected:");
-	haxe_Log.trace(Main.instance.room.get_state().players,{ fileName : "src/scenes/Lobby.hx", lineNumber : 15, className : "scenes.Lobby", methodName : "new"});
-	var player = Main.instance.room.get_state().players.iterator();
-	while(player.hasNext()) {
-		var player1 = player.next();
-		haxe_Log.trace(player1,{ fileName : "src/scenes/Lobby.hx", lineNumber : 17, className : "scenes.Lobby", methodName : "new"});
-		player1.onChange = function(changes) {
-			haxe_Log.trace("SINGLE PLAYER CHANGED",{ fileName : "src/scenes/Lobby.hx", lineNumber : 19, className : "scenes.Lobby", methodName : "new", customParams : [changes]});
-		};
-	}
+	Main.instance.room.get_state().players.onAdd = $bind(this,this.onAddPlayer);
+	Main.instance.room.get_state().players.onChange = $bind(this,this.onChangePlayer);
+	Main.instance.room.get_state().players.onRemove = $bind(this,this.onRemovePlayer);
 };
 $hxClasses["scenes.Lobby"] = scenes_Lobby;
 scenes_Lobby.__name__ = "scenes.Lobby";
 scenes_Lobby.__super__ = h2d_Scene;
 scenes_Lobby.prototype = $extend(h2d_Scene.prototype,{
-	renderListOfPlayers: function() {
-		this.playerListTxt.set_text("Users connected:" + "List");
-		haxe_Log.trace("Main.instance.room.state.players",{ fileName : "src/scenes/Lobby.hx", lineNumber : 47, className : "scenes.Lobby", methodName : "renderListOfPlayers", customParams : [Main.instance.room.get_state().players]});
+	onAddPlayer: function(player,key) {
+		this.renderListOfPlayers();
+	}
+	,onChangePlayer: function(player,key) {
+		this.renderListOfPlayers();
+	}
+	,onRemovePlayer: function(player,key) {
+		this.renderListOfPlayers();
+	}
+	,renderListOfPlayers: function() {
+		this.playerListTxt.set_text("Users connected:");
+		var player = Main.instance.room.get_state().players.iterator();
+		while(player.hasNext()) {
+			var player1 = player.next();
+			if(player1.alias != null) {
+				var _g = this.playerListTxt;
+				_g.set_text(_g.text + ("\n" + player1.alias));
+			}
+		}
 	}
 	,destroy: function() {
-		haxe_Log.trace("Scene:Lobby DISPOSE",{ fileName : "src/scenes/Lobby.hx", lineNumber : 51, className : "scenes.Lobby", methodName : "destroy"});
+		haxe_Log.trace("Scene:Lobby DISPOSE",{ fileName : "src/scenes/Lobby.hx", lineNumber : 43, className : "scenes.Lobby", methodName : "destroy"});
+		if(($_=Main.instance.room.get_state().players,$bind($_,$_.onAdd)) == $bind(this,this.onAddPlayer)) {
+			Main.instance.room.get_state().players.onAdd = null;
+		}
+		if(($_=Main.instance.room.get_state().players,$bind($_,$_.onChange)) == $bind(this,this.onChangePlayer)) {
+			Main.instance.room.get_state().players.onChange = null;
+		}
+		if(($_=Main.instance.room.get_state().players,$bind($_,$_.onRemove)) == $bind(this,this.onRemovePlayer)) {
+			Main.instance.room.get_state().players.onRemove = null;
+		}
 		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_Lobby
