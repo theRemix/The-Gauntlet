@@ -42,9 +42,20 @@ class InputAlias extends h2d.Scene{
     submitBtn.onClick = submit;
 
     Main.instance.room.onMessage(State.ALIAS_ENTERED, onMessageAliasEntered);
+    hxd.Window.getInstance().addEventTarget(onEvent);
   }
 
-  private function submit(_) {
+  private function onEvent(event : hxd.Event) {
+    switch(event.kind) {
+      case EKeyUp:
+        if(event.keyCode == 13){
+          submit();
+        }
+      case _:
+    }
+  }
+
+  private function submit(?_) {
     submitBtn.textColor = 0xFFFFFF;
     Main.instance.room.send("setAlias", input.text);
   }

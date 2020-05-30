@@ -9,8 +9,6 @@ class Main extends hxd.App {
   // heaps
   override function init() {
     this.goToScene(scenes.Connecting);
-
-    hxd.Window.getInstance().addEventTarget(onEvent);
   }
 
   // colyseus
@@ -77,17 +75,6 @@ class Main extends hxd.App {
 
   override function update(dt:Float) {
 
-  }
-
-  private function onEvent(event : hxd.Event) {
-      switch(event.kind) {
-          case EKeyDown: //trace('DOWN keyCode: ${event.keyCode}');
-          case EKeyUp:
-            if(this.room == null) return;
-            // trace('UP keyCode: ${event.keyCode}');
-            // this.room.send("updateTest", Std.string(event.keyCode));
-          case _:
-      }
   }
 
   public static var instance:Main;

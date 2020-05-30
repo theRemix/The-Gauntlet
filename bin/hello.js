@@ -336,7 +336,6 @@ Main.__super__ = hxd_App;
 Main.prototype = $extend(hxd_App.prototype,{
 	init: function() {
 		this.goToScene(scenes_Connecting);
-		hxd_Window.getInstance().addEventTarget($bind(this,this.onEvent));
 	}
 	,goToScene: function(scene) {
 		switch(scene) {
@@ -353,7 +352,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 			this.setScene(this.scene,true);
 			break;
 		default:
-			haxe_Log.trace("WARN! No handler for scenee = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 39, className : "Main", methodName : "goToScene"});
+			haxe_Log.trace("WARN! No handler for scenee = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 37, className : "Main", methodName : "goToScene"});
 		}
 		return this.scene;
 	}
@@ -363,7 +362,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 			tf.set_text(err.message);
 			tf.posChanged = true;
 			tf.y = 20;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 51, className : "Main", methodName : "onJoinOrCreate"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 49, className : "Main", methodName : "onJoinOrCreate"});
 			return;
 		}
 		this.room = room;
@@ -373,21 +372,9 @@ Main.prototype = $extend(hxd_App.prototype,{
 		this.goToScene(scenes_InputAlias);
 	}
 	,onStateChange: function(changes) {
-		haxe_Log.trace("onStateChange",{ fileName : "src/Main.hx", lineNumber : 66, className : "Main", methodName : "onStateChange", customParams : [changes]});
+		haxe_Log.trace("onStateChange",{ fileName : "src/Main.hx", lineNumber : 64, className : "Main", methodName : "onStateChange", customParams : [changes]});
 	}
 	,update: function(dt) {
-	}
-	,onEvent: function(event) {
-		switch(event.kind._hx_index) {
-		case 8:
-			break;
-		case 9:
-			if(this.room == null) {
-				return;
-			}
-			break;
-		default:
-		}
 	}
 	,__class__: Main
 });
@@ -63681,12 +63668,20 @@ var scenes_InputAlias = function() {
 	_this5.y = 110;
 	this.submitBtn.onClick = $bind(this,this.submit);
 	Main.instance.room.onMessage("ALIAS_ENTERED",$bind(this,this.onMessageAliasEntered));
+	hxd_Window.getInstance().addEventTarget($bind(this,this.onEvent));
 };
 $hxClasses["scenes.InputAlias"] = scenes_InputAlias;
 scenes_InputAlias.__name__ = "scenes.InputAlias";
 scenes_InputAlias.__super__ = h2d_Scene;
 scenes_InputAlias.prototype = $extend(h2d_Scene.prototype,{
-	submit: function(_) {
+	onEvent: function(event) {
+		if(event.kind._hx_index == 9) {
+			if(event.keyCode == 13) {
+				this.submit();
+			}
+		}
+	}
+	,submit: function(_) {
 		this.submitBtn.set_textColor(16777215);
 		Main.instance.room.send("setAlias",this.input.text);
 	}
@@ -63694,7 +63689,7 @@ scenes_InputAlias.prototype = $extend(h2d_Scene.prototype,{
 		Main.instance.goToScene(scenes_Lobby);
 	}
 	,dispose: function() {
-		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/InputAlias.hx", lineNumber : 57, className : "scenes.InputAlias", methodName : "dispose"});
+		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/InputAlias.hx", lineNumber : 68, className : "scenes.InputAlias", methodName : "dispose"});
 		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_InputAlias
