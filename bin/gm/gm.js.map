@@ -1,0 +1,8 @@
+{
+"version":3,
+"file":"gm.js",
+"sourceRoot":"file:///",
+"sources":["/app/src/GMain.hx"],
+"names":[],
+"mappings":";;YAKE,WAAe;AAAA,CACb,8BAAM;AADO,CAGb,iCAA0B,mBAAoB;AAHjC;aAcf,WAAuB;AAAA;AAAA;;OARvB,YAAiB;AAAA,EAEf,QAAQ;AAFO,EAGf,cAAe;AAHA,EAKf,8BAAuB,wBAAwB;AALhC;;;;;;;;"
+}

@@ -1,6 +1,14 @@
 -main Main
 -lib heaps
 -lib colyseus
--js bin/hello.js
+-js bin/player/main.js
+-cp src
+-debug
+
+--next
+
+-main GMain
+-lib colyseus
+-js bin/gm/gm.js
 -cp src
 -debug
