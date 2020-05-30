@@ -2,8 +2,8 @@ import io.colyseus.Client;
 import io.colyseus.Room;
 
 class Main extends hxd.App {
-  private var client:Client;
-	private var room:Room<State>;
+  public var client:Client;
+	public var room:Room<State>;
   private var scene:h2d.Scene;
 
   // heaps
@@ -32,7 +32,7 @@ class Main extends hxd.App {
         this.setScene(this.scene, true);
 
       case scenes.Lobby:
-        this.scene = new scenes.Lobby(client, room);
+        this.scene = new scenes.Lobby();
         this.setScene(this.scene, true);
 
       default:
@@ -51,39 +51,58 @@ class Main extends hxd.App {
       trace("JOIN ERROR: " + err);
       return;
     }
-
-    this.goToScene(scenes.InputAlias);
-
     this.room = room;
 
     this.room.onStateChange += Rooms.onStateChange;
-    this.room.onMessage(0, Rooms.onMessage0);
-    this.room.onMessage("type", Rooms.onMessageType);
-    this.room.onMessage("playerConnected", Rooms.onMessagePlayerConnected);
     this.room.onError += Rooms.onError;
     this.room.onLeave += Rooms.onLeave;
 
     // this.room.state.movePlayer({ x: 200, y: 200 });
 
-    this.room.state.players.onAdd = Players.onAdd;
-    this.room.state.players.onChange = Players.onChange;
-    this.room.state.players.onRemove = Players.onRemove;
+    // this.room.state.players.onAdd = Players.onAdd;
+    // this.room.state.players.onChange = Players.onChange;
+    // this.room.state.players.onRemove = Players.onRemove;
+
+    // this.room.state.listen('')
+    // room.listen("players/:id", (change) => {
+    this.room.state.players.onAdd = function(player, key) {
+      trace("STATE.PLAYER ADD", player, " ADDED AT: ", key);
+      player.onChange = function(changes) {
+        trace("SINGLE PLAYER CHANGED", changes);
+        // changes.forEach(change => {
+        //     console.log(change.field);
+        //     console.log(change.value);
+        //     console.log(change.previousValue);
+        // })
+      };
+      player.onRemove = function() {
+        trace("SINGLE PLAYER REMOVED", player);
+      };
+    }
+    this.room.state.players.onChange = function(player, key) {
+      trace("STATE.PLAYER CHANGED AT", key);
+    };
+    this.room.state.players.onRemove = function(player, key) {
+      trace("STATE.PLAYER REMOVED AT", key);
+    };
 
     // this.room.state.onChange = onStateChange;
 
+    this.goToScene(scenes.InputAlias);
   }
 
-  // private inline function onStateChange(changes){
-  //   for(change in changes){
-  //     switch(change.field){
-  //       case State.ALIAS_ENTERED:
-  //         this.scene = new scenes.Lobby();
-  //         this.setScene(this.scene, true);
-  //       default:
-  //         trace('WARN! unhandled change: ${change.field}');
-  //     }
-  //   }
-  // }
+  private inline function onStateChange(changes){
+    trace('onStateChange', changes);
+    // for(change in changes){
+    //   switch(change.field){
+    //     case State.ALIAS_ENTERED:
+    //       trace('case', State.ALIAS_ENTERED);
+    //       goToScene(scenes.Lobby);
+    //     default:
+    //       trace('WARN! unhandled change: ${change.field}');
+    //   }
+    // }
+  }
 
   override function update(dt:Float) {
 
@@ -91,11 +110,11 @@ class Main extends hxd.App {
 
   private function onEvent(event : hxd.Event) {
       switch(event.kind) {
-          case EKeyDown: trace('DOWN keyCode: ${event.keyCode}');
+          case EKeyDown: //trace('DOWN keyCode: ${event.keyCode}');
           case EKeyUp:
             if(this.room == null) return;
-            trace('UP keyCode: ${event.keyCode}');
-            this.room.send("updateTest", Std.string(event.keyCode));
+            // trace('UP keyCode: ${event.keyCode}');
+            // this.room.send("updateTest", Std.string(event.keyCode));
           case _:
       }
   }

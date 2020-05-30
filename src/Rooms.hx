@@ -3,14 +3,6 @@ class Rooms {
       trace("STATE CHANGE: " + Std.string(state));
   }
 
-  public static inline function onMessage0(message) {
-      trace("onMessage: 0 => " + message);
-  }
-
-  public static inline function onMessageType(message) {
-      trace("onMessage: 'type' => " + message);
-  }
-
   public static inline function onMessagePlayerConnected(message) {
       trace("onMessage: 'PlayerConnected' => " + message);
   }

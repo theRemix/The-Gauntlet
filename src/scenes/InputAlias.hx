@@ -1,6 +1,9 @@
 package scenes;
 
 class InputAlias extends h2d.Scene{
+  private var input:h2d.TextInput;
+  private var submitBtn:h2d.TextInput;
+
   public function new(){
     super();
 
@@ -9,7 +12,7 @@ class InputAlias extends h2d.Scene{
     var tf = new h2d.Text(font, this);
     tf.text = "Enter your alias:";
 
-    var input = new h2d.TextInput(font, this);
+    input = new h2d.TextInput(font, this);
     input.backgroundColor = 0x80808080;
     input.textColor = 0xAAAAAA;
 
@@ -28,7 +31,7 @@ class InputAlias extends h2d.Scene{
         input.text = input.text.substr(0, -1);
     }
 
-    var submitBtn = new h2d.TextInput(font, this);
+    submitBtn = new h2d.TextInput(font, this);
     submitBtn.text = "LOGIN";
     submitBtn.canEdit = false;
     submitBtn.textColor = 0xAACCAA;
@@ -36,12 +39,20 @@ class InputAlias extends h2d.Scene{
     submitBtn.scale(2);
     submitBtn.x = 240;
     submitBtn.y = 110;
-    submitBtn.onClick = function(_) {
-      submitBtn.textColor = 0xFFFFFF;
-      Main.instance.goToScene(scenes.Lobby);
-    }
+    submitBtn.onClick = submit;
 
+    Main.instance.room.onMessage(State.ALIAS_ENTERED, onMessageAliasEntered);
   }
+
+  private function submit(_) {
+    submitBtn.textColor = 0xFFFFFF;
+    Main.instance.room.send("setAlias", input.text);
+  }
+
+  private function onMessageAliasEntered(_){
+    Main.instance.goToScene(scenes.Lobby);
+  }
+
   public override function dispose(){
     trace("Scene:InputAlias DISPOSE");
     super.dispose();

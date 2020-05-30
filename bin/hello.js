@@ -349,7 +349,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 			this.setScene(this.scene,true);
 			break;
 		case scenes_Lobby:
-			this.scene = new scenes_Lobby(this.client,this.room);
+			this.scene = new scenes_Lobby();
 			this.setScene(this.scene,true);
 			break;
 		default:
@@ -366,31 +366,40 @@ Main.prototype = $extend(hxd_App.prototype,{
 			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 51, className : "Main", methodName : "onJoinOrCreate"});
 			return;
 		}
-		this.goToScene(scenes_InputAlias);
 		this.room = room;
 		this.room.onStateChange.push(Rooms.onStateChange);
-		this.room.onMessage(0,Rooms.onMessage0);
-		this.room.onMessage("type",Rooms.onMessageType);
-		this.room.onMessage("playerConnected",Rooms.onMessagePlayerConnected);
 		this.room.onError.push(Rooms.onError);
 		this.room.onLeave.push(Rooms.onLeave);
-		this.room.get_state().players.onAdd = Players.onAdd;
-		this.room.get_state().players.onChange = Players.onChange;
-		this.room.get_state().players.onRemove = Players.onRemove;
+		this.room.get_state().players.onAdd = function(player,key) {
+			haxe_Log.trace("STATE.PLAYER ADD",{ fileName : "src/Main.hx", lineNumber : 69, className : "Main", methodName : "onJoinOrCreate", customParams : [player," ADDED AT: ",key]});
+			player.onChange = function(changes) {
+				haxe_Log.trace("SINGLE PLAYER CHANGED",{ fileName : "src/Main.hx", lineNumber : 71, className : "Main", methodName : "onJoinOrCreate", customParams : [changes]});
+			};
+			player.onRemove = function() {
+				haxe_Log.trace("SINGLE PLAYER REMOVED",{ fileName : "src/Main.hx", lineNumber : 79, className : "Main", methodName : "onJoinOrCreate", customParams : [player]});
+			};
+		};
+		this.room.get_state().players.onChange = function(player1,key1) {
+			haxe_Log.trace("STATE.PLAYER CHANGED AT",{ fileName : "src/Main.hx", lineNumber : 83, className : "Main", methodName : "onJoinOrCreate", customParams : [key1]});
+		};
+		this.room.get_state().players.onRemove = function(player2,key2) {
+			haxe_Log.trace("STATE.PLAYER REMOVED AT",{ fileName : "src/Main.hx", lineNumber : 86, className : "Main", methodName : "onJoinOrCreate", customParams : [key2]});
+		};
+		this.goToScene(scenes_InputAlias);
+	}
+	,onStateChange: function(changes) {
+		haxe_Log.trace("onStateChange",{ fileName : "src/Main.hx", lineNumber : 95, className : "Main", methodName : "onStateChange", customParams : [changes]});
 	}
 	,update: function(dt) {
 	}
 	,onEvent: function(event) {
 		switch(event.kind._hx_index) {
 		case 8:
-			haxe_Log.trace("DOWN keyCode: " + event.keyCode,{ fileName : "src/Main.hx", lineNumber : 94, className : "Main", methodName : "onEvent"});
 			break;
 		case 9:
 			if(this.room == null) {
 				return;
 			}
-			haxe_Log.trace("UP keyCode: " + event.keyCode,{ fileName : "src/Main.hx", lineNumber : 97, className : "Main", methodName : "onEvent"});
-			this.room.send("updateTest",event.keyCode == null ? "null" : "" + event.keyCode);
 			break;
 		default:
 		}
@@ -721,13 +730,10 @@ io_colyseus_serializer_schema_Schema.prototype = {
 	,__class__: io_colyseus_serializer_schema_Schema
 };
 var Player = function() {
-	this.y = 0;
-	this.x = 0;
+	this.alias = null;
 	io_colyseus_serializer_schema_Schema.call(this);
-	this._indexes.h[0] = "x";
-	this._types.h[0] = "number";
-	this._indexes.h[1] = "y";
-	this._types.h[1] = "number";
+	this._indexes.h[0] = "alias";
+	this._types.h[0] = "string";
 };
 $hxClasses["Player"] = Player;
 Player.__name__ = "Player";
@@ -735,18 +741,6 @@ Player.__super__ = io_colyseus_serializer_schema_Schema;
 Player.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
 	__class__: Player
 });
-var Players = function() { };
-$hxClasses["Players"] = Players;
-Players.__name__ = "Players";
-Players.onAdd = function(player,key) {
-	haxe_Log.trace("PLAYER",{ fileName : "src/Players.hx", lineNumber : 4, className : "Players", methodName : "onAdd", customParams : [player," ADDED AT: ",key]});
-};
-Players.onChange = function(player,key) {
-	haxe_Log.trace("PLAYER CHANGED AT: ",{ fileName : "src/Players.hx", lineNumber : 13, className : "Players", methodName : "onChange", customParams : [key]});
-};
-Players.onRemove = function(player,key) {
-	haxe_Log.trace("PLAYER REMOVED AT: ",{ fileName : "src/Players.hx", lineNumber : 19, className : "Players", methodName : "onRemove", customParams : [key]});
-};
 var Reflect = function() { };
 $hxClasses["Reflect"] = Reflect;
 Reflect.__name__ = "Reflect";
@@ -838,20 +832,14 @@ Rooms.__name__ = "Rooms";
 Rooms.onStateChange = function(state) {
 	haxe_Log.trace("STATE CHANGE: " + Std.string(state),{ fileName : "src/Rooms.hx", lineNumber : 3, className : "Rooms", methodName : "onStateChange"});
 };
-Rooms.onMessage0 = function(message) {
-	haxe_Log.trace("onMessage: 0 => " + message,{ fileName : "src/Rooms.hx", lineNumber : 7, className : "Rooms", methodName : "onMessage0"});
-};
-Rooms.onMessageType = function(message) {
-	haxe_Log.trace("onMessage: 'type' => " + message,{ fileName : "src/Rooms.hx", lineNumber : 11, className : "Rooms", methodName : "onMessageType"});
-};
 Rooms.onMessagePlayerConnected = function(message) {
-	haxe_Log.trace("onMessage: 'PlayerConnected' => " + message,{ fileName : "src/Rooms.hx", lineNumber : 15, className : "Rooms", methodName : "onMessagePlayerConnected"});
+	haxe_Log.trace("onMessage: 'PlayerConnected' => " + message,{ fileName : "src/Rooms.hx", lineNumber : 7, className : "Rooms", methodName : "onMessagePlayerConnected"});
 };
 Rooms.onError = function(code,message) {
-	haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Rooms.hx", lineNumber : 19, className : "Rooms", methodName : "onError"});
+	haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Rooms.hx", lineNumber : 11, className : "Rooms", methodName : "onError"});
 };
 Rooms.onLeave = function() {
-	haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Rooms.hx", lineNumber : 23, className : "Rooms", methodName : "onLeave"});
+	haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Rooms.hx", lineNumber : 15, className : "Rooms", methodName : "onLeave"});
 };
 var State = function() {
 	this.players = new io_colyseus_serializer_schema_MapSchema_$Player();
@@ -859,6 +847,8 @@ var State = function() {
 	this._indexes.h[0] = "players";
 	this._types.h[0] = "map";
 	this._childSchemaTypes.h[0] = Player;
+	this._indexes.h[1] = "test";
+	this._types.h[1] = "string";
 };
 $hxClasses["State"] = State;
 State.__name__ = "State";
@@ -63652,81 +63642,105 @@ scenes_Connecting.__name__ = "scenes.Connecting";
 scenes_Connecting.__super__ = h2d_Scene;
 scenes_Connecting.prototype = $extend(h2d_Scene.prototype,{
 	dispose: function() {
-		haxe_Log.trace("Scene:Connecting DISPOSE",{ fileName : "src/scenes/Connecting.hx", lineNumber : 11, className : "scenes.Connecting", methodName : "dispose"});
+		haxe_Log.trace("Scene:Connecting DISPOSE",{ fileName : "src/scenes/Connecting.hx", lineNumber : 12, className : "scenes.Connecting", methodName : "dispose"});
 		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_Connecting
 });
 var scenes_InputAlias = function() {
+	var _gthis = this;
 	h2d_Scene.call(this);
 	var font = hxd_res_DefaultFont.get();
 	var tf = new h2d_Text(font,this);
 	tf.set_text("Enter your alias:");
-	var input = new h2d_TextInput(font,this);
-	input.set_backgroundColor(-2139062144);
-	input.set_textColor(11184810);
-	var _g = input;
+	this.input = new h2d_TextInput(font,this);
+	this.input.set_backgroundColor(-2139062144);
+	this.input.set_textColor(11184810);
+	var _this = this.input;
+	var _g = _this;
 	_g.posChanged = true;
 	_g.scaleX *= 2;
-	var _g1 = input;
+	var _g1 = _this;
 	_g1.posChanged = true;
 	_g1.scaleY *= 2;
-	input.posChanged = true;
-	var v = input.y = 50;
-	input.posChanged = true;
-	input.x = v;
-	input.inputWidth = 240;
-	input.onFocus = function(_) {
-		input.set_textColor(16777215);
+	var _this1 = this.input;
+	var _this2 = this.input;
+	_this2.posChanged = true;
+	_this1.posChanged = true;
+	_this1.x = _this2.y = 50;
+	this.input.inputWidth = 240;
+	this.input.onFocus = function(_) {
+		_gthis.input.set_textColor(16777215);
 	};
-	input.onFocusLost = function(_1) {
-		input.set_textColor(11184810);
+	this.input.onFocusLost = function(_1) {
+		_gthis.input.set_textColor(11184810);
 	};
-	input.onChange = function() {
-		while(input.text.length > 32) input.set_text(HxOverrides.substr(input.text,0,-1));
+	this.input.onChange = function() {
+		while(_gthis.input.text.length > 32) _gthis.input.set_text(HxOverrides.substr(_gthis.input.text,0,-1));
 	};
-	var submitBtn = new h2d_TextInput(font,this);
-	submitBtn.set_text("LOGIN");
-	submitBtn.canEdit = false;
-	submitBtn.set_textColor(11193514);
-	submitBtn.set_backgroundColor(-2139045760);
-	var _g2 = submitBtn;
+	this.submitBtn = new h2d_TextInput(font,this);
+	this.submitBtn.set_text("LOGIN");
+	this.submitBtn.canEdit = false;
+	this.submitBtn.set_textColor(11193514);
+	this.submitBtn.set_backgroundColor(-2139045760);
+	var _this3 = this.submitBtn;
+	var _g2 = _this3;
 	_g2.posChanged = true;
 	_g2.scaleX *= 2;
-	var _g3 = submitBtn;
+	var _g3 = _this3;
 	_g3.posChanged = true;
 	_g3.scaleY *= 2;
-	submitBtn.posChanged = true;
-	submitBtn.x = 240;
-	submitBtn.posChanged = true;
-	submitBtn.y = 110;
-	submitBtn.onClick = function(_2) {
-		submitBtn.set_textColor(16777215);
-		Main.instance.goToScene(scenes_Lobby);
-	};
+	var _this4 = this.submitBtn;
+	_this4.posChanged = true;
+	_this4.x = 240;
+	var _this5 = this.submitBtn;
+	_this5.posChanged = true;
+	_this5.y = 110;
+	this.submitBtn.onClick = $bind(this,this.submit);
+	Main.instance.room.onMessage("ALIAS_ENTERED",$bind(this,this.onMessageAliasEntered));
 };
 $hxClasses["scenes.InputAlias"] = scenes_InputAlias;
 scenes_InputAlias.__name__ = "scenes.InputAlias";
 scenes_InputAlias.__super__ = h2d_Scene;
 scenes_InputAlias.prototype = $extend(h2d_Scene.prototype,{
-	dispose: function() {
-		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/InputAlias.hx", lineNumber : 46, className : "scenes.InputAlias", methodName : "dispose"});
+	submit: function(_) {
+		this.submitBtn.set_textColor(16777215);
+		Main.instance.room.send("setAlias",this.input.text);
+	}
+	,onMessageAliasEntered: function(_) {
+		Main.instance.goToScene(scenes_Lobby);
+	}
+	,dispose: function() {
+		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/InputAlias.hx", lineNumber : 57, className : "scenes.InputAlias", methodName : "dispose"});
 		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_InputAlias
 });
-var scenes_Lobby = function(client,room) {
+var scenes_Lobby = function() {
 	h2d_Scene.call(this);
-	haxe_Log.trace("Lobby init",{ fileName : "src/scenes/Lobby.hx", lineNumber : 11, className : "scenes.Lobby", methodName : "new"});
-	this.client = client;
-	this.room = room;
+	var font = hxd_res_DefaultFont.get();
+	this.playerListTxt = new h2d_Text(font,this);
+	this.playerListTxt.set_text("Users connected:");
+	haxe_Log.trace(Main.instance.room.get_state().players,{ fileName : "src/scenes/Lobby.hx", lineNumber : 15, className : "scenes.Lobby", methodName : "new"});
+	var player = Main.instance.room.get_state().players.iterator();
+	while(player.hasNext()) {
+		var player1 = player.next();
+		haxe_Log.trace(player1,{ fileName : "src/scenes/Lobby.hx", lineNumber : 17, className : "scenes.Lobby", methodName : "new"});
+		player1.onChange = function(changes) {
+			haxe_Log.trace("SINGLE PLAYER CHANGED",{ fileName : "src/scenes/Lobby.hx", lineNumber : 19, className : "scenes.Lobby", methodName : "new", customParams : [changes]});
+		};
+	}
 };
 $hxClasses["scenes.Lobby"] = scenes_Lobby;
 scenes_Lobby.__name__ = "scenes.Lobby";
 scenes_Lobby.__super__ = h2d_Scene;
 scenes_Lobby.prototype = $extend(h2d_Scene.prototype,{
-	destroy: function() {
-		haxe_Log.trace("Scene:Lobby DISPOSE",{ fileName : "src/scenes/Lobby.hx", lineNumber : 16, className : "scenes.Lobby", methodName : "destroy"});
+	renderListOfPlayers: function() {
+		this.playerListTxt.set_text("Users connected:" + "List");
+		haxe_Log.trace("Main.instance.room.state.players",{ fileName : "src/scenes/Lobby.hx", lineNumber : 47, className : "scenes.Lobby", methodName : "renderListOfPlayers", customParams : [Main.instance.room.get_state().players]});
+	}
+	,destroy: function() {
+		haxe_Log.trace("Scene:Lobby DISPOSE",{ fileName : "src/scenes/Lobby.hx", lineNumber : 51, className : "scenes.Lobby", methodName : "destroy"});
 		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_Lobby
@@ -63777,8 +63791,9 @@ if(ArrayBuffer.prototype.slice == null) {
 	ArrayBuffer.prototype.slice = js_lib__$ArrayBuffer_ArrayBufferCompat.sliceImpl;
 }
 io_colyseus_serializer_schema_Schema.decoder = new io_colyseus_serializer_schema_Decoder();
-State.CONNECTED = "CONNECTED";
+State.DISCONNECTED = "DISCONNECTED";
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
+State.SET_ALIAS = "setAlias";
 Xml.Element = 0;
 Xml.PCData = 1;
 Xml.CData = 2;
