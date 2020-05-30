@@ -1,6 +1,6 @@
 package scenes;
 
-class InputAlias extends h2d.Scene{
+class FormAlias extends h2d.Scene{
   private var input:h2d.TextInput;
   private var submitBtn:h2d.TextInput;
 

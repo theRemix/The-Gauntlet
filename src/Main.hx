@@ -25,8 +25,8 @@ class Main extends hxd.App {
         this.scene = new scenes.Connecting();
         this.setScene(this.scene);
 
-      case scenes.InputAlias:
-        this.scene = new scenes.InputAlias();
+      case scenes.FormAlias:
+        this.scene = new scenes.FormAlias();
         this.setScene(this.scene, true);
 
       case scenes.Lobby:
@@ -57,7 +57,7 @@ class Main extends hxd.App {
 
     // this.room.state.onChange = onStateChange;
 
-    this.goToScene(scenes.InputAlias);
+    this.goToScene(scenes.FormAlias);
   }
 
   private inline function onStateChange(changes){

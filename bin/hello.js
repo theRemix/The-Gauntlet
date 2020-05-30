@@ -343,8 +343,8 @@ Main.prototype = $extend(hxd_App.prototype,{
 			this.scene = new scenes_Connecting();
 			this.setScene(this.scene);
 			break;
-		case scenes_InputAlias:
-			this.scene = new scenes_InputAlias();
+		case scenes_FormAlias:
+			this.scene = new scenes_FormAlias();
 			this.setScene(this.scene,true);
 			break;
 		case scenes_Lobby:
@@ -369,7 +369,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 		this.room.onStateChange.push(Rooms.onStateChange);
 		this.room.onError.push(Rooms.onError);
 		this.room.onLeave.push(Rooms.onLeave);
-		this.goToScene(scenes_InputAlias);
+		this.goToScene(scenes_FormAlias);
 	}
 	,onStateChange: function(changes) {
 		haxe_Log.trace("onStateChange",{ fileName : "src/Main.hx", lineNumber : 64, className : "Main", methodName : "onStateChange", customParams : [changes]});
@@ -63617,7 +63617,7 @@ scenes_Connecting.prototype = $extend(h2d_Scene.prototype,{
 	}
 	,__class__: scenes_Connecting
 });
-var scenes_InputAlias = function() {
+var scenes_FormAlias = function() {
 	var _gthis = this;
 	h2d_Scene.call(this);
 	var font = hxd_res_DefaultFont.get();
@@ -63670,10 +63670,10 @@ var scenes_InputAlias = function() {
 	Main.instance.room.onMessage("ALIAS_ENTERED",$bind(this,this.onMessageAliasEntered));
 	hxd_Window.getInstance().addEventTarget($bind(this,this.onEvent));
 };
-$hxClasses["scenes.InputAlias"] = scenes_InputAlias;
-scenes_InputAlias.__name__ = "scenes.InputAlias";
-scenes_InputAlias.__super__ = h2d_Scene;
-scenes_InputAlias.prototype = $extend(h2d_Scene.prototype,{
+$hxClasses["scenes.FormAlias"] = scenes_FormAlias;
+scenes_FormAlias.__name__ = "scenes.FormAlias";
+scenes_FormAlias.__super__ = h2d_Scene;
+scenes_FormAlias.prototype = $extend(h2d_Scene.prototype,{
 	onEvent: function(event) {
 		if(event.kind._hx_index == 9) {
 			if(event.keyCode == 13) {
@@ -63689,10 +63689,10 @@ scenes_InputAlias.prototype = $extend(h2d_Scene.prototype,{
 		Main.instance.goToScene(scenes_Lobby);
 	}
 	,dispose: function() {
-		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/InputAlias.hx", lineNumber : 68, className : "scenes.InputAlias", methodName : "dispose"});
+		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/FormAlias.hx", lineNumber : 68, className : "scenes.FormAlias", methodName : "dispose"});
 		h2d_Scene.prototype.dispose.call(this);
 	}
-	,__class__: scenes_InputAlias
+	,__class__: scenes_FormAlias
 });
 var scenes_Lobby = function() {
 	h2d_Scene.call(this);
