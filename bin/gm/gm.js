@@ -22,6 +22,174 @@ EReg.prototype = {
 	}
 	,__class__: EReg
 };
+var GMain = function() {
+	window.document.addEventListener("DOMContentLoaded",$bind(this,this.init));
+	this.client = new io_colyseus_Client("ws://localhost:3000");
+};
+GMain.__name__ = "GMain";
+GMain.main = function() {
+	new GMain();
+};
+GMain.createPlayerTableRow = function(table,player) {
+	var row = window.document.createElement("tr");
+	var key = window.document.createElement("td");
+	var alias = window.document.createElement("td");
+	var pause = window.document.createElement("td");
+	var connect = window.document.createElement("td");
+	row.className = "player_row";
+	key.innerText = player.key;
+	alias.innerText = player.alias;
+	row.append(key,alias,pause,connect);
+	table.appendChild(row);
+};
+GMain.prototype = {
+	init: function(_) {
+		var _gthis = this;
+		this.servers_container = window.document.getElementById("servers_container");
+		this.server_address = window.document.getElementById("server_address");
+		this.players_container = window.document.getElementById("players_container");
+		this.players_table_container = window.document.getElementById("players_table_container");
+		this.players_table = window.document.getElementById("players_table");
+		this.controls_container = window.document.getElementById("controls_container");
+		this.status_container = window.document.getElementById("status_container");
+		this.status = window.document.getElementById("status");
+		this.server_address_input = js_Boot.__cast(window.document.getElementById("server_address_input") , HTMLInputElement);
+		this.create_server_form = js_Boot.__cast(window.document.getElementById("create_server_form") , HTMLFormElement);
+		this.server_address.hidden = true;
+		this.players_container.hidden = true;
+		this.controls_container.hidden = true;
+		this.create_server_form.reset();
+		this.server_address_input.onchange = function(e) {
+			_gthis.server_address.innerText = e.currentTarget.value.trim();
+		};
+		this.create_server_form.onsubmit = function(e1) {
+			e1.preventDefault();
+			if(_gthis.server_address.innerText.length == 0) {
+				_gthis.status.innerText = "❌ You must enter a server address";
+				e1.currentTarget.reset();
+				return;
+			}
+			_gthis.server_address.innerText = StringTools.trim(_gthis.server_address.innerText);
+			_gthis.status.innerText = "👷 Creating Server";
+			var _gthis1 = _gthis.client;
+			var _g = new haxe_ds_StringMap();
+			var value = _gthis.server_address.innerText;
+			if(__map_reserved["server_address"] != null) {
+				_g.setReserved("server_address",value);
+			} else {
+				_g.h["server_address"] = value;
+			}
+			_gthis1.create_State("state_handler",_g,State,$bind(_gthis,_gthis.onRoomCreate));
+		};
+	}
+	,onRoomCreate: function(err,room) {
+		var _gthis = this;
+		if(err != null) {
+			this.status.innerText = err.message;
+			console.log("src/GMain.hx:76:","JOIN ERROR: " + Std.string(err));
+			return;
+		}
+		this.create_server_form.hidden = true;
+		this.server_address.hidden = false;
+		this.players_container.hidden = false;
+		this.controls_container.hidden = false;
+		this.status.innerText = "Server \"" + this.server_address.innerText + "\" Created";
+		var updatePlayerList = function(player,key) {
+			var rows = _gthis.players_table.getElementsByClassName("player_row");
+			var _g = 0;
+			while(_g < rows.length) {
+				var row = rows[_g];
+				++_g;
+				_gthis.players_table.removeChild(row);
+			}
+			var player1 = room.get_state().players.items.iterator();
+			while(player1.hasNext()) {
+				var player2 = player1.next();
+				var table = _gthis.players_table;
+				var row1 = window.document.createElement("tr");
+				var key1 = window.document.createElement("td");
+				var alias = window.document.createElement("td");
+				var pause = window.document.createElement("td");
+				var connect = window.document.createElement("td");
+				row1.className = "player_row";
+				key1.innerText = player2.key;
+				alias.innerText = player2.alias;
+				row1.append(key1,alias,pause,connect);
+				table.appendChild(row1);
+			}
+		};
+		room.get_state().players.onAdd = room.get_state().players.onChange = room.get_state().players.onRemove = updatePlayerList;
+	}
+	,__class__: GMain
+};
+var HxOverrides = function() { };
+HxOverrides.__name__ = "HxOverrides";
+HxOverrides.cca = function(s,index) {
+	var x = s.charCodeAt(index);
+	if(x != x) {
+		return undefined;
+	}
+	return x;
+};
+HxOverrides.substr = function(s,pos,len) {
+	if(len == null) {
+		len = s.length;
+	} else if(len < 0) {
+		if(pos == 0) {
+			len = s.length + len;
+		} else {
+			return "";
+		}
+	}
+	return s.substr(pos,len);
+};
+HxOverrides.remove = function(a,obj) {
+	var i = a.indexOf(obj);
+	if(i == -1) {
+		return false;
+	}
+	a.splice(i,1);
+	return true;
+};
+HxOverrides.iter = function(a) {
+	return { cur : 0, arr : a, hasNext : function() {
+		return this.cur < this.arr.length;
+	}, next : function() {
+		return this.arr[this.cur++];
+	}};
+};
+var Lambda = function() { };
+Lambda.__name__ = "Lambda";
+Lambda.exists = function(it,f) {
+	var x = $getIterator(it);
+	while(x.hasNext()) {
+		var x1 = x.next();
+		if(f(x1)) {
+			return true;
+		}
+	}
+	return false;
+};
+Lambda.count = function(it,pred) {
+	var n = 0;
+	if(pred == null) {
+		var _ = $getIterator(it);
+		while(_.hasNext()) {
+			var _1 = _.next();
+			++n;
+		}
+	} else {
+		var x = $getIterator(it);
+		while(x.hasNext()) {
+			var x1 = x.next();
+			if(pred(x1)) {
+				++n;
+			}
+		}
+	}
+	return n;
+};
+Math.__name__ = "Math";
 var io_colyseus_serializer_schema_Decoder = function() {
 };
 io_colyseus_serializer_schema_Decoder.__name__ = "io.colyseus.serializer.schema.Decoder";
@@ -342,170 +510,6 @@ io_colyseus_serializer_schema_Schema.prototype = {
 	}
 	,__class__: io_colyseus_serializer_schema_Schema
 };
-var GState = function() {
-	this.dummy = 0;
-	io_colyseus_serializer_schema_Schema.call(this);
-	this._indexes.h[0] = "dummy";
-	this._types.h[0] = "number";
-};
-GState.__name__ = "GState";
-GState.__super__ = io_colyseus_serializer_schema_Schema;
-GState.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
-	__class__: GState
-});
-var GMain = function() {
-	window.document.addEventListener("DOMContentLoaded",$bind(this,this.init));
-	this.roomClient = new io_colyseus_Client("ws://localhost:3000");
-	this.roomClient.joinOrCreate_GState("room_controller",new haxe_ds_StringMap(),GState,$bind(this,this.onRoomJoinOrCreate));
-};
-GMain.__name__ = "GMain";
-GMain.main = function() {
-	new GMain();
-};
-GMain.createPlayerTableRow = function(table,player) {
-	var row = window.document.createElement("tr");
-	var key = window.document.createElement("td");
-	var alias = window.document.createElement("td");
-	var pause = window.document.createElement("td");
-	var connect = window.document.createElement("td");
-	row.className = "player_row";
-	key.innerText = player.key;
-	alias.innerText = player.alias;
-	row.append(key,alias,pause,connect);
-	table.appendChild(row);
-};
-GMain.prototype = {
-	init: function(_) {
-		this.servers_container = window.document.getElementById("servers_container");
-		this.server_address = window.document.getElementById("server_address");
-		this.players_container = window.document.getElementById("players_container");
-		this.players_table_container = window.document.getElementById("players_table_container");
-		this.players_table = window.document.getElementById("players_table");
-		this.controls_container = window.document.getElementById("controls_container");
-		this.status_container = window.document.getElementById("status_container");
-		this.status = window.document.getElementById("status");
-		this.server_address_input = js_Boot.__cast(window.document.getElementById("server_address_input") , HTMLInputElement);
-		this.create_server_btn = window.document.getElementById("create_server");
-		this.servers_container.hidden = true;
-		this.players_container.hidden = true;
-		this.controls_container.hidden = true;
-		this.status.innerText = "📡 Connecting to Room Controller";
-	}
-	,onRoomJoinOrCreate: function(err,room) {
-		var _gthis = this;
-		if(err != null) {
-			this.status.innerText = err.message;
-			console.log("src/GMain.hx:68:","JOIN ERROR: " + Std.string(err));
-			return;
-		}
-		this.create_server_btn.onclick = function(_) {
-			if(_gthis.server_name == "") {
-				return;
-			}
-			_gthis.status.innerText = "👷 Creating Server";
-			room.send("createServer",_gthis.server_address_input.value);
-		};
-		this.servers_container.hidden = false;
-		this.status.innerText = "✅ Connected to Room Controller!";
-		room.onMessage("SERVER_CREATED",function(address) {
-			_gthis.server_address.innerText = address;
-			_gthis.server_address_input.hidden = true;
-			_gthis.create_server_btn.hidden = true;
-			_gthis.status.innerText = "Server \"" + address + "\" Created";
-			_gthis.switchToCreatedServer();
-		});
-	}
-	,switchToCreatedServer: function() {
-		this.status.innerText = "🖧  Connecting to Game State room";
-		this.roomClient.joinOrCreate_State(this.server_address.innerText,new haxe_ds_StringMap(),State,$bind(this,this.onGameJoinOrCreate));
-	}
-	,onGameJoinOrCreate: function(err,room) {
-		var _gthis = this;
-		if(err != null) {
-			this.status.innerText = err.message;
-			console.log("src/GMain.hx:99:","JOIN ERROR: " + Std.string(err));
-			return;
-		}
-		this.players_container.hidden = false;
-		this.controls_container.hidden = false;
-		this.status.innerText = "✅ Connected to Game State room!";
-		var updatePlayerList = function(player,key) {
-			var rows = _gthis.players_table.getElementsByClassName("player_row");
-			var _g = 0;
-			while(_g < rows.length) {
-				var row = rows[_g];
-				++_g;
-				_gthis.players_table.removeChild(row);
-			}
-			var player1 = room.get_state().players.items.iterator();
-			while(player1.hasNext()) {
-				var player2 = player1.next();
-				var table = _gthis.players_table;
-				var row1 = window.document.createElement("tr");
-				var key1 = window.document.createElement("td");
-				var alias = window.document.createElement("td");
-				var pause = window.document.createElement("td");
-				var connect = window.document.createElement("td");
-				row1.className = "player_row";
-				key1.innerText = player2.key;
-				alias.innerText = player2.alias;
-				row1.append(key1,alias,pause,connect);
-				table.appendChild(row1);
-			}
-		};
-		room.get_state().players.onAdd = room.get_state().players.onChange = room.get_state().players.onRemove = updatePlayerList;
-	}
-	,__class__: GMain
-};
-var HxOverrides = function() { };
-HxOverrides.__name__ = "HxOverrides";
-HxOverrides.remove = function(a,obj) {
-	var i = a.indexOf(obj);
-	if(i == -1) {
-		return false;
-	}
-	a.splice(i,1);
-	return true;
-};
-HxOverrides.iter = function(a) {
-	return { cur : 0, arr : a, hasNext : function() {
-		return this.cur < this.arr.length;
-	}, next : function() {
-		return this.arr[this.cur++];
-	}};
-};
-var Lambda = function() { };
-Lambda.__name__ = "Lambda";
-Lambda.exists = function(it,f) {
-	var x = $getIterator(it);
-	while(x.hasNext()) {
-		var x1 = x.next();
-		if(f(x1)) {
-			return true;
-		}
-	}
-	return false;
-};
-Lambda.count = function(it,pred) {
-	var n = 0;
-	if(pred == null) {
-		var _ = $getIterator(it);
-		while(_.hasNext()) {
-			var _1 = _.next();
-			++n;
-		}
-	} else {
-		var x = $getIterator(it);
-		while(x.hasNext()) {
-			var x1 = x.next();
-			if(pred(x1)) {
-				++n;
-			}
-		}
-	}
-	return n;
-};
-Math.__name__ = "Math";
 var Player = function() {
 	this.alias = null;
 	this.key = null;
@@ -603,6 +607,37 @@ Std.string = function(s) {
 };
 var StringTools = function() { };
 StringTools.__name__ = "StringTools";
+StringTools.isSpace = function(s,pos) {
+	var c = HxOverrides.cca(s,pos);
+	if(!(c > 8 && c < 14)) {
+		return c == 32;
+	} else {
+		return true;
+	}
+};
+StringTools.ltrim = function(s) {
+	var l = s.length;
+	var r = 0;
+	while(r < l && StringTools.isSpace(s,r)) ++r;
+	if(r > 0) {
+		return HxOverrides.substr(s,r,l - r);
+	} else {
+		return s;
+	}
+};
+StringTools.rtrim = function(s) {
+	var l = s.length;
+	var r = 0;
+	while(r < l && StringTools.isSpace(s,l - r - 1)) ++r;
+	if(r > 0) {
+		return HxOverrides.substr(s,0,l - r);
+	} else {
+		return s;
+	}
+};
+StringTools.trim = function(s) {
+	return StringTools.ltrim(StringTools.rtrim(s));
+};
 StringTools.replace = function(s,sub,by) {
 	return s.split(sub).join(by);
 };
@@ -1689,11 +1724,8 @@ var io_colyseus_Client = function(endpoint) {
 };
 io_colyseus_Client.__name__ = "io.colyseus.Client";
 io_colyseus_Client.prototype = {
-	joinOrCreate_GState: function(roomName,options,stateClass,callback) {
-		this.createMatchMakeRequest_joinOrCreate_T("joinOrCreate",roomName,options,stateClass,callback);
-	}
-	,joinOrCreate_State: function(roomName,options,stateClass,callback) {
-		this.createMatchMakeRequest_joinOrCreate_T("joinOrCreate",roomName,options,stateClass,callback);
+	create_State: function(roomName,options,stateClass,callback) {
+		this.createMatchMakeRequest_create_T("create",roomName,options,stateClass,callback);
 	}
 	,createMatchMakeRequest_reconnect_T: function(method,roomName,options,stateClass,callback) {
 		var _gthis = this;
@@ -3431,9 +3463,8 @@ if(ArrayBuffer.prototype.slice == null) {
 	ArrayBuffer.prototype.slice = js_lib__$ArrayBuffer_ArrayBufferCompat.sliceImpl;
 }
 io_colyseus_serializer_schema_Schema.decoder = new io_colyseus_serializer_schema_Decoder();
-GState.SERVER_CREATED = "SERVER_CREATED";
-GState.CREATE_SERVER = "createServer";
-GState.SET_PLAYER_SCENE = "setPlayerScene";
+State.COLYSEUS_ROOM = "state_handler";
+State.SERVER_ADDRESS = "server_address";
 State.DISCONNECTED = "DISCONNECTED";
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
 State.SET_ALIAS = "setAlias";

@@ -359,13 +359,13 @@ Main.prototype = $extend(hxd_App.prototype,{
 		}
 		return this.scene;
 	}
-	,onJoinOrCreate: function(err,room) {
+	,onJoin: function(err,room) {
 		if(err != null) {
 			var tf = new h2d_Text(hxd_res_DefaultFont.get(),this.scene);
 			tf.set_text(err.message);
 			tf.posChanged = true;
 			tf.y = 20;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 52, className : "Main", methodName : "onJoinOrCreate"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 52, className : "Main", methodName : "onJoin"});
 			return;
 		}
 		this.room = room;
@@ -62047,8 +62047,8 @@ var io_colyseus_Client = function(endpoint) {
 $hxClasses["io.colyseus.Client"] = io_colyseus_Client;
 io_colyseus_Client.__name__ = "io.colyseus.Client";
 io_colyseus_Client.prototype = {
-	joinOrCreate_State: function(roomName,options,stateClass,callback) {
-		this.createMatchMakeRequest_joinOrCreate_T("joinOrCreate",roomName,options,stateClass,callback);
+	join_State: function(roomName,options,stateClass,callback) {
+		this.createMatchMakeRequest_join_T("join",roomName,options,stateClass,callback);
 	}
 	,createMatchMakeRequest_reconnect_T: function(method,roomName,options,stateClass,callback) {
 		var _gthis = this;
@@ -63769,11 +63769,20 @@ scenes_FormServer.prototype = $extend(h2d_Scene.prototype,{
 	}
 	,submit: function(_) {
 		this.submitBtn.set_textColor(16777215);
-		Main.instance.client.joinOrCreate_State(this.input.text,new haxe_ds_StringMap(),State,($_=Main.instance,$bind($_,$_.onJoinOrCreate)));
+		var tmp = Main.instance.client;
+		var _g = new haxe_ds_StringMap();
+		var value = this.input.text;
+		if(__map_reserved["server_address"] != null) {
+			_g.setReserved("server_address",value);
+		} else {
+			_g.h["server_address"] = value;
+		}
+		tmp.join_State("state_handler",_g,State,($_=Main.instance,$bind($_,$_.onJoin)));
 		Main.instance.goToScene(scenes_Connecting);
 	}
 	,dispose: function() {
 		haxe_Log.trace("Scene:InputServer DISPOSE",{ fileName : "src/scenes/FormServer.hx", lineNumber : 64, className : "scenes.FormServer", methodName : "dispose"});
+		hxd_Window.getInstance().removeEventTarget($bind(this,this.onEvent));
 		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_FormServer
@@ -63872,6 +63881,8 @@ if(ArrayBuffer.prototype.slice == null) {
 	ArrayBuffer.prototype.slice = js_lib__$ArrayBuffer_ArrayBufferCompat.sliceImpl;
 }
 io_colyseus_serializer_schema_Schema.decoder = new io_colyseus_serializer_schema_Decoder();
+State.COLYSEUS_ROOM = "state_handler";
+State.SERVER_ADDRESS = "server_address";
 State.DISCONNECTED = "DISCONNECTED";
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
 State.SET_ALIAS = "setAlias";

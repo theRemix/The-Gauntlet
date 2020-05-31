@@ -68,7 +68,7 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
     return true;
   }
 
-  onJoin (client) {
+  onJoin (client, options) {
     this.state.createPlayer(client.sessionId);
   }
 

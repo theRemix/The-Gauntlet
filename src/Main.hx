@@ -42,7 +42,7 @@ class Main extends hxd.App {
     return this.scene;
   }
 
-  public inline function onJoinOrCreate(err:io.colyseus.error.MatchMakeError, room) {
+  public inline function onJoin(err:io.colyseus.error.MatchMakeError, room) {
     if (err != null) {
 
       var tf = new h2d.Text(hxd.res.DefaultFont.get(), this.scene);

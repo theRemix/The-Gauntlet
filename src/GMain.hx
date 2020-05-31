@@ -1,25 +1,15 @@
 import js.Browser.document;
 import js.html.DOMElement;
+import js.html.FormElement;
 import js.html.InputElement;
 import io.colyseus.Client;
 import io.colyseus.Room;
 import io.colyseus.serializer.schema.Schema;
 
-class GState extends Schema {
-  // messages server -> client
-  public static inline var SERVER_CREATED = "SERVER_CREATED";
-
-  // messages client -> server
-  public static inline var CREATE_SERVER = "createServer";
-  public static inline var SET_PLAYER_SCENE = "setPlayerScene";
-
-	@:type("number")
-	public var dummy:Int = 0;
-}
+using StringTools;
 
 class GMain {
-  var roomClient:Client; // room controller, creates servers
-  var gameClient:Client; // same room as players
+  var client:Client;
 
   var servers_container:DOMElement;
   var server_address:DOMElement;
@@ -30,15 +20,12 @@ class GMain {
   var status_container:DOMElement;
   var status:DOMElement;
   var server_address_input:InputElement;
-  var create_server_btn:DOMElement;
-
-  var server_name:String;
+  var create_server_form:FormElement;
 
   function new() {
     document.addEventListener("DOMContentLoaded", init);
 
-    roomClient = new Client('ws://localhost:3000');
-    roomClient.joinOrCreate("room_controller", [], GState, onRoomJoinOrCreate);
+    client = new Client('ws://localhost:3000');
   }
 
   // DOM ready
@@ -52,72 +39,49 @@ class GMain {
     status_container = document.getElementById("status_container");
     status = document.getElementById("status");
     server_address_input = cast(document.getElementById("server_address_input"), InputElement);
-    create_server_btn = document.getElementById("create_server");
+    create_server_form = cast(document.getElementById("create_server_form"), FormElement);
 
-    servers_container.hidden = true;
+    server_address.hidden = true;
     players_container.hidden = true;
     controls_container.hidden = true;
 
-    status.innerText = "📡 Connecting to Room Controller";
+    // status.innerText = "📡 Connecting to Room Controller";
+    // status.innerText = "✅ Connected to Room Controller!";
+    // status.innerText = "🖧  Connecting to Game State room";
+    // status.innerText = '✅ Connected to Game State room!';
+
+    create_server_form.reset();
+
+    server_address_input.onchange = function(e){
+      server_address.innerText = e.currentTarget.value.trim();
+    }
+    create_server_form.onsubmit = function(e){
+      e.preventDefault();
+      if(server_address.innerText.length == 0){
+        status.innerText = "❌ You must enter a server address";
+        e.currentTarget.reset();
+        return;
+      }
+      server_address.innerText = server_address.innerText.trim();
+      status.innerText = "👷 Creating Server";
+      client.create(State.COLYSEUS_ROOM, [State.SERVER_ADDRESS => server_address.innerText], State, onRoomCreate);
+    }
+
   }
 
   // Colyseus ready
-  function onRoomJoinOrCreate(err:io.colyseus.error.MatchMakeError, room:Room<GState>) {
+  function onRoomCreate(err:io.colyseus.error.MatchMakeError, room:Room<State>) {
     if (err != null) {
       status.innerText = err.message;
       trace("JOIN ERROR: " + err);
       return;
     }
 
-    create_server_btn.onclick = function(_){
-      if(server_name == "") return;
-      status.innerText = "👷 Creating Server";
-      room.send(GState.CREATE_SERVER, server_address_input.value);
-    }
-
-    servers_container.hidden = false;
-    status.innerText = "✅ Connected to Room Controller!";
-
-    room.onMessage(GState.SERVER_CREATED, function(address){
-      server_address.innerText = address;
-      server_address_input.hidden = true;
-      create_server_btn.hidden = true;
-      status.innerText = 'Server "$address" Created';
-
-      switchToCreatedServer();
-    });
-  }
-
-  function switchToCreatedServer(){
-    status.innerText = "🖧  Connecting to Game State room";
-    roomClient.joinOrCreate(server_address.innerText, [], State, onGameJoinOrCreate);
-  }
-
-  function onGameJoinOrCreate(err:io.colyseus.error.MatchMakeError, room:Room<State>) {
-    if (err != null) {
-      status.innerText = err.message;
-      trace("JOIN ERROR: " + err);
-      return;
-    }
-
+    create_server_form.hidden = true;
+    server_address.hidden = false;
     players_container.hidden = false;
     controls_container.hidden = false;
-
-    // create_server_btn.onclick = function(_){
-    //   if(server_name == "") return;
-    //   status.innerText = "👷 Creating Server";
-    //   room.send(GState.CREATE_SERVER, server_address_input.value);
-    // }
-
-    status.innerText = '✅ Connected to Game State room!';
-
-    // room.onMessage(GState.SERVER_CREATED, function(address){
-    //   server_address.innerText = address;
-    //   server_address_input.hidden = true;
-    //   create_server_btn.hidden = true;
-    //   status.innerText = 'Server "$address" Created';
-    // });
-
+    status.innerText = 'Server "${server_address.innerText}" Created';
 
     room.state.players.onAdd =
     room.state.players.onChange =
@@ -134,7 +98,6 @@ class GMain {
   }
 
   static function main() new GMain();
-
 
   static inline function createPlayerTableRow(table, player){
     var row = document.createElement("tr");

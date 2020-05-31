@@ -4,7 +4,7 @@ const colyseus = require('colyseus')
 const { monitor } = require('@colyseus/monitor')
 const { createServer } = require('http')
 const app = express()
-const { RoomController } = require('./rooms/roomController')
+const { StateHandlerRoom } = require('./rooms/stateHandler')
 
 app.use(express.json())
 
@@ -20,11 +20,10 @@ const gameServer = new colyseus.Server({
   pingInterval: 0,
 })
 
-// gameServer.define("lobby", colyseus.LobbyRoom).enableRealtimeListing()
-
-RoomController.gameServer = gameServer
-gameServer.define("room_controller", RoomController).enableRealtimeListing()
-
+gameServer
+   .define("state_handler", StateHandlerRoom)
+   .filterBy(['server_address'])
+   // .enableRealtimeListing()
 
 gameServer.onShutdown(() =>
   console.log(`game server is going down.`)

@@ -56,12 +56,13 @@ class FormServer extends h2d.Scene{
 
   private function submit(?_) {
     submitBtn.textColor = 0xFFFFFF;
-    Main.instance.client.joinOrCreate(input.text, [], State, Main.instance.onJoinOrCreate);
+    Main.instance.client.join(State.COLYSEUS_ROOM, [State.SERVER_ADDRESS => input.text], State, Main.instance.onJoin);
     Main.instance.goToScene(scenes.Connecting);
   }
 
   public override function dispose(){
     trace("Scene:InputServer DISPOSE");
+    hxd.Window.getInstance().removeEventTarget(onEvent);
     super.dispose();
   }
 }
