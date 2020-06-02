@@ -13,4 +13,10 @@ class State extends Schema {
 
 	@:type("ref", Player)
 	public var gm: Player;
+
+	@:type("number")
+	public var tutScreen: Int;
+
+	@:type("number")
+	public var tutStep: Int;
 }

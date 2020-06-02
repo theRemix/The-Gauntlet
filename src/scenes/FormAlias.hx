@@ -7,7 +7,7 @@ private enum InputType {
   Number;
 }
 
-class FormAlias extends h2d.Scene{
+class FormAlias extends StatefulScene{
   private var font:h2d.Font;
   private var aliasInput:TextInput;
   private var hackingInput:TextInput;

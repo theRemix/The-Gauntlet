@@ -6,21 +6,22 @@ import io.colyseus.Room;
 class Main extends hxd.App {
   public var client:Client;
 	public var room:Room<State>;
-  private var scene:h2d.Scene;
+  private var scene:StatefulScene;
 
   // heaps
   override function init() {
-    this.goToScene(scenes.FormServer);
+    // this.goToScene(scenes.FormServer);
+    this.goToScene(scenes.Tut1);
   }
 
   // colyseus
   public function new() {
     super();
 
-    this.client = new Client('ws://localhost:3000');
+    // this.client = new Client('ws://localhost:3000');
   }
 
-  public function goToScene(scene:Class<h2d.Scene>):h2d.Scene {
+  public function goToScene(scene:Class<StatefulScene>):h2d.Scene {
     switch(scene){
       case scenes.Connecting:
         this.scene = new scenes.Connecting();
@@ -38,8 +39,12 @@ class Main extends hxd.App {
         this.scene = new scenes.Lobby();
         this.setScene(this.scene, true);
 
+      case scenes.Tut1:
+        this.scene = new scenes.Tut1();
+        this.setScene(this.scene, true);
+
       default:
-        trace('WARN! No handler for scenee = $scene');
+        trace('WARN! No handler for scene = $scene');
     }
     return this.scene;
   }
@@ -57,9 +62,16 @@ class Main extends hxd.App {
     }
     this.room = room;
 
-    this.room.onStateChange += Rooms.onStateChange;
-    this.room.onError += Rooms.onError;
-    this.room.onLeave += Rooms.onLeave;
+    this.room.onStateChange += function onStateChange(state) {
+      trace("STATE CHANGE: " + Std.string(state));
+
+    }
+    this.room.onError += function onError(code: Int, message: String) {
+      trace("ROOM ERROR: " + code + " => " + message);
+    };
+    this.room.onLeave += function onLeave() {
+      trace("ROOM LEAVE");
+  };
 
     // this.room.onMessage(State.DISCONNECTED, function(_){ // not handled yet
     //   js.Browser.alert("Server Disconnected! Will reload the browser.");

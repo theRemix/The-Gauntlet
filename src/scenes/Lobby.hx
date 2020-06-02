@@ -1,6 +1,6 @@
 package scenes;
 
-class Lobby extends h2d.Scene{
+class Lobby extends StatefulScene{
   private var playerListTxt:h2d.Text;
 
   public function new(){

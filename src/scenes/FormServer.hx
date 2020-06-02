@@ -1,6 +1,6 @@
 package scenes;
 
-class FormServer extends h2d.Scene{
+class FormServer extends StatefulScene{
   private var input:h2d.TextInput;
   private var submitBtn:h2d.TextInput;
 

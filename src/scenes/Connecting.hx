@@ -1,6 +1,6 @@
 package scenes;
 
-class Connecting extends h2d.Scene{
+class Connecting extends StatefulScene{
 
   private var backBtn:h2d.TextInput;
 
