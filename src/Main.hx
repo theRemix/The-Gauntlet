@@ -2,15 +2,19 @@ import js.Browser.document;
 import js.Browser.window;
 import io.colyseus.Client;
 import io.colyseus.Room;
+import io.colyseus.serializer.schema.Schema;
+
 
 class Main extends hxd.App {
   public var client:Client;
 	public var room:Room<State>;
   private var scene:h2d.Scene;
+  public var gmControlledScenes:Bool;
 
   // heaps
   override function init() {
     this.goToScene(scenes.FormServer);
+    // this.goToScene(scenes.Tut1);
   }
 
   // colyseus
@@ -38,8 +42,12 @@ class Main extends hxd.App {
         this.scene = new scenes.Lobby();
         this.setScene(this.scene, true);
 
+      case scenes.Tut1:
+        this.scene = new scenes.Tut1();
+        this.setScene(this.scene, true);
+
       default:
-        trace('WARN! No handler for scenee = $scene');
+        trace('WARN! No handler for scene = $scene');
     }
     return this.scene;
   }
@@ -57,9 +65,14 @@ class Main extends hxd.App {
     }
     this.room = room;
 
-    this.room.onStateChange += Rooms.onStateChange;
-    this.room.onError += Rooms.onError;
-    this.room.onLeave += Rooms.onLeave;
+    // this.room.onStateChange += onStateChange;
+    this.room.state.onChange = onStateChange;
+    this.room.onError += function onError(code: Int, message: String) {
+      trace("ROOM ERROR: " + code + " => " + message);
+    };
+    this.room.onLeave += function onLeave() {
+      trace("ROOM LEAVE");
+  };
 
     // this.room.onMessage(State.DISCONNECTED, function(_){ // not handled yet
     //   js.Browser.alert("Server Disconnected! Will reload the browser.");
@@ -70,22 +83,34 @@ class Main extends hxd.App {
       this.room.leave();
       return null;
     }
-    // this.room.state.onChange = onStateChange;
 
     this.goToScene(scenes.FormAlias);
   }
 
-  private inline function onStateChange(changes){
-    trace('onStateChange', changes);
-    // for(change in changes){
-    //   switch(change.field){
-    //     case State.ALIAS_ENTERED:
-    //       trace('case', State.ALIAS_ENTERED);
-    //       goToScene(scenes.Lobby);
-    //     default:
-    //       trace('WARN! unhandled change: ${change.field}');
-    //   }
-    // }
+  private inline function onStateChange(changes:Array<DataChange>){
+    // trace('onStateChange', changes);
+    for(change in changes){
+      switch(change.field){
+        case "scene":
+          if(this.gmControlledScenes){
+            switch(Std.string(change.value)){
+              case "Lobby":
+                goToScene(scenes.Lobby);
+              case "Tut1":
+                goToScene(scenes.Tut1);
+              default:
+                trace('WARN: unhandled change scene in Main.onStateChange[scene]: ${change.value}');
+            }
+          }
+        case "pauseOverlay":
+          trace('case', "pauseOverlay");
+        case "tutStep":
+        case "players":
+        case "gm":
+        default:
+          trace('WARN: unhandled change in Main.onStateChange: ${change.field}');
+      }
+    }
   }
 
   override function update(dt:Float) {

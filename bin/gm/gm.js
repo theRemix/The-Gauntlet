@@ -391,17 +391,28 @@ GMain.prototype = {
 		this.status = window.document.getElementById("status");
 		this.server_address_input = js_Boot.__cast(window.document.getElementById("server_address_input") , HTMLInputElement);
 		this.create_server_form = js_Boot.__cast(window.document.getElementById("create_server_form") , HTMLFormElement);
+		this.sim_running = js_Boot.__cast(window.document.getElementById("sim_running") , HTMLInputElement);
+		this.sim_pause_dim = js_Boot.__cast(window.document.getElementById("sim_pause_dim") , HTMLInputElement);
+		this.sim_pause_dark = js_Boot.__cast(window.document.getElementById("sim_pause_dark") , HTMLInputElement);
+		this.cur_scene = js_Boot.__cast(window.document.getElementById("cur_scene") , HTMLSelectElement);
+		this.scene_tut1_controls = window.document.getElementById("scene_tut1_controls");
+		this.scene_tut1_controls_1 = js_Boot.__cast(window.document.getElementById("scene_tut1_controls_1") , HTMLInputElement);
+		this.scene_tut1_controls_2 = js_Boot.__cast(window.document.getElementById("scene_tut1_controls_2") , HTMLInputElement);
+		this.scene_tut1_controls_3 = js_Boot.__cast(window.document.getElementById("scene_tut1_controls_3") , HTMLInputElement);
+		this.scene_tut1_controls_4 = js_Boot.__cast(window.document.getElementById("scene_tut1_controls_4") , HTMLInputElement);
+		this.scene_tut1_controls_5 = js_Boot.__cast(window.document.getElementById("scene_tut1_controls_5") , HTMLInputElement);
 		this.server_address.hidden = true;
 		this.servers_container.hidden = true;
 		this.players_container.hidden = true;
 		this.controls_container.hidden = true;
+		this.scene_tut1_controls.hidden = true;
 		this.status.innerText = "📡 Connecting to Room Controller";
 	}
 	,onRoomJoinOrCreate: function(err,room) {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:70:","JOIN ERROR: " + Std.string(err));
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/GMain.hx", lineNumber : 100, className : "GMain", methodName : "onRoomJoinOrCreate"});
 			return;
 		}
 		this.servers_container.hidden = false;
@@ -436,7 +447,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:118:","JOIN ERROR: " + Std.string(err));
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/GMain.hx", lineNumber : 149, className : "GMain", methodName : "onGameJoinOrCreate"});
 			return;
 		}
 		this.players_container.hidden = false;
@@ -491,7 +502,101 @@ GMain.prototype = {
 			}
 		};
 		room.get_state().players.onRemove = removePlayerList;
-		window.onbeforeunload = function(_) {
+		this.scene_tut1_controls.hidden = false;
+		this.sim_running.onclick = function(_) {
+			haxe_Log.trace("sim_running.onclick",{ fileName : "src/GMain.hx", lineNumber : 189, className : "GMain", methodName : "onGameJoinOrCreate"});
+		};
+		this.sim_pause_dim.onclick = function(_1) {
+			haxe_Log.trace("sim_pause_dim.onclick",{ fileName : "src/GMain.hx", lineNumber : 192, className : "GMain", methodName : "onGameJoinOrCreate"});
+		};
+		this.sim_pause_dark.onclick = function(_2) {
+			haxe_Log.trace("sim_pause_dark.onclick",{ fileName : "src/GMain.hx", lineNumber : 195, className : "GMain", methodName : "onGameJoinOrCreate"});
+		};
+		this.cur_scene.onchange = function(e) {
+			haxe_Log.trace("cur_scene.onchange",{ fileName : "src/GMain.hx", lineNumber : 198, className : "GMain", methodName : "onGameJoinOrCreate", customParams : [e.target.value]});
+			room.send("setScene",e.target.value);
+		};
+		this.scene_tut1_controls_1.onchange = function(e1) {
+			haxe_Log.trace("scene_tut1_controls_1.onchange",{ fileName : "src/GMain.hx", lineNumber : 202, className : "GMain", methodName : "onGameJoinOrCreate", customParams : [e1.target.checked]});
+			var _g3 = new haxe_ds_StringMap();
+			if(__map_reserved["step"] != null) {
+				_g3.setReserved("step",1);
+			} else {
+				_g3.h["step"] = 1;
+			}
+			var value = e1.target.checked;
+			if(__map_reserved["value"] != null) {
+				_g3.setReserved("value",value);
+			} else {
+				_g3.h["value"] = value;
+			}
+			room.send("setTutStep",_g3);
+		};
+		this.scene_tut1_controls_2.onchange = function(e2) {
+			haxe_Log.trace("scene_tut1_controls_2.onchange",{ fileName : "src/GMain.hx", lineNumber : 206, className : "GMain", methodName : "onGameJoinOrCreate", customParams : [e2.target.checked]});
+			var _g4 = new haxe_ds_StringMap();
+			if(__map_reserved["step"] != null) {
+				_g4.setReserved("step",2);
+			} else {
+				_g4.h["step"] = 2;
+			}
+			var value1 = e2.target.checked;
+			if(__map_reserved["value"] != null) {
+				_g4.setReserved("value",value1);
+			} else {
+				_g4.h["value"] = value1;
+			}
+			room.send("setTutStep",_g4);
+		};
+		this.scene_tut1_controls_3.onchange = function(e3) {
+			haxe_Log.trace("scene_tut1_controls_3.onchange",{ fileName : "src/GMain.hx", lineNumber : 210, className : "GMain", methodName : "onGameJoinOrCreate", customParams : [e3.target.checked]});
+			var _g5 = new haxe_ds_StringMap();
+			if(__map_reserved["step"] != null) {
+				_g5.setReserved("step",3);
+			} else {
+				_g5.h["step"] = 3;
+			}
+			var value2 = e3.target.checked;
+			if(__map_reserved["value"] != null) {
+				_g5.setReserved("value",value2);
+			} else {
+				_g5.h["value"] = value2;
+			}
+			room.send("setTutStep",_g5);
+		};
+		this.scene_tut1_controls_4.onchange = function(e4) {
+			haxe_Log.trace("scene_tut1_controls_4.onchange",{ fileName : "src/GMain.hx", lineNumber : 214, className : "GMain", methodName : "onGameJoinOrCreate", customParams : [e4.target.checked]});
+			var _g6 = new haxe_ds_StringMap();
+			if(__map_reserved["step"] != null) {
+				_g6.setReserved("step",4);
+			} else {
+				_g6.h["step"] = 4;
+			}
+			var value3 = e4.target.checked;
+			if(__map_reserved["value"] != null) {
+				_g6.setReserved("value",value3);
+			} else {
+				_g6.h["value"] = value3;
+			}
+			room.send("setTutStep",_g6);
+		};
+		this.scene_tut1_controls_5.onchange = function(e5) {
+			haxe_Log.trace("scene_tut1_controls_5.onchange",{ fileName : "src/GMain.hx", lineNumber : 218, className : "GMain", methodName : "onGameJoinOrCreate", customParams : [e5.target.checked]});
+			var _g7 = new haxe_ds_StringMap();
+			if(__map_reserved["step"] != null) {
+				_g7.setReserved("step",5);
+			} else {
+				_g7.h["step"] = 5;
+			}
+			var value4 = e5.target.checked;
+			if(__map_reserved["value"] != null) {
+				_g7.setReserved("value",value4);
+			} else {
+				_g7.h["value"] = value4;
+			}
+			room.send("setTutStep",_g7);
+		};
+		window.onbeforeunload = function(_3) {
 			room.leave();
 			return null;
 		};
@@ -631,6 +736,7 @@ Reflect.compareMethods = function(f1,f2) {
 	}
 };
 var State = function() {
+	this.tutStep = new io_colyseus_serializer_schema_ArraySchema_$Bool();
 	this.players = new io_colyseus_serializer_schema_MapSchema_$Player();
 	io_colyseus_serializer_schema_Schema.call(this);
 	this._indexes.h[0] = "players";
@@ -639,6 +745,13 @@ var State = function() {
 	this._indexes.h[1] = "gm";
 	this._types.h[1] = "ref";
 	this._childSchemaTypes.h[1] = Player;
+	this._indexes.h[2] = "scene";
+	this._types.h[2] = "string";
+	this._indexes.h[3] = "pauseOverlay";
+	this._types.h[3] = "string";
+	this._indexes.h[4] = "tutStep";
+	this._types.h[4] = "array";
+	this._childPrimitiveTypes.h[4] = "boolean";
 };
 State.__name__ = "State";
 State.__super__ = io_colyseus_serializer_schema_Schema;
@@ -719,6 +832,31 @@ var haxe__$Int64__$_$_$Int64 = function(high,low) {
 haxe__$Int64__$_$_$Int64.__name__ = "haxe._Int64.___Int64";
 haxe__$Int64__$_$_$Int64.prototype = {
 	__class__: haxe__$Int64__$_$_$Int64
+};
+var haxe_Log = function() { };
+haxe_Log.__name__ = "haxe.Log";
+haxe_Log.formatOutput = function(v,infos) {
+	var str = Std.string(v);
+	if(infos == null) {
+		return str;
+	}
+	var pstr = infos.fileName + ":" + infos.lineNumber;
+	if(infos.customParams != null) {
+		var _g = 0;
+		var _g1 = infos.customParams;
+		while(_g < _g1.length) {
+			var v1 = _g1[_g];
+			++_g;
+			str += ", " + Std.string(v1);
+		}
+	}
+	return pstr + ": " + str;
+};
+haxe_Log.trace = function(v,infos) {
+	var str = haxe_Log.formatOutput(v,infos);
+	if(typeof(console) != "undefined" && console.log != null) {
+		console.log(str);
+	}
 };
 var haxe_Timer = function(time_ms) {
 	var me = this;
@@ -1633,7 +1771,7 @@ var haxe_net_impl_WebSocketJs = function(url,protocols) {
 			};
 			fileReader.readAsArrayBuffer(js_Boot.__cast(m , Blob));
 		} else {
-			console.log("haxe/net/impl/WebSocketJs.hx:47:","Unhandled websocket onmessage " + m);
+			haxe_Log.trace("Unhandled websocket onmessage " + m,{ fileName : "haxe/net/impl/WebSocketJs.hx", lineNumber : 47, className : "haxe.net.impl.WebSocketJs", methodName : "new"});
 		}
 	};
 };
@@ -1713,11 +1851,11 @@ io_colyseus_Auth.prototype = {
 		}
 		req.setHeader("Accept","application/json");
 		req.onData = function(json) {
-			console.log("io/colyseus/Auth.hx:64:","RESPONSE:" + json);
+			haxe_Log.trace("RESPONSE:" + json,{ fileName : "io/colyseus/Auth.hx", lineNumber : 64, className : "io.colyseus.Auth", methodName : "request"});
 		};
 		req.onError = function(err) {
-			console.log("io/colyseus/Auth.hx:68:","onError");
-			console.log("io/colyseus/Auth.hx:69:",err);
+			haxe_Log.trace("onError",{ fileName : "io/colyseus/Auth.hx", lineNumber : 68, className : "io.colyseus.Auth", methodName : "request"});
+			haxe_Log.trace(err,{ fileName : "io/colyseus/Auth.hx", lineNumber : 69, className : "io.colyseus.Auth", methodName : "request"});
 		};
 		req.setHeader("X-HTTP-Method-Override",method);
 		req.request(true);
@@ -2074,7 +2212,7 @@ io_colyseus_Room.prototype = {
 		} else if(code == io_colyseus_Protocol.ERROR) {
 			var errorCode = io_colyseus_serializer_schema_Schema.decoder.number(data,it);
 			var message = io_colyseus_serializer_schema_Schema.decoder.string(data,it);
-			console.log("io/colyseus/Room.hx:150:","Room error: code => " + errorCode + ", message => " + message);
+			haxe_Log.trace("Room error: code => " + errorCode + ", message => " + message,{ fileName : "io/colyseus/Room.hx", lineNumber : 150, className : "io.colyseus.Room", methodName : "onMessageCallback"});
 			var _g2 = 0;
 			var _g11 = this.onError;
 			while(_g2 < _g11.length) {
@@ -2135,7 +2273,7 @@ io_colyseus_Room.prototype = {
 			var _this1 = this.onMessageHandlers;
 			(__map_reserved[messageType] != null ? _this1.getReserved(messageType) : _this1.h[messageType])(message);
 		} else {
-			console.log("io/colyseus/Room.hx:195:","onMessage not registered for type " + Std.string(type));
+			haxe_Log.trace("onMessage not registered for type " + Std.string(type),{ fileName : "io/colyseus/Room.hx", lineNumber : 195, className : "io.colyseus.Room", methodName : "dispatchMessage"});
 		}
 	}
 	,getMessageHandlerKey: function(type) {
@@ -2234,6 +2372,45 @@ io_colyseus_serializer_SchemaSerializer.prototype = {
 	,handshake: function(bytes,offset) {
 	}
 	,__class__: io_colyseus_serializer_SchemaSerializer
+};
+var io_colyseus_serializer_schema_ArraySchema_$Bool = function() {
+	this.items = [];
+};
+io_colyseus_serializer_schema_ArraySchema_$Bool.__name__ = "io.colyseus.serializer.schema.ArraySchema_Bool";
+io_colyseus_serializer_schema_ArraySchema_$Bool.prototype = {
+	get_length: function() {
+		return this.items.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_ArraySchema_$Bool();
+		cloned.items = this.items.slice();
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return HxOverrides.iter(this.items);
+	}
+	,toString: function() {
+		var data = [];
+		var _g = 0;
+		var _g1 = this.items;
+		while(_g < _g1.length) {
+			var item = _g1[_g];
+			++_g;
+			data.push("" + (item == null ? "null" : "" + item));
+		}
+		return "ArraySchema(" + Lambda.count(this.items) + ") { " + data.join(", ") + " } ";
+	}
+	,__class__: io_colyseus_serializer_schema_ArraySchema_$Bool
+	,__properties__: {get_length:"get_length"}
 };
 var io_colyseus_serializer_schema_ArraySchema_$Dynamic = function() {
 	this.items = [];
@@ -3483,6 +3660,8 @@ io_colyseus_serializer_schema_Schema.decoder = new io_colyseus_serializer_schema
 GState.SERVER_CREATED = "SERVER_CREATED";
 GState.CREATE_SERVER = "createServer";
 GState.SET_PLAYER_SCENE = "setPlayerScene";
+GState.SET_SCENE = "setScene";
+GState.SET_TUT_STEP = "setTutStep";
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
 State.SET_ALIAS_STATS = "setAliasAndStats";
 haxe_io_FPHelper.i64tmp = (function($this) {

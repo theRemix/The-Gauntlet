@@ -2,6 +2,7 @@ import js.Browser.document;
 import js.Browser.window;
 import js.html.DOMElement;
 import js.html.InputElement;
+import js.html.SelectElement;
 import js.html.FormElement;
 import io.colyseus.Client;
 import io.colyseus.Room;
@@ -14,6 +15,8 @@ class GState extends Schema {
   // messages client -> server
   public static inline var CREATE_SERVER = "createServer";
   public static inline var SET_PLAYER_SCENE = "setPlayerScene";
+  public static inline var SET_SCENE = "setScene";
+  public static inline var SET_TUT_STEP = "setTutStep";
 
 	@:type("number")
 	public var dummy:Int = 0;
@@ -32,6 +35,18 @@ class GMain {
   var status:DOMElement;
   var server_address_input:InputElement;
   var create_server_form:FormElement;
+
+  var sim_running:InputElement;
+  var sim_pause_dim:InputElement;
+  var sim_pause_dark:InputElement;
+  var cur_scene:SelectElement;
+  var scene_tut1_controls:DOMElement;
+  var scene_tut1_controls_1:InputElement;
+  var scene_tut1_controls_2:InputElement;
+  var scene_tut1_controls_3:InputElement;
+  var scene_tut1_controls_4:InputElement;
+  var scene_tut1_controls_5:InputElement;
+
 
   var server_name:String;
 
@@ -55,12 +70,27 @@ class GMain {
     server_address_input = cast(document.getElementById("server_address_input"), InputElement);
     create_server_form = cast(document.getElementById("create_server_form"), FormElement);
 
+    sim_running = cast(document.getElementById("sim_running"), InputElement);
+    sim_pause_dim = cast(document.getElementById("sim_pause_dim"), InputElement);
+    sim_pause_dark = cast(document.getElementById("sim_pause_dark"), InputElement);
+    cur_scene = cast(document.getElementById("cur_scene"), SelectElement);
+    scene_tut1_controls = document.getElementById("scene_tut1_controls");
+    scene_tut1_controls_1 = cast(document.getElementById("scene_tut1_controls_1"), InputElement);
+    scene_tut1_controls_2 = cast(document.getElementById("scene_tut1_controls_2"), InputElement);
+    scene_tut1_controls_3 = cast(document.getElementById("scene_tut1_controls_3"), InputElement);
+    scene_tut1_controls_4 = cast(document.getElementById("scene_tut1_controls_4"), InputElement);
+    scene_tut1_controls_5 = cast(document.getElementById("scene_tut1_controls_5"), InputElement);
+
     server_address.hidden = true;
     servers_container.hidden = true;
     players_container.hidden = true;
     controls_container.hidden = true;
+    scene_tut1_controls.hidden = true;
 
     status.innerText = "📡 Connecting to Room Controller";
+
+    // FAST DEV
+    // onGameJoinOrCreate(null, new Room<State>("dummy", State));
   }
 
   // Colyseus ready
@@ -90,6 +120,7 @@ class GMain {
       status.innerText = "👷 Creating Server";
       room.send(GState.CREATE_SERVER, server_address_input.value);
     }
+
 
     // room.onMessage(State.DISCONNECTED, function(_){
     //   js.Browser.alert("Server Disconnected! Will reload the browser.");
@@ -123,23 +154,11 @@ class GMain {
     controls_container.hidden = false;
     server_address.hidden = false;
 
-    // create_server_btn.onclick = function(_){
-    //   if(server_name == "") return;
-    //   status.innerText = "👷 Creating Server";
-    //   room.send(GState.CREATE_SERVER, server_address_input.value);
-    // }
-
     status.innerText = '✅ Connected to Game State room!';
 
-    // room.onMessage(GState.SERVER_CREATED, function(address){
-    //   server_address.innerText = address;
-    //   server_address_input.hidden = true;
-    //   create_server_btn.hidden = true;
-    //   status.innerText = 'Server "$address" Created';
-    // });
-
-
     // room.state.players.onAdd =
+
+    // FAST DEV START
     room.state.players.onChange = function updatePlayerList(player, key){
       var rows = players_table.getElementsByClassName("player_row");
       for(row in rows){
@@ -161,6 +180,45 @@ class GMain {
       }
 
     }
+    // FAST DEV END
+
+
+    // CONTROLS
+    scene_tut1_controls.hidden = false;
+    sim_running.onclick = function(_){
+      trace('sim_running.onclick');
+    }
+    sim_pause_dim.onclick = function(_){
+      trace('sim_pause_dim.onclick');
+    }
+    sim_pause_dark.onclick = function(_){
+      trace('sim_pause_dark.onclick');
+    }
+    cur_scene.onchange = function(e){
+      trace('cur_scene.onchange', e.target.value);
+      room.send(GState.SET_SCENE, e.target.value);
+    }
+    scene_tut1_controls_1.onchange = function(e){
+      trace('scene_tut1_controls_1.onchange', e.target.checked);
+      room.send(GState.SET_TUT_STEP, ["step" => 1, "value" => e.target.checked]);
+    }
+    scene_tut1_controls_2.onchange = function(e){
+      trace('scene_tut1_controls_2.onchange', e.target.checked);
+      room.send(GState.SET_TUT_STEP, ["step" => 2, "value" => e.target.checked]);
+    }
+    scene_tut1_controls_3.onchange = function(e){
+      trace('scene_tut1_controls_3.onchange', e.target.checked);
+      room.send(GState.SET_TUT_STEP, ["step" => 3, "value" => e.target.checked]);
+    }
+    scene_tut1_controls_4.onchange = function(e){
+      trace('scene_tut1_controls_4.onchange', e.target.checked);
+      room.send(GState.SET_TUT_STEP, ["step" => 4, "value" => e.target.checked]);
+    }
+    scene_tut1_controls_5.onchange = function(e){
+      trace('scene_tut1_controls_5.onchange', e.target.checked);
+      room.send(GState.SET_TUT_STEP, ["step" => 5, "value" => e.target.checked]);
+    }
+
 
     window.onbeforeunload = function(_){
       room.leave();

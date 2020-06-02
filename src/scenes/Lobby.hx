@@ -14,6 +14,10 @@ class Lobby extends h2d.Scene{
     Main.instance.room.state.players.onAdd = onAddPlayer;
     Main.instance.room.state.players.onChange = onChangePlayer;
     Main.instance.room.state.players.onRemove = onRemovePlayer;
+
+    renderListOfPlayers();
+
+    Main.instance.gmControlledScenes = true;
   }
 
   // rerender all names

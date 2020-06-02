@@ -37,7 +37,59 @@
   </div>
   <div id="controls_container">
     <h2>Controls</h2>
-    <div id="controls"></div>
+
+    <fieldset>
+      <label for="sim_running">
+        Running
+        <input type="radio" name="sim_state" id="sim_running" />
+      </label>
+      <label for="sim_pause_dim">
+        Pause Dim
+        <input type="radio" name="sim_state" id="sim_pause_dim" />
+      </label>
+      <label for="sim_pause_dark">
+        Pause Dark
+        <input type="radio" name="sim_state" id="sim_pause_dark" />
+      </label>
+    </fieldset>
+
+    <form id="controls_scene" action="#">
+      <label for="cur_scene">Current Scene:</label>
+      <select name="cur_scene" id="cur_scene">
+        <option value="Lobby">Lobby</option>
+        <option value="Tut1">Tutorial 1</option>
+      </select>
+    </form>
+
+    <div id="scene_controls">
+      <div id="scene_tut1_controls">
+        <label for="scene_tut1_controls_1">
+          Show Step 1
+          <input type="checkbox" id="scene_tut1_controls_1">
+        </label>
+        <br />
+        <label for="scene_tut1_controls_2">
+          Show Step 2
+          <input type="checkbox" id="scene_tut1_controls_2">
+        </label>
+        <br />
+        <label for="scene_tut1_controls_3">
+          Show Step 3
+          <input type="checkbox" id="scene_tut1_controls_3">
+        </label>
+        <br />
+        <label for="scene_tut1_controls_4">
+          Show Step 4
+          <input type="checkbox" id="scene_tut1_controls_4">
+        </label>
+        <br />
+        <label for="scene_tut1_controls_5">
+          Show Step 5
+          <input type="checkbox" id="scene_tut1_controls_5">
+        </label>
+      </div>
+    </div>
+
   </div>
   <div id="status_container">
     <h2>Status</h2>

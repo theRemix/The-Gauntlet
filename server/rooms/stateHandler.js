@@ -1,6 +1,6 @@
 const { Room, Client } = require("colyseus")
 const schema = require("@colyseus/schema")
-const { Schema, MapSchema } = schema
+const { Schema, ArraySchema, MapSchema } = schema
 
 class Player extends Schema {
 }
@@ -18,6 +18,7 @@ class State extends Schema {
     super();
 
     this.players = new MapSchema();
+    this.tutStep = new ArraySchema();
   }
 
   something = "This attribute won't be sent to the client-side";
@@ -47,10 +48,22 @@ class State extends Schema {
     this.players[ id ].intellect = parseInt(aliasAndStats.intellect);
   }
 
+  setScene(sceneName) {
+    this.scene = sceneName;
+  }
+
+  setTutStep(step, visible) {
+    this.tutStep[step] = visible;
+  }
+
+
 }
 schema.defineTypes(State, {
   players: { map: Player },
   gm: Player,
+	scene: "string",
+	pauseOverlay: "string",
+	tutStep: ["boolean"],
 });
 
 module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
@@ -69,6 +82,23 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
       this.state.setAliasAndStats(client.sessionId, aliasAndStats);
       client.send("ALIAS_ENTERED");
     });
+
+    this.onMessage("setScene", (client, sceneName) => {
+      if(client.sessionId != this.state.gm.key)
+        return console.warn('WARN: non GM attempted to run setScene');
+
+      console.log("StateHandlerRoom setScene", sceneName);
+      this.state.setScene(sceneName);
+    });
+
+    this.onMessage("setTutStep", (client, {step, value}) => {
+      if(client.sessionId != this.state.gm.key)
+        return console.warn('WARN: non GM attempted to run setTutStep');
+
+      console.log("StateHandlerRoom setTutStep", step, value);
+      this.state.setTutStep(step, value);
+    });
+
   }
 
   onAuth(client, options, req) {
