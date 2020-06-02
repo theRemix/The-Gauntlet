@@ -10,7 +10,7 @@ class FormServer extends h2d.Scene{
     var font = hxd.res.DefaultFont.get();
 
     var tf = new h2d.Text(font, this);
-    tf.text = "Enter your server address:";
+    tf.text = "Enter server address:";
 
     input = new h2d.TextInput(font, this);
     input.backgroundColor = 0x80808080;
@@ -56,12 +56,13 @@ class FormServer extends h2d.Scene{
 
   private function submit(?_) {
     submitBtn.textColor = 0xFFFFFF;
-    Main.instance.client.joinOrCreate(input.text, [], State, Main.instance.onJoinOrCreate);
+    Main.instance.client.join(input.text, [], State, Main.instance.onJoin);
     Main.instance.goToScene(scenes.Connecting);
   }
 
   public override function dispose(){
     trace("Scene:InputServer DISPOSE");
+    hxd.Window.getInstance().removeEventTarget(onEvent);
     super.dispose();
   }
 }

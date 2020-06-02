@@ -355,8 +355,8 @@ GState.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
 });
 var GMain = function() {
 	window.document.addEventListener("DOMContentLoaded",$bind(this,this.init));
-	this.roomClient = new io_colyseus_Client("ws://localhost:3000");
-	this.roomClient.joinOrCreate_GState("room_controller",new haxe_ds_StringMap(),GState,$bind(this,this.onRoomJoinOrCreate));
+	this.client = new io_colyseus_Client("ws://localhost:3000");
+	this.client.joinOrCreate_GState("room_controller",new haxe_ds_StringMap(),GState,$bind(this,this.onRoomJoinOrCreate));
 };
 GMain.__name__ = "GMain";
 GMain.main = function() {
@@ -369,6 +369,7 @@ GMain.createPlayerTableRow = function(table,player) {
 	var pause = window.document.createElement("td");
 	var connect = window.document.createElement("td");
 	row.className = "player_row";
+	key.className = "player_key";
 	key.innerText = player.key;
 	alias.innerText = player.alias;
 	row.append(key,alias,pause,connect);
@@ -385,7 +386,8 @@ GMain.prototype = {
 		this.status_container = window.document.getElementById("status_container");
 		this.status = window.document.getElementById("status");
 		this.server_address_input = js_Boot.__cast(window.document.getElementById("server_address_input") , HTMLInputElement);
-		this.create_server_btn = window.document.getElementById("create_server");
+		this.create_server_form = js_Boot.__cast(window.document.getElementById("create_server_form") , HTMLFormElement);
+		this.server_address.hidden = true;
 		this.servers_container.hidden = true;
 		this.players_container.hidden = true;
 		this.controls_container.hidden = true;
@@ -395,39 +397,51 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:68:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:70:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
-		this.create_server_btn.onclick = function(_) {
-			if(_gthis.server_name == "") {
+		this.servers_container.hidden = false;
+		this.create_server_form.reset();
+		this.status.innerText = "✅ Connected to Room Controller!";
+		this.server_address_input.onchange = function(e) {
+			_gthis.server_address.innerText = e.currentTarget.value.trim();
+		};
+		this.create_server_form.onsubmit = function(e1) {
+			e1.preventDefault();
+			if(_gthis.server_address.innerText.length == 0) {
+				_gthis.status.innerText = "❌ You must enter a server address";
+				e1.currentTarget.reset();
 				return;
 			}
 			_gthis.status.innerText = "👷 Creating Server";
 			room.send("createServer",_gthis.server_address_input.value);
 		};
-		this.servers_container.hidden = false;
-		this.status.innerText = "✅ Connected to Room Controller!";
+		room.onMessage("DISCONNECTED",function(_) {
+			window.alert("Server Disconnected! Will reload the browser.");
+			window.document.location.reload();
+		});
 		room.onMessage("SERVER_CREATED",function(address) {
 			_gthis.server_address.innerText = address;
 			_gthis.server_address_input.hidden = true;
-			_gthis.create_server_btn.hidden = true;
+			_gthis.create_server_form.hidden = true;
 			_gthis.status.innerText = "Server \"" + address + "\" Created";
 			_gthis.switchToCreatedServer();
 		});
 	}
 	,switchToCreatedServer: function() {
 		this.status.innerText = "🖧  Connecting to Game State room";
-		this.roomClient.joinOrCreate_State(this.server_address.innerText,new haxe_ds_StringMap(),State,$bind(this,this.onGameJoinOrCreate));
+		this.client.joinOrCreate_State(this.server_address.innerText,new haxe_ds_StringMap(),State,$bind(this,this.onGameJoinOrCreate));
 	}
 	,onGameJoinOrCreate: function(err,room) {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:99:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:118:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.players_container.hidden = false;
 		this.controls_container.hidden = false;
+		this.server_address.hidden = false;
 		this.status.innerText = "✅ Connected to Game State room!";
 		var updatePlayerList = function(player,key) {
 			var rows = _gthis.players_table.getElementsByClassName("player_row");
@@ -447,13 +461,40 @@ GMain.prototype = {
 				var pause = window.document.createElement("td");
 				var connect = window.document.createElement("td");
 				row1.className = "player_row";
+				key1.className = "player_key";
 				key1.innerText = player2.key;
 				alias.innerText = player2.alias;
 				row1.append(key1,alias,pause,connect);
 				table.appendChild(row1);
 			}
 		};
-		room.get_state().players.onAdd = room.get_state().players.onChange = room.get_state().players.onRemove = updatePlayerList;
+		room.get_state().players.onChange = updatePlayerList;
+		var removePlayerList = function(player3,key2) {
+			var rows1 = _gthis.players_table.getElementsByClassName("player_row");
+			var _g1 = 0;
+			while(_g1 < rows1.length) {
+				var row2 = rows1[_g1];
+				++_g1;
+				var keyCols = row2.getElementsByClassName("player_key");
+				var _g2 = 0;
+				while(_g2 < keyCols.length) {
+					var keyCol = keyCols[_g2];
+					++_g2;
+					if(keyCol.innerText == key2) {
+						_gthis.players_table.removeChild(row2);
+					}
+				}
+			}
+		};
+		room.get_state().players.onRemove = removePlayerList;
+		window.onbeforeunload = function(_) {
+			room.leave();
+			return null;
+		};
+		room.onMessage("DISCONNECTED",function(_1) {
+			window.alert("Server Disconnected! Will reload the browser.");
+			window.document.location.reload();
+		});
 	}
 	,__class__: GMain
 };

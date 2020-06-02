@@ -20,7 +20,7 @@ module.exports.RoomController = class RoomController extends Room {
   onCreate (options) {
     console.log("RoomController created!", options);
 
-    this.setSeatReservationTime(20)
+    this.setSeatReservationTime(40)
 
     this.setState(new State());
 

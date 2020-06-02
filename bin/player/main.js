@@ -355,28 +355,37 @@ Main.prototype = $extend(hxd_App.prototype,{
 			this.setScene(this.scene,true);
 			break;
 		default:
-			haxe_Log.trace("WARN! No handler for scenee = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 40, className : "Main", methodName : "goToScene"});
+			haxe_Log.trace("WARN! No handler for scenee = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 42, className : "Main", methodName : "goToScene"});
 		}
 		return this.scene;
 	}
-	,onJoinOrCreate: function(err,room) {
+	,onJoin: function(err,room) {
+		var _gthis = this;
 		if(err != null) {
+			(js_Boot.__cast(this.scene , scenes_Connecting)).showReturnBtn();
 			var tf = new h2d_Text(hxd_res_DefaultFont.get(),this.scene);
 			tf.set_text(err.message);
 			tf.posChanged = true;
 			tf.y = 20;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 52, className : "Main", methodName : "onJoinOrCreate"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 55, className : "Main", methodName : "onJoin"});
 			return;
 		}
 		this.room = room;
-		this.goToScene(scenes_FormAlias);
 		this.room.onStateChange.push(Rooms.onStateChange);
 		this.room.onError.push(Rooms.onError);
 		this.room.onLeave.push(Rooms.onLeave);
+		this.room.onMessage("DISCONNECTED",function(_) {
+			window.alert("Server Disconnected! Will reload the browser.");
+			window.document.location.reload();
+		});
+		window.onbeforeunload = function(_1) {
+			_gthis.room.leave();
+			return null;
+		};
 		this.goToScene(scenes_FormAlias);
 	}
 	,onStateChange: function(changes) {
-		haxe_Log.trace("onStateChange",{ fileName : "src/Main.hx", lineNumber : 68, className : "Main", methodName : "onStateChange", customParams : [changes]});
+		haxe_Log.trace("onStateChange",{ fileName : "src/Main.hx", lineNumber : 79, className : "Main", methodName : "onStateChange", customParams : [changes]});
 	}
 	,update: function(dt) {
 	}
@@ -62047,8 +62056,8 @@ var io_colyseus_Client = function(endpoint) {
 $hxClasses["io.colyseus.Client"] = io_colyseus_Client;
 io_colyseus_Client.__name__ = "io.colyseus.Client";
 io_colyseus_Client.prototype = {
-	joinOrCreate_State: function(roomName,options,stateClass,callback) {
-		this.createMatchMakeRequest_joinOrCreate_T("joinOrCreate",roomName,options,stateClass,callback);
+	join_State: function(roomName,options,stateClass,callback) {
+		this.createMatchMakeRequest_join_T("join",roomName,options,stateClass,callback);
 	}
 	,createMatchMakeRequest_reconnect_T: function(method,roomName,options,stateClass,callback) {
 		var _gthis = this;
@@ -63614,15 +63623,43 @@ org_msgpack_MsgPack.decode = function(b,option) {
 };
 var scenes_Connecting = function() {
 	h2d_Scene.call(this);
-	var tf = new h2d_Text(hxd_res_DefaultFont.get(),this);
+	var font = hxd_res_DefaultFont.get();
+	var tf = new h2d_Text(font,this);
 	tf.set_text("Connecting to the net");
+	this.backBtn = new h2d_TextInput(font,this);
+	this.backBtn.set_text("RETURN");
+	this.backBtn.canEdit = false;
+	this.backBtn.set_textColor(11193514);
+	var _this = this.backBtn;
+	var _g = _this;
+	_g.posChanged = true;
+	_g.scaleX *= 2;
+	var _g1 = _this;
+	_g1.posChanged = true;
+	_g1.scaleY *= 2;
+	var _this1 = this.backBtn;
+	_this1.posChanged = true;
+	_this1.x = 240;
+	var _this2 = this.backBtn;
+	_this2.posChanged = true;
+	_this2.y = 110;
+	this.backBtn.onClick = $bind(this,this.backBtnOnClick);
+	this.backBtn.set_visible(false);
 };
 $hxClasses["scenes.Connecting"] = scenes_Connecting;
 scenes_Connecting.__name__ = "scenes.Connecting";
 scenes_Connecting.__super__ = h2d_Scene;
 scenes_Connecting.prototype = $extend(h2d_Scene.prototype,{
-	dispose: function() {
-		haxe_Log.trace("Scene:Connecting DISPOSE",{ fileName : "src/scenes/Connecting.hx", lineNumber : 12, className : "scenes.Connecting", methodName : "dispose"});
+	showReturnBtn: function() {
+		this.backBtn.set_visible(true);
+		this.backBtn.set_backgroundColor(-2139045760);
+	}
+	,backBtnOnClick: function(_) {
+		this.backBtn.set_textColor(16777215);
+		Main.instance.goToScene(scenes_FormServer);
+	}
+	,dispose: function() {
+		haxe_Log.trace("Scene:Connecting DISPOSE",{ fileName : "src/scenes/Connecting.hx", lineNumber : 37, className : "scenes.Connecting", methodName : "dispose"});
 		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_Connecting
@@ -63700,6 +63737,8 @@ scenes_FormAlias.prototype = $extend(h2d_Scene.prototype,{
 	}
 	,dispose: function() {
 		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/FormAlias.hx", lineNumber : 68, className : "scenes.FormAlias", methodName : "dispose"});
+		Main.instance.room.onMessage("ALIAS_ENTERED",null);
+		hxd_Window.getInstance().removeEventTarget($bind(this,this.onEvent));
 		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_FormAlias
@@ -63709,7 +63748,7 @@ var scenes_FormServer = function() {
 	h2d_Scene.call(this);
 	var font = hxd_res_DefaultFont.get();
 	var tf = new h2d_Text(font,this);
-	tf.set_text("Enter your server address:");
+	tf.set_text("Enter server address:");
 	this.input = new h2d_TextInput(font,this);
 	this.input.set_backgroundColor(-2139062144);
 	this.input.set_textColor(11184810);
@@ -63769,11 +63808,12 @@ scenes_FormServer.prototype = $extend(h2d_Scene.prototype,{
 	}
 	,submit: function(_) {
 		this.submitBtn.set_textColor(16777215);
-		Main.instance.client.joinOrCreate_State(this.input.text,new haxe_ds_StringMap(),State,($_=Main.instance,$bind($_,$_.onJoinOrCreate)));
+		Main.instance.client.join_State(this.input.text,new haxe_ds_StringMap(),State,($_=Main.instance,$bind($_,$_.onJoin)));
 		Main.instance.goToScene(scenes_Connecting);
 	}
 	,dispose: function() {
 		haxe_Log.trace("Scene:InputServer DISPOSE",{ fileName : "src/scenes/FormServer.hx", lineNumber : 64, className : "scenes.FormServer", methodName : "dispose"});
+		hxd_Window.getInstance().removeEventTarget($bind(this,this.onEvent));
 		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_FormServer

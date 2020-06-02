@@ -52,7 +52,7 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
   onCreate (options) {
     console.log("StateHandlerRoom created!", options);
 
-    this.setSeatReservationTime(20)
+    this.setSeatReservationTime(40)
 
     this.setState(new State());
 
@@ -72,29 +72,32 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
     this.state.createPlayer(client.sessionId);
   }
 
-  async onLeave (client, consented) {
-    client.send("DISCONNECTED");
+  onLeave (client, consented) {
+    console.log("user disconnected", client.sessionId, 'consented', consented);
+    this.state.removePlayer(client.sessionId);
+    // client.send("DISCONNECTED", client);
 
-    // flag client as inactive for other users
-    if(this.state.players.hasOwnProperty(client.sessionId)){
-      this.state.players[client.sessionId].connected = false;
-      try {
-        if (consented) {
-          this.state.removePlayer(client.sessionId);
-          throw new Error("consented leave");
-        }
+  // async onLeave (client, consented) {
+    // // flag client as inactive for other users
+    // if(this.state.players.hasOwnProperty(client.sessionId)){
+    //   this.state.players[client.sessionId].connected = false;
+    //   try {
+    //     if (consented) {
+    //       this.state.removePlayer(client.sessionId);
+    //       throw new Error("consented leave");
+    //     }
 
-        // allow disconnected client to reconnect into this room until 20 seconds
-        await this.allowReconnection(client, 20);
+    //     // allow disconnected client to reconnect into this room until 20 seconds
+    //     await this.allowReconnection(client, 20);
 
-        // client returned! let's re-activate it.
-        this.state.players[client.sessionId].connected = true;
+    //     // client returned! let's re-activate it.
+    //     this.state.players[client.sessionId].connected = true;
 
-      } catch (e) {
-        // 20 seconds expired. let's remove the client.
-        this.state.removePlayer(client.sessionId);
-      }
-    }
+    //   } catch (e) {
+    //     // 20 seconds expired. let's remove the client.
+    //     this.state.removePlayer(client.sessionId);
+    //   }
+    // }
   }
 
   onDispose () {

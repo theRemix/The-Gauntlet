@@ -1,3 +1,5 @@
+import js.Browser.document;
+import js.Browser.window;
 import io.colyseus.Client;
 import io.colyseus.Room;
 
@@ -42,9 +44,10 @@ class Main extends hxd.App {
     return this.scene;
   }
 
-  public inline function onJoinOrCreate(err:io.colyseus.error.MatchMakeError, room) {
+  public inline function onJoin(err:io.colyseus.error.MatchMakeError, room) {
     if (err != null) {
 
+      cast(this.scene, scenes.Connecting).showReturnBtn();
       var tf = new h2d.Text(hxd.res.DefaultFont.get(), this.scene);
       tf.text = err.message;
       tf.y = 20;
@@ -53,12 +56,20 @@ class Main extends hxd.App {
       return;
     }
     this.room = room;
-    this.goToScene(scenes.FormAlias);
 
     this.room.onStateChange += Rooms.onStateChange;
     this.room.onError += Rooms.onError;
     this.room.onLeave += Rooms.onLeave;
 
+    this.room.onMessage(State.DISCONNECTED, function(_){
+      js.Browser.alert("Server Disconnected! Will reload the browser.");
+      document.location.reload();
+    });
+
+    window.onbeforeunload = function(_){
+      this.room.leave();
+      return null;
+    }
     // this.room.state.onChange = onStateChange;
 
     this.goToScene(scenes.FormAlias);

@@ -57,7 +57,7 @@ class FormAlias extends h2d.Scene{
 
   private function submit(?_) {
     submitBtn.textColor = 0xFFFFFF;
-    Main.instance.room.send("setAlias", input.text);
+    Main.instance.room.send(State.SET_ALIAS, input.text);
   }
 
   private function onMessageAliasEntered(_){
@@ -66,6 +66,8 @@ class FormAlias extends h2d.Scene{
 
   public override function dispose(){
     trace("Scene:InputAlias DISPOSE");
+    Main.instance.room.onMessage(State.ALIAS_ENTERED, null);
+    hxd.Window.getInstance().removeEventTarget(onEvent);
     super.dispose();
   }
 }
