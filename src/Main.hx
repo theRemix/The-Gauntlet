@@ -61,10 +61,10 @@ class Main extends hxd.App {
     this.room.onError += Rooms.onError;
     this.room.onLeave += Rooms.onLeave;
 
-    this.room.onMessage(State.DISCONNECTED, function(_){
-      js.Browser.alert("Server Disconnected! Will reload the browser.");
-      document.location.reload();
-    });
+    // this.room.onMessage(State.DISCONNECTED, function(_){ // not handled yet
+    //   js.Browser.alert("Server Disconnected! Will reload the browser.");
+    //   document.location.reload();
+    // });
 
     window.onbeforeunload = function(_){
       this.room.leave();

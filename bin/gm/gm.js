@@ -366,13 +366,17 @@ GMain.createPlayerTableRow = function(table,player) {
 	var row = window.document.createElement("tr");
 	var key = window.document.createElement("td");
 	var alias = window.document.createElement("td");
+	var stats = window.document.createElement("td");
 	var pause = window.document.createElement("td");
 	var connect = window.document.createElement("td");
 	row.className = "player_row";
 	key.className = "player_key";
 	key.innerText = player.key;
 	alias.innerText = player.alias;
-	row.append(key,alias,pause,connect);
+	if(player.alias != "GM") {
+		stats.innerHTML = "hacking:" + (player.hacking == null ? "null" : "" + player.hacking) + "<br>sysops:" + (player.sysops == null ? "null" : "" + player.sysops) + "<br>skullduggery:" + (player.skullduggery == null ? "null" : "" + player.skullduggery) + "<br>int:" + (player.intellect == null ? "null" : "" + player.intellect);
+	}
+	row.append(key,alias,stats,pause,connect);
 	table.appendChild(row);
 };
 GMain.prototype = {
@@ -416,10 +420,6 @@ GMain.prototype = {
 			_gthis.status.innerText = "👷 Creating Server";
 			room.send("createServer",_gthis.server_address_input.value);
 		};
-		room.onMessage("DISCONNECTED",function(_) {
-			window.alert("Server Disconnected! Will reload the browser.");
-			window.document.location.reload();
-		});
 		room.onMessage("SERVER_CREATED",function(address) {
 			_gthis.server_address.innerText = address;
 			_gthis.server_address_input.hidden = true;
@@ -458,13 +458,17 @@ GMain.prototype = {
 				var row1 = window.document.createElement("tr");
 				var key1 = window.document.createElement("td");
 				var alias = window.document.createElement("td");
+				var stats = window.document.createElement("td");
 				var pause = window.document.createElement("td");
 				var connect = window.document.createElement("td");
 				row1.className = "player_row";
 				key1.className = "player_key";
 				key1.innerText = player2.key;
 				alias.innerText = player2.alias;
-				row1.append(key1,alias,pause,connect);
+				if(player2.alias != "GM") {
+					stats.innerHTML = "hacking:" + (player2.hacking == null ? "null" : "" + player2.hacking) + "<br>sysops:" + (player2.sysops == null ? "null" : "" + player2.sysops) + "<br>skullduggery:" + (player2.skullduggery == null ? "null" : "" + player2.skullduggery) + "<br>int:" + (player2.intellect == null ? "null" : "" + player2.intellect);
+				}
+				row1.append(key1,alias,stats,pause,connect);
 				table.appendChild(row1);
 			}
 		};
@@ -491,10 +495,6 @@ GMain.prototype = {
 			room.leave();
 			return null;
 		};
-		room.onMessage("DISCONNECTED",function(_1) {
-			window.alert("Server Disconnected! Will reload the browser.");
-			window.document.location.reload();
-		});
 	}
 	,__class__: GMain
 };
@@ -555,6 +555,14 @@ var Player = function() {
 	this._types.h[0] = "string";
 	this._indexes.h[1] = "alias";
 	this._types.h[1] = "string";
+	this._indexes.h[2] = "hacking";
+	this._types.h[2] = "number";
+	this._indexes.h[3] = "sysops";
+	this._types.h[3] = "number";
+	this._indexes.h[4] = "skullduggery";
+	this._types.h[4] = "number";
+	this._indexes.h[5] = "intellect";
+	this._types.h[5] = "number";
 };
 Player.__name__ = "Player";
 Player.__super__ = io_colyseus_serializer_schema_Schema;
@@ -3475,9 +3483,8 @@ io_colyseus_serializer_schema_Schema.decoder = new io_colyseus_serializer_schema
 GState.SERVER_CREATED = "SERVER_CREATED";
 GState.CREATE_SERVER = "createServer";
 GState.SET_PLAYER_SCENE = "setPlayerScene";
-State.DISCONNECTED = "DISCONNECTED";
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
-State.SET_ALIAS = "setAlias";
+State.SET_ALIAS_STATS = "setAliasAndStats";
 haxe_io_FPHelper.i64tmp = (function($this) {
 	var $r;
 	var this1 = new haxe__$Int64__$_$_$Int64(0,0);

@@ -91,10 +91,10 @@ class GMain {
       room.send(GState.CREATE_SERVER, server_address_input.value);
     }
 
-    room.onMessage(State.DISCONNECTED, function(_){
-      js.Browser.alert("Server Disconnected! Will reload the browser.");
-      document.location.reload();
-    });
+    // room.onMessage(State.DISCONNECTED, function(_){
+    //   js.Browser.alert("Server Disconnected! Will reload the browser.");
+    //   document.location.reload();
+    // });
 
     room.onMessage(GState.SERVER_CREATED, function(address){
       server_address.innerText = address;
@@ -167,10 +167,10 @@ class GMain {
       return null;
     }
 
-    room.onMessage(State.DISCONNECTED, function(_){
-      js.Browser.alert("Server Disconnected! Will reload the browser.");
-      document.location.reload();
-    });
+    // room.onMessage(State.DISCONNECTED, function(_){
+    //   js.Browser.alert("Server Disconnected! Will reload the browser.");
+    //   document.location.reload();
+    // });
 
   }
 
@@ -181,6 +181,7 @@ class GMain {
     var row = document.createElement("tr");
     var key = document.createElement("td");
     var alias = document.createElement("td");
+    var stats = document.createElement("td");
     var pause = document.createElement("td");
     var connect = document.createElement("td");
 
@@ -188,8 +189,11 @@ class GMain {
     key.className = "player_key";
     key.innerText = player.key;
     alias.innerText = player.alias;
+    if(player.alias != "GM"){
+      stats.innerHTML = 'hacking:${Std.string(player.hacking)}<br>sysops:${Std.string(player.sysops)}<br>skullduggery:${Std.string(player.skullduggery)}<br>int:${Std.string(player.intellect)}';
+    }
 
-    row.append(key, alias, pause, connect);
+    row.append(key, alias, stats, pause, connect);
     // row.appendChild(key);
     table.appendChild(row);
   }

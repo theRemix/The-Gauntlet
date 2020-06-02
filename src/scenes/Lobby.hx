@@ -30,11 +30,17 @@ class Lobby extends h2d.Scene{
   }
 
   public function renderListOfPlayers(){
-    playerListTxt.text = "Users connected:";
+    playerListTxt.text = "Users connected:\n\nAlias       Hacking       Sysops       Skullduggery       Int";
 
     for(player in Main.instance.room.state.players){
       if(player.alias != null){
         playerListTxt.text += "\n"+player.alias;
+        if(player.alias != "GM"){
+          playerListTxt.text += "       "+player.hacking;
+          playerListTxt.text += "       "+player.sysops;
+          playerListTxt.text += "       "+player.skullduggery;
+          playerListTxt.text += "       "+player.intellect;
+        }
       }
     }
   }

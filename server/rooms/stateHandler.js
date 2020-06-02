@@ -7,6 +7,10 @@ class Player extends Schema {
 schema.defineTypes(Player, {
   key: "string",
   alias: "string",
+  hacking: "number",
+  sysops: "number",
+  skullduggery: "number",
+  intellect: "number",
 });
 
 class State extends Schema {
@@ -35,8 +39,12 @@ class State extends Schema {
     console.log('removed player', id)
   }
 
-  setAlias(id, alias) {
-    this.players[ id ].alias = alias;
+  setAliasAndStats(id, aliasAndStats) {
+    this.players[ id ].alias = aliasAndStats.alias;
+    this.players[ id ].hacking = parseInt(aliasAndStats.hacking);
+    this.players[ id ].sysops = parseInt(aliasAndStats.sysops);
+    this.players[ id ].skullduggery = parseInt(aliasAndStats.skullduggery);
+    this.players[ id ].intellect = parseInt(aliasAndStats.intellect);
   }
 
 }
@@ -56,9 +64,9 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
 
     this.setState(new State());
 
-    this.onMessage("setAlias", (client, alias) => {
-      console.log("StateHandlerRoom setAlias", client.sessionId, ":", alias);
-      this.state.setAlias(client.sessionId, alias);
+    this.onMessage("setAliasAndStats", (client, aliasAndStats) => {
+      console.log("StateHandlerRoom setAlias", client.sessionId, ":", aliasAndStats);
+      this.state.setAliasAndStats(client.sessionId, aliasAndStats);
       client.send("ALIAS_ENTERED");
     });
   }
@@ -75,7 +83,6 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
   onLeave (client, consented) {
     console.log("user disconnected", client.sessionId, 'consented', consented);
     this.state.removePlayer(client.sessionId);
-    // client.send("DISCONNECTED", client);
 
   // async onLeave (client, consented) {
     // // flag client as inactive for other users
@@ -101,6 +108,8 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
   }
 
   onDispose () {
+    // console.log("Broadcasting DISCONNECTED");
+    // this.broadcast("DISCONNECTED"); // not handled yet
     console.log("Dispose StateHandlerRoom");
   }
 

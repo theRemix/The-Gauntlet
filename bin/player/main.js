@@ -374,11 +374,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 		this.room.onStateChange.push(Rooms.onStateChange);
 		this.room.onError.push(Rooms.onError);
 		this.room.onLeave.push(Rooms.onLeave);
-		this.room.onMessage("DISCONNECTED",function(_) {
-			window.alert("Server Disconnected! Will reload the browser.");
-			window.document.location.reload();
-		});
-		window.onbeforeunload = function(_1) {
+		window.onbeforeunload = function(_) {
 			_gthis.room.leave();
 			return null;
 		};
@@ -722,6 +718,14 @@ var Player = function() {
 	this._types.h[0] = "string";
 	this._indexes.h[1] = "alias";
 	this._types.h[1] = "string";
+	this._indexes.h[2] = "hacking";
+	this._types.h[2] = "number";
+	this._indexes.h[3] = "sysops";
+	this._types.h[3] = "number";
+	this._indexes.h[4] = "skullduggery";
+	this._types.h[4] = "number";
+	this._indexes.h[5] = "intellect";
+	this._types.h[5] = "number";
 };
 $hxClasses["Player"] = Player;
 Player.__name__ = "Player";
@@ -63664,81 +63668,138 @@ scenes_Connecting.prototype = $extend(h2d_Scene.prototype,{
 	}
 	,__class__: scenes_Connecting
 });
+var scenes__$FormAlias_InputType = $hxEnums["scenes._FormAlias.InputType"] = { __ename__ : true, __constructs__ : ["Alpha","Number"]
+	,Alpha: {_hx_index:0,__enum__:"scenes._FormAlias.InputType",toString:$estr}
+	,Number: {_hx_index:1,__enum__:"scenes._FormAlias.InputType",toString:$estr}
+};
+scenes__$FormAlias_InputType.__empty_constructs__ = [scenes__$FormAlias_InputType.Alpha,scenes__$FormAlias_InputType.Number];
 var scenes_FormAlias = function() {
-	var _gthis = this;
 	h2d_Scene.call(this);
-	var font = hxd_res_DefaultFont.get();
-	var tf = new h2d_Text(font,this);
-	tf.set_text("Enter your alias:");
-	this.input = new h2d_TextInput(font,this);
-	this.input.set_backgroundColor(-2139062144);
-	this.input.set_textColor(11184810);
-	var _this = this.input;
+	this.font = hxd_res_DefaultFont.get();
+	this.aliasInput = this.createFormInput("Alias:",50,scenes__$FormAlias_InputType.Alpha);
+	this.hackingInput = this.createFormInput("Comp (Hacking):",90,scenes__$FormAlias_InputType.Number);
+	this.sysopsInput = this.createFormInput("Comp (Sysops):",130,scenes__$FormAlias_InputType.Number);
+	this.skullduggeryInput = this.createFormInput("Skullduggery:",170,scenes__$FormAlias_InputType.Number);
+	this.intInput = this.createFormInput("Intellect:",210,scenes__$FormAlias_InputType.Number);
+	this.submitBtn = new h2d_TextInput(this.font,this);
+	this.submitBtn.set_text("LOGIN");
+	this.submitBtn.canEdit = false;
+	this.submitBtn.set_textColor(11193514);
+	this.submitBtn.set_backgroundColor(-2139045760);
+	var _this = this.submitBtn;
 	var _g = _this;
 	_g.posChanged = true;
 	_g.scaleX *= 2;
 	var _g1 = _this;
 	_g1.posChanged = true;
 	_g1.scaleY *= 2;
-	var _this1 = this.input;
-	var _this2 = this.input;
-	_this2.posChanged = true;
+	var _this1 = this.submitBtn;
 	_this1.posChanged = true;
-	_this1.x = _this2.y = 50;
-	this.input.inputWidth = 240;
-	this.input.onFocus = function(_) {
-		_gthis.input.set_textColor(16777215);
-	};
-	this.input.onFocusLost = function(_1) {
-		_gthis.input.set_textColor(11184810);
-	};
-	this.input.onChange = function() {
-		while(_gthis.input.text.length > 32) _gthis.input.set_text(HxOverrides.substr(_gthis.input.text,0,-1));
-	};
-	this.submitBtn = new h2d_TextInput(font,this);
-	this.submitBtn.set_text("LOGIN");
-	this.submitBtn.canEdit = false;
-	this.submitBtn.set_textColor(11193514);
-	this.submitBtn.set_backgroundColor(-2139045760);
-	var _this3 = this.submitBtn;
-	var _g2 = _this3;
-	_g2.posChanged = true;
-	_g2.scaleX *= 2;
-	var _g3 = _this3;
-	_g3.posChanged = true;
-	_g3.scaleY *= 2;
-	var _this4 = this.submitBtn;
-	_this4.posChanged = true;
-	_this4.x = 240;
-	var _this5 = this.submitBtn;
-	_this5.posChanged = true;
-	_this5.y = 110;
+	_this1.x = 440;
+	var _this2 = this.submitBtn;
+	_this2.posChanged = true;
+	_this2.y = 290;
 	this.submitBtn.onClick = $bind(this,this.submit);
 	Main.instance.room.onMessage("ALIAS_ENTERED",$bind(this,this.onMessageAliasEntered));
-	hxd_Window.getInstance().addEventTarget($bind(this,this.onEvent));
 };
 $hxClasses["scenes.FormAlias"] = scenes_FormAlias;
 scenes_FormAlias.__name__ = "scenes.FormAlias";
 scenes_FormAlias.__super__ = h2d_Scene;
 scenes_FormAlias.prototype = $extend(h2d_Scene.prototype,{
-	onEvent: function(event) {
-		if(event.kind._hx_index == 9) {
-			if(event.keyCode == 13) {
-				this.submit();
-			}
+	createFormInput: function(label,y,type) {
+		var _label = new h2d_Text(this.font,this);
+		var _g = _label;
+		_g.posChanged = true;
+		_g.scaleX *= 1.4;
+		var _g1 = _label;
+		_g1.posChanged = true;
+		_g1.scaleY *= 1.4;
+		_label.posChanged = true;
+		_label.x = 50;
+		_label.posChanged = true;
+		_label.y = 50 + y;
+		_label.set_text(label);
+		var input = new h2d_TextInput(this.font,this);
+		input.set_backgroundColor(-2139062144);
+		input.set_textColor(11184810);
+		var _g2 = input;
+		_g2.posChanged = true;
+		_g2.scaleX *= 2;
+		var _g3 = input;
+		_g3.posChanged = true;
+		_g3.scaleY *= 2;
+		input.posChanged = true;
+		input.x = 190;
+		input.posChanged = true;
+		input.y = 50 + y;
+		input.inputWidth = type == scenes__$FormAlias_InputType.Alpha ? 240 : 40;
+		input.onFocus = function(_) {
+			input.set_textColor(16777215);
+		};
+		input.onFocusLost = function(_1) {
+			input.set_textColor(11184810);
+		};
+		var tmp;
+		switch(type._hx_index) {
+		case 0:
+			tmp = function() {
+				while(input.text.length > 32) input.set_text(HxOverrides.substr(input.text,0,-1));
+			};
+			break;
+		case 1:
+			tmp = function() {
+				var _this_r = new RegExp("([^0-9]+)","gi".split("u").join(""));
+				var tmp1 = input.text.replace(_this_r,"");
+				input.set_text(tmp1);
+				while(input.text.length > 3) input.set_text(HxOverrides.substr(input.text,0,-1));
+			};
+			break;
 		}
+		input.onChange = tmp;
+		return input;
 	}
 	,submit: function(_) {
 		this.submitBtn.set_textColor(16777215);
-		Main.instance.room.send("setAlias",this.input.text);
+		var tmp = Main.instance.room;
+		var _g = new haxe_ds_StringMap();
+		var value = this.aliasInput.text;
+		if(__map_reserved["alias"] != null) {
+			_g.setReserved("alias",value);
+		} else {
+			_g.h["alias"] = value;
+		}
+		var value1 = this.hackingInput.text;
+		if(__map_reserved["hacking"] != null) {
+			_g.setReserved("hacking",value1);
+		} else {
+			_g.h["hacking"] = value1;
+		}
+		var value2 = this.sysopsInput.text;
+		if(__map_reserved["sysops"] != null) {
+			_g.setReserved("sysops",value2);
+		} else {
+			_g.h["sysops"] = value2;
+		}
+		var value3 = this.skullduggeryInput.text;
+		if(__map_reserved["skullduggery"] != null) {
+			_g.setReserved("skullduggery",value3);
+		} else {
+			_g.h["skullduggery"] = value3;
+		}
+		var value4 = this.intInput.text;
+		if(__map_reserved["intellect"] != null) {
+			_g.setReserved("intellect",value4);
+		} else {
+			_g.h["intellect"] = value4;
+		}
+		tmp.send("setAliasAndStats",_g);
 	}
 	,onMessageAliasEntered: function(_) {
 		Main.instance.goToScene(scenes_Lobby);
 	}
 	,dispose: function() {
-		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/FormAlias.hx", lineNumber : 68, className : "scenes.FormAlias", methodName : "dispose"});
+		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/FormAlias.hx", lineNumber : 102, className : "scenes.FormAlias", methodName : "dispose"});
 		Main.instance.room.onMessage("ALIAS_ENTERED",null);
-		hxd_Window.getInstance().removeEventTarget($bind(this,this.onEvent));
 		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_FormAlias
@@ -63841,18 +63902,28 @@ scenes_Lobby.prototype = $extend(h2d_Scene.prototype,{
 		this.renderListOfPlayers();
 	}
 	,renderListOfPlayers: function() {
-		this.playerListTxt.set_text("Users connected:");
+		this.playerListTxt.set_text("Users connected:\n\nAlias       Hacking       Sysops       Skullduggery       Int");
 		var player = Main.instance.room.get_state().players.iterator();
 		while(player.hasNext()) {
 			var player1 = player.next();
 			if(player1.alias != null) {
 				var _g = this.playerListTxt;
 				_g.set_text(_g.text + ("\n" + player1.alias));
+				if(player1.alias != "GM") {
+					var _g1 = this.playerListTxt;
+					_g1.set_text(_g1.text + ("       " + player1.hacking));
+					var _g2 = this.playerListTxt;
+					_g2.set_text(_g2.text + ("       " + player1.sysops));
+					var _g3 = this.playerListTxt;
+					_g3.set_text(_g3.text + ("       " + player1.skullduggery));
+					var _g4 = this.playerListTxt;
+					_g4.set_text(_g4.text + ("       " + player1.intellect));
+				}
 			}
 		}
 	}
 	,destroy: function() {
-		haxe_Log.trace("Scene:Lobby DISPOSE",{ fileName : "src/scenes/Lobby.hx", lineNumber : 43, className : "scenes.Lobby", methodName : "destroy"});
+		haxe_Log.trace("Scene:Lobby DISPOSE",{ fileName : "src/scenes/Lobby.hx", lineNumber : 49, className : "scenes.Lobby", methodName : "destroy"});
 		if(($_=Main.instance.room.get_state().players,$bind($_,$_.onAdd)) == $bind(this,this.onAddPlayer)) {
 			Main.instance.room.get_state().players.onAdd = null;
 		}
@@ -63912,9 +63983,8 @@ if(ArrayBuffer.prototype.slice == null) {
 	ArrayBuffer.prototype.slice = js_lib__$ArrayBuffer_ArrayBufferCompat.sliceImpl;
 }
 io_colyseus_serializer_schema_Schema.decoder = new io_colyseus_serializer_schema_Decoder();
-State.DISCONNECTED = "DISCONNECTED";
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
-State.SET_ALIAS = "setAlias";
+State.SET_ALIAS_STATS = "setAliasAndStats";
 Xml.Element = 0;
 Xml.PCData = 1;
 Xml.CData = 2;
