@@ -1,11 +1,10 @@
 /*
 - scene.Tut3 -> Hacking Instructions
-    - Choose a subsystem to make a run
-    - You may jack out of a subsystem to run on another
     - Run Programs on subsystems to break in
     - To run a program, simply drag the program onto the subsystem
     - If the program was not the correct one, it will flash red
     - If the program was the correct one, it will flash blue, the subsystem will be ACCESSED and your team can now connect to any connected subsystems
+    - Some SubSystems are not accessible from the net, so you must enter through other systems
     - Firewalls block programs, avoid them!
     - Multiple programs can be used to access a subsystem, having lots of programs is generally a good thing
     - Depending on your Skills and Int levels, you will each have different programs.
@@ -37,12 +36,11 @@ class Tut3 extends h2d.Scene{
     var yspace = 40;
 
     steps = [
-      createStep("Choose a subsystem to make a run.", x, y),
-      createStep("You may jack out of a subsystem to run on another.", x, y+yspace),
       createStep("Run Programs on subsystems to break in.", x, y+yspace*2),
       createStep("To run a program, simply drag the program onto the subsystem.", x, y+yspace*3),
       createStep("If the program was not the correct one, it will flash red.", x, y+yspace*4),
       createStep("If the program was the correct one, it will flash blue,\n  the subsystem will be ACCESSED and your team can now connect to any connected subsystems.", x, y+yspace*5),
+      createStep("Some subsystems are not accessible from the net, so you must enter through other systems.", x, y+yspace*5),
       createStep("Firewalls block programs, avoid them!", x, y+yspace*6),
       createStep("Multiple programs can be used to access a subsystem, having lots of programs is generally a good thing.", x, y+yspace*7),
       createStep("Depending on your Skills and Int levels, you will each have different programs.", x, y+yspace*8),
