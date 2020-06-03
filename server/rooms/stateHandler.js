@@ -50,6 +50,8 @@ class State extends Schema {
 
   setScene(sceneName) {
     this.scene = sceneName;
+    // reset
+    this.tutStep = new ArraySchema();
   }
 
   setTutStep(step, visible) {

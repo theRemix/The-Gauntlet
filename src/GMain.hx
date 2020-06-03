@@ -41,11 +41,9 @@ class GMain {
   var sim_pause_dark:InputElement;
   var cur_scene:SelectElement;
   var scene_tut1_controls:DOMElement;
-  var scene_tut1_controls_1:InputElement;
-  var scene_tut1_controls_2:InputElement;
-  var scene_tut1_controls_3:InputElement;
-  var scene_tut1_controls_4:InputElement;
-  var scene_tut1_controls_5:InputElement;
+  var scene_tut1_control_inputs:Array<InputElement>;
+  var scene_tut2_controls:DOMElement;
+  var scene_tut2_control_inputs:Array<InputElement>;
 
 
   var server_name:String;
@@ -75,17 +73,29 @@ class GMain {
     sim_pause_dark = cast(document.getElementById("sim_pause_dark"), InputElement);
     cur_scene = cast(document.getElementById("cur_scene"), SelectElement);
     scene_tut1_controls = document.getElementById("scene_tut1_controls");
-    scene_tut1_controls_1 = cast(document.getElementById("scene_tut1_controls_1"), InputElement);
-    scene_tut1_controls_2 = cast(document.getElementById("scene_tut1_controls_2"), InputElement);
-    scene_tut1_controls_3 = cast(document.getElementById("scene_tut1_controls_3"), InputElement);
-    scene_tut1_controls_4 = cast(document.getElementById("scene_tut1_controls_4"), InputElement);
-    scene_tut1_controls_5 = cast(document.getElementById("scene_tut1_controls_5"), InputElement);
+    scene_tut1_control_inputs = [
+      cast(document.getElementById("scene_tut1_controls_1"), InputElement),
+      cast(document.getElementById("scene_tut1_controls_2"), InputElement),
+      cast(document.getElementById("scene_tut1_controls_3"), InputElement),
+      cast(document.getElementById("scene_tut1_controls_4"), InputElement),
+      cast(document.getElementById("scene_tut1_controls_5"), InputElement),
+    ];
+    scene_tut2_controls = document.getElementById("scene_tut2_controls");
+    scene_tut2_control_inputs = [
+      cast(document.getElementById("scene_tut2_controls_1"), InputElement),
+      cast(document.getElementById("scene_tut2_controls_2"), InputElement),
+      cast(document.getElementById("scene_tut2_controls_3"), InputElement),
+      cast(document.getElementById("scene_tut2_controls_4"), InputElement),
+      cast(document.getElementById("scene_tut2_controls_5"), InputElement),
+      cast(document.getElementById("scene_tut2_controls_6"), InputElement)
+    ];
 
-    server_address.hidden = true;
-    servers_container.hidden = true;
-    players_container.hidden = true;
-    controls_container.hidden = true;
-    scene_tut1_controls.hidden = true;
+    server_address.hidden =
+    servers_container.hidden =
+    players_container.hidden =
+    controls_container.hidden =
+    scene_tut1_controls.hidden =
+    scene_tut2_controls.hidden = true;
 
     status.innerText = "📡 Connecting to Room Controller";
 
@@ -184,7 +194,6 @@ class GMain {
 
 
     // CONTROLS
-    scene_tut1_controls.hidden = false;
     sim_running.onclick = function(_){
       trace('sim_running.onclick');
     }
@@ -197,27 +206,32 @@ class GMain {
     cur_scene.onchange = function(e){
       trace('cur_scene.onchange', e.target.value);
       room.send(GState.SET_SCENE, e.target.value);
+
+      switch(e.target.value){
+        case "Lobby":
+          scene_tut1_controls.hidden =
+          scene_tut2_controls.hidden = true;
+        case "Tut1":
+          scene_tut1_controls.hidden = false;
+          scene_tut2_controls.hidden = true;
+        case "Tut2":
+          scene_tut1_controls.hidden = true;
+          scene_tut2_controls.hidden = false;
+      }
+
+      // this happens on server, just going to sync it manually
+      for(i in scene_tut1_control_inputs) i.checked = false;
+      for(i in scene_tut2_control_inputs) i.checked = false;
     }
-    scene_tut1_controls_1.onchange = function(e){
-      trace('scene_tut1_controls_1.onchange', e.target.checked);
-      room.send(GState.SET_TUT_STEP, ["step" => 1, "value" => e.target.checked]);
-    }
-    scene_tut1_controls_2.onchange = function(e){
-      trace('scene_tut1_controls_2.onchange', e.target.checked);
-      room.send(GState.SET_TUT_STEP, ["step" => 2, "value" => e.target.checked]);
-    }
-    scene_tut1_controls_3.onchange = function(e){
-      trace('scene_tut1_controls_3.onchange', e.target.checked);
-      room.send(GState.SET_TUT_STEP, ["step" => 3, "value" => e.target.checked]);
-    }
-    scene_tut1_controls_4.onchange = function(e){
-      trace('scene_tut1_controls_4.onchange', e.target.checked);
-      room.send(GState.SET_TUT_STEP, ["step" => 4, "value" => e.target.checked]);
-    }
-    scene_tut1_controls_5.onchange = function(e){
-      trace('scene_tut1_controls_5.onchange', e.target.checked);
-      room.send(GState.SET_TUT_STEP, ["step" => 5, "value" => e.target.checked]);
-    }
+
+    for(i in 0...scene_tut1_control_inputs.length)
+      scene_tut1_control_inputs[i].onchange = function(e){
+        room.send(GState.SET_TUT_STEP, ["step" => i, "value" => e.target.checked]);
+      }
+    for(i in 0...scene_tut2_control_inputs.length)
+      scene_tut2_control_inputs[i].onchange = function(e){
+        room.send(GState.SET_TUT_STEP, ["step" => i, "value" => e.target.checked]);
+      }
 
 
     window.onbeforeunload = function(_){

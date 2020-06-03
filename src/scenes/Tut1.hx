@@ -15,11 +15,6 @@ class Tut1 extends h2d.Scene{
 
   private var font:h2d.Font;
   private var headline:h2d.Text;
-  private var step1:h2d.Text;
-  private var step2:h2d.Text;
-  private var step3:h2d.Text;
-  private var step4:h2d.Text;
-  private var step5:h2d.Text;
   private var steps:Array<h2d.Text>;
 
   public function new(){
@@ -37,19 +32,20 @@ class Tut1 extends h2d.Scene{
     var y = 60;
     var yspace = 40;
 
-    step1 = createStep("You start with 600 seconds of in game time to access the Encrypted Backup Server that holds the data you are stealing.", x, y);
-    step2 = createStep("You will know if you have succeeded because you will see this sign [RUN SUCCESSFUL, YOU STOLE THE DATA].", x, y+yspace);
-    step3 = createStep("You may fail by getting caught in game.", x, y+yspace*2);
-    step4 = createStep("You may fail by running out of time, this can cause Intrusion Detection Systems to lock out all your connections,\n  and/or SysOps tracing one of you, and/or brain damage on BMI connected.", x, y+yspace*3);
-    step5 = createStep("You will know if you have failed by the GM pausing the simulation and telling you how you failed.", x, y+yspace*4);
-    steps = [step1, step2, step3, step4, step5];
+    steps = [
+      createStep("You start with 600 seconds of in game time to access the Encrypted Backup Server that holds the data you are stealing.", x, y),
+      createStep("You will know if you have succeeded because you will see this sign [RUN SUCCESSFUL, YOU STOLE THE DATA].", x, y+yspace),
+      createStep("You may fail by getting caught in game.", x, y+yspace*2),
+      createStep("You may fail by running out of time, this can cause Intrusion Detection Systems to lock out all your connections,\n  and/or SysOps tracing one of you, and/or brain damage on BMI connected.", x, y+yspace*3),
+      createStep("You will know if you have failed by the GM pausing the simulation and telling you how you failed.", x, y+yspace*4),
+    ];
 
     var stepVals = Main.instance.room.state.tutStep.items;
-    step1.visible = stepVals[1];
-    step2.visible = stepVals[2];
-    step3.visible = stepVals[3];
-    step4.visible = stepVals[4];
-    step5.visible = stepVals[5];
+    steps[0].visible = stepVals[0];
+    steps[1].visible = stepVals[1];
+    steps[2].visible = stepVals[2];
+    steps[3].visible = stepVals[3];
+    steps[4].visible = stepVals[4];
 
     Main.instance.room.state.tutStep.onAdd =
     Main.instance.room.state.tutStep.onRemove =
@@ -67,12 +63,10 @@ class Tut1 extends h2d.Scene{
 
   private inline function onTutStepChange(item:Bool, key:Int) {
     var stepVals = Main.instance.room.state.tutStep.items;
-    steps[key-1].visible = item;
+    steps[key].visible = item;
   }
 
   public function destroy(){
-    trace("Scene:Tut1 DISPOSE");
-
     if(Main.instance.room.state.tutStep.onChange == onTutStepChange){
       Main.instance.room.state.tutStep.onChange = null;
     }
