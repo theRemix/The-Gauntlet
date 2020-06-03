@@ -2,6 +2,8 @@ package scenes;
 
 import h2d.TextInput;
 
+using StringTools;
+
 private enum InputType {
   Alpha;
   Number;
@@ -85,7 +87,7 @@ class FormAlias extends h2d.Scene{
     Main.instance.room.send(
       State.SET_ALIAS_STATS,
       [
-        "alias" => aliasInput.text,
+        "alias" => aliasInput.text.trim(),
         "hacking" => hackingInput.text,
         "sysops" => sysopsInput.text,
         "skullduggery" => skullduggeryInput.text,
@@ -95,6 +97,13 @@ class FormAlias extends h2d.Scene{
   }
 
   private function onMessageAliasEntered(_){
+    Main.instance.curPlayer = new Player();
+    Main.instance.curPlayer.alias = aliasInput.text.trim();
+    Main.instance.curPlayer.hacking = Std.parseInt(hackingInput.text);
+    Main.instance.curPlayer.sysops = Std.parseInt(sysopsInput.text);
+    Main.instance.curPlayer.skullduggery = Std.parseInt(skullduggeryInput.text);
+    Main.instance.curPlayer.intellect = Std.parseInt(intInput.text);
+
     Main.instance.goToScene(scenes.Lobby);
   }
 

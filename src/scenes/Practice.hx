@@ -1,10 +1,14 @@
 package scenes;
 
 import entities.Program;
+import entities.SubSystem;
+
+using Lambda;
 
 class Practice extends SimBase{
 
-  private var backBtn:h2d.TextInput;
+  private var subsystems:List<SubSystem>;
+  private var programs:List<Program>;
 
   public function new(){
     super();
@@ -17,12 +21,39 @@ class Practice extends SimBase{
     tf.x = 200;
     tf.y = 20;
 
-    var p1 = new Program(this, "test 1", 0xaaffcc, 200, 200, 250, 50);
-    var p2 = new Program(this, "test 2", 0xffccaa, 250, 300, 250, 50);
+    programs = new List<Program>();
+    programs.add(new Program(this, "test 1", 0xaaffcc, 200, 300, 50, 50));
+    programs.add(new Program(this, "test 2", 0xffccaa, 350, 300, 50, 50));
+
+    subsystems = new List<SubSystem>();
+    subsystems.add(new SubSystem(this, "system 1", 0xaaffcc, 180, 100, 100, 100));
+    subsystems.add(new SubSystem(this, "system 2", 0xffccaa, 360, 100, 100, 100));
+
+    Main.instance.sceneUpdate = update;
   }
 
+  private inline function checkCollisions(){
+
+    var activeProgram = programs.find(function(p) return p.active);
+
+    if(activeProgram == null) return;
+
+    for(s in subsystems){
+      if(s.getBounds().intersects(activeProgram.getBounds())){
+        s.hackAttempt(activeProgram);
+        activeProgram.resetPos();
+      }
+    }
+
+  }
+
+  public function update(dt:Float) {
+    checkCollisions();
+  }
 
   public override function dispose(){
     super.dispose();
+    Main.instance.sceneUpdate = null;
   }
+
 }

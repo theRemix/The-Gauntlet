@@ -10,6 +10,7 @@ class Main extends hxd.App {
 	public var room:Room<State>;
   private var scene:h2d.Scene;
   public var gmControlledScenes:Bool;
+  public var curPlayer:Player;
 
   // heaps
   override function init() {
@@ -130,8 +131,10 @@ class Main extends hxd.App {
     }
   }
 
-  override function update(dt:Float) {
+  public var sceneUpdate:Float->Void;
 
+  override function update(dt:Float) {
+    if(sceneUpdate != null) sceneUpdate(dt);
   }
 
   public static var instance:Main;
