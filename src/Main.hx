@@ -54,6 +54,10 @@ class Main extends hxd.App {
         this.scene = new scenes.Tut3();
         this.setScene(this.scene, true);
 
+      case scenes.Practice:
+        this.scene = new scenes.Practice();
+        this.setScene(this.scene, true);
+
       default:
         trace('WARN! No handler for scene = $scene');
     }
@@ -95,8 +99,7 @@ class Main extends hxd.App {
     this.goToScene(scenes.FormAlias);
   }
 
-  private inline function onStateChange(changes:Array<DataChange>){
-    // trace('onStateChange', changes);
+  private inline function onStateChange(changes:Array<DataChange>) {
     for(change in changes){
       switch(change.field){
         case "scene":
@@ -110,6 +113,8 @@ class Main extends hxd.App {
                 goToScene(scenes.Tut2);
               case "Tut3":
                 goToScene(scenes.Tut3);
+              case "Practice":
+                goToScene(scenes.Practice);
               default:
                 trace('WARN: unhandled change scene in Main.onStateChange[scene]: ${change.value}');
             }
