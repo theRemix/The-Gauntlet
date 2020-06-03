@@ -399,14 +399,16 @@ GMain.prototype = {
 		this.scene_tut1_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut1_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_5") , HTMLInputElement)];
 		this.scene_tut2_controls = window.document.getElementById("scene_tut2_controls");
 		this.scene_tut2_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut2_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_5") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_6") , HTMLInputElement)];
-		this.server_address.hidden = this.servers_container.hidden = this.players_container.hidden = this.controls_container.hidden = this.scene_tut1_controls.hidden = this.scene_tut2_controls.hidden = true;
+		this.scene_tut3_controls = window.document.getElementById("scene_tut3_controls");
+		this.scene_tut3_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut3_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_5") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_6") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_7") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_8") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_9") , HTMLInputElement)];
+		this.server_address.hidden = this.servers_container.hidden = this.players_container.hidden = this.controls_container.hidden = this.scene_tut1_controls.hidden = this.scene_tut2_controls.hidden = this.scene_tut3_controls.hidden = true;
 		this.status.innerText = "📡 Connecting to Room Controller";
 	}
 	,onRoomJoinOrCreate: function(err,room) {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/GMain.hx", lineNumber : 110, className : "GMain", methodName : "onRoomJoinOrCreate"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/GMain.hx", lineNumber : 125, className : "GMain", methodName : "onRoomJoinOrCreate"});
 			return;
 		}
 		this.servers_container.hidden = false;
@@ -441,7 +443,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/GMain.hx", lineNumber : 159, className : "GMain", methodName : "onGameJoinOrCreate"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/GMain.hx", lineNumber : 174, className : "GMain", methodName : "onGameJoinOrCreate"});
 			return;
 		}
 		this.players_container.hidden = false;
@@ -497,28 +499,32 @@ GMain.prototype = {
 		};
 		room.get_state().players.onRemove = removePlayerList;
 		this.sim_running.onclick = function(_) {
-			haxe_Log.trace("sim_running.onclick",{ fileName : "src/GMain.hx", lineNumber : 198, className : "GMain", methodName : "onGameJoinOrCreate"});
+			haxe_Log.trace("sim_running.onclick",{ fileName : "src/GMain.hx", lineNumber : 213, className : "GMain", methodName : "onGameJoinOrCreate"});
 		};
 		this.sim_pause_dim.onclick = function(_1) {
-			haxe_Log.trace("sim_pause_dim.onclick",{ fileName : "src/GMain.hx", lineNumber : 201, className : "GMain", methodName : "onGameJoinOrCreate"});
+			haxe_Log.trace("sim_pause_dim.onclick",{ fileName : "src/GMain.hx", lineNumber : 216, className : "GMain", methodName : "onGameJoinOrCreate"});
 		};
 		this.sim_pause_dark.onclick = function(_2) {
-			haxe_Log.trace("sim_pause_dark.onclick",{ fileName : "src/GMain.hx", lineNumber : 204, className : "GMain", methodName : "onGameJoinOrCreate"});
+			haxe_Log.trace("sim_pause_dark.onclick",{ fileName : "src/GMain.hx", lineNumber : 219, className : "GMain", methodName : "onGameJoinOrCreate"});
 		};
 		this.cur_scene.onchange = function(e) {
-			haxe_Log.trace("cur_scene.onchange",{ fileName : "src/GMain.hx", lineNumber : 207, className : "GMain", methodName : "onGameJoinOrCreate", customParams : [e.target.value]});
+			haxe_Log.trace("cur_scene.onchange",{ fileName : "src/GMain.hx", lineNumber : 222, className : "GMain", methodName : "onGameJoinOrCreate", customParams : [e.target.value]});
 			room.send("setScene",e.target.value);
 			switch(e.target.value) {
 			case "Lobby":
-				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = true;
+				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
 				break;
 			case "Tut1":
+				_gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
 				_gthis.scene_tut1_controls.hidden = false;
-				_gthis.scene_tut2_controls.hidden = true;
 				break;
 			case "Tut2":
-				_gthis.scene_tut1_controls.hidden = true;
+				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
 				_gthis.scene_tut2_controls.hidden = false;
+				break;
+			case "Tut3":
+				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = true;
+				_gthis.scene_tut3_controls.hidden = false;
 				break;
 			}
 			var _g11 = 0;
@@ -535,40 +541,47 @@ GMain.prototype = {
 				++_g3;
 				i1.checked = false;
 			}
+			var _g5 = 0;
+			var _g6 = _gthis.scene_tut3_control_inputs;
+			while(_g5 < _g6.length) {
+				var i2 = _g6[_g5];
+				++_g5;
+				i2.checked = false;
+			}
 		};
-		var _g5 = 0;
+		var _g7 = 0;
 		var _g12 = this.scene_tut1_control_inputs.length;
-		while(_g5 < _g12) {
-			var i2 = [_g5++];
-			this.scene_tut1_control_inputs[i2[0]].onchange = (function(i3) {
+		while(_g7 < _g12) {
+			var i3 = [_g7++];
+			this.scene_tut1_control_inputs[i3[0]].onchange = (function(i4) {
 				return function(e1) {
-					var _g6 = new haxe_ds_StringMap();
+					var _g8 = new haxe_ds_StringMap();
 					if(__map_reserved["step"] != null) {
-						_g6.setReserved("step",i3[0]);
+						_g8.setReserved("step",i4[0]);
 					} else {
-						_g6.h["step"] = i3[0];
+						_g8.h["step"] = i4[0];
 					}
 					var value = e1.target.checked;
 					if(__map_reserved["value"] != null) {
-						_g6.setReserved("value",value);
+						_g8.setReserved("value",value);
 					} else {
-						_g6.h["value"] = value;
+						_g8.h["value"] = value;
 					}
-					room.send("setTutStep",_g6);
+					room.send("setTutStep",_g8);
 				};
-			})(i2);
+			})(i3);
 		}
 		var _g22 = 0;
 		var _g31 = this.scene_tut2_control_inputs.length;
 		while(_g22 < _g31) {
-			var i4 = [_g22++];
-			this.scene_tut2_control_inputs[i4[0]].onchange = (function(i5) {
+			var i5 = [_g22++];
+			this.scene_tut2_control_inputs[i5[0]].onchange = (function(i6) {
 				return function(e2) {
 					var _g23 = new haxe_ds_StringMap();
 					if(__map_reserved["step"] != null) {
-						_g23.setReserved("step",i5[0]);
+						_g23.setReserved("step",i6[0]);
 					} else {
-						_g23.h["step"] = i5[0];
+						_g23.h["step"] = i6[0];
 					}
 					var value1 = e2.target.checked;
 					if(__map_reserved["value"] != null) {
@@ -578,7 +591,29 @@ GMain.prototype = {
 					}
 					room.send("setTutStep",_g23);
 				};
-			})(i4);
+			})(i5);
+		}
+		var _g41 = 0;
+		var _g51 = this.scene_tut3_control_inputs.length;
+		while(_g41 < _g51) {
+			var i7 = [_g41++];
+			this.scene_tut3_control_inputs[i7[0]].onchange = (function(i8) {
+				return function(e3) {
+					var _g42 = new haxe_ds_StringMap();
+					if(__map_reserved["step"] != null) {
+						_g42.setReserved("step",i8[0]);
+					} else {
+						_g42.h["step"] = i8[0];
+					}
+					var value2 = e3.target.checked;
+					if(__map_reserved["value"] != null) {
+						_g42.setReserved("value",value2);
+					} else {
+						_g42.h["value"] = value2;
+					}
+					room.send("setTutStep",_g42);
+				};
+			})(i7);
 		}
 		window.onbeforeunload = function(_3) {
 			room.leave();

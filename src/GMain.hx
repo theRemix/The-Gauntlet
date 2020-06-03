@@ -44,6 +44,8 @@ class GMain {
   var scene_tut1_control_inputs:Array<InputElement>;
   var scene_tut2_controls:DOMElement;
   var scene_tut2_control_inputs:Array<InputElement>;
+  var scene_tut3_controls:DOMElement;
+  var scene_tut3_control_inputs:Array<InputElement>;
 
 
   var server_name:String;
@@ -89,13 +91,26 @@ class GMain {
       cast(document.getElementById("scene_tut2_controls_5"), InputElement),
       cast(document.getElementById("scene_tut2_controls_6"), InputElement)
     ];
+    scene_tut3_controls = document.getElementById("scene_tut3_controls");
+    scene_tut3_control_inputs = [
+      cast(document.getElementById("scene_tut3_controls_1"), InputElement),
+      cast(document.getElementById("scene_tut3_controls_2"), InputElement),
+      cast(document.getElementById("scene_tut3_controls_3"), InputElement),
+      cast(document.getElementById("scene_tut3_controls_4"), InputElement),
+      cast(document.getElementById("scene_tut3_controls_5"), InputElement),
+      cast(document.getElementById("scene_tut3_controls_6"), InputElement),
+      cast(document.getElementById("scene_tut3_controls_7"), InputElement),
+      cast(document.getElementById("scene_tut3_controls_8"), InputElement),
+      cast(document.getElementById("scene_tut3_controls_9"), InputElement)
+    ];
 
     server_address.hidden =
     servers_container.hidden =
     players_container.hidden =
     controls_container.hidden =
     scene_tut1_controls.hidden =
-    scene_tut2_controls.hidden = true;
+    scene_tut2_controls.hidden =
+    scene_tut3_controls.hidden = true;
 
     status.innerText = "📡 Connecting to Room Controller";
 
@@ -210,18 +225,26 @@ class GMain {
       switch(e.target.value){
         case "Lobby":
           scene_tut1_controls.hidden =
-          scene_tut2_controls.hidden = true;
+          scene_tut2_controls.hidden =
+          scene_tut3_controls.hidden = true;
         case "Tut1":
+          scene_tut2_controls.hidden =
+          scene_tut3_controls.hidden = true;
           scene_tut1_controls.hidden = false;
-          scene_tut2_controls.hidden = true;
         case "Tut2":
-          scene_tut1_controls.hidden = true;
+          scene_tut1_controls.hidden =
+          scene_tut3_controls.hidden = true;
           scene_tut2_controls.hidden = false;
+        case "Tut3":
+          scene_tut1_controls.hidden =
+          scene_tut2_controls.hidden = true;
+          scene_tut3_controls.hidden = false;
       }
 
       // this happens on server, just going to sync it manually
       for(i in scene_tut1_control_inputs) i.checked = false;
       for(i in scene_tut2_control_inputs) i.checked = false;
+      for(i in scene_tut3_control_inputs) i.checked = false;
     }
 
     for(i in 0...scene_tut1_control_inputs.length)
@@ -230,6 +253,10 @@ class GMain {
       }
     for(i in 0...scene_tut2_control_inputs.length)
       scene_tut2_control_inputs[i].onchange = function(e){
+        room.send(GState.SET_TUT_STEP, ["step" => i, "value" => e.target.checked]);
+      }
+    for(i in 0...scene_tut3_control_inputs.length)
+      scene_tut3_control_inputs[i].onchange = function(e){
         room.send(GState.SET_TUT_STEP, ["step" => i, "value" => e.target.checked]);
       }
 

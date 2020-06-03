@@ -50,6 +50,10 @@ class Main extends hxd.App {
         this.scene = new scenes.Tut2();
         this.setScene(this.scene, true);
 
+      case scenes.Tut3:
+        this.scene = new scenes.Tut3();
+        this.setScene(this.scene, true);
+
       default:
         trace('WARN! No handler for scene = $scene');
     }
@@ -104,6 +108,8 @@ class Main extends hxd.App {
                 goToScene(scenes.Tut1);
               case "Tut2":
                 goToScene(scenes.Tut2);
+              case "Tut3":
+                goToScene(scenes.Tut3);
               default:
                 trace('WARN: unhandled change scene in Main.onStateChange[scene]: ${change.value}');
             }

@@ -362,8 +362,12 @@ Main.prototype = $extend(hxd_App.prototype,{
 			this.scene = new scenes_Tut2();
 			this.setScene(this.scene,true);
 			break;
+		case scenes_Tut3:
+			this.scene = new scenes_Tut3();
+			this.setScene(this.scene,true);
+			break;
 		default:
-			haxe_Log.trace("WARN! No handler for scene = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 54, className : "Main", methodName : "goToScene"});
+			haxe_Log.trace("WARN! No handler for scene = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 58, className : "Main", methodName : "goToScene"});
 		}
 		return this.scene;
 	}
@@ -375,17 +379,17 @@ Main.prototype = $extend(hxd_App.prototype,{
 			tf.set_text(err.message);
 			tf.posChanged = true;
 			tf.y = 20;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 67, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 71, className : "Main", methodName : "onJoin"});
 			return;
 		}
 		this.room = room;
 		this.room.get_state().onChange = $bind(this,this.onStateChange);
 		var onError = function(code,message) {
-			haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Main.hx", lineNumber : 75, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Main.hx", lineNumber : 79, className : "Main", methodName : "onJoin"});
 		};
 		this.room.onError.push(onError);
 		var onLeave = function() {
-			haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Main.hx", lineNumber : 78, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Main.hx", lineNumber : 82, className : "Main", methodName : "onJoin"});
 		};
 		this.room.onLeave.push(onLeave);
 		window.onbeforeunload = function(_) {
@@ -403,7 +407,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 			case "gm":
 				break;
 			case "pauseOverlay":
-				haxe_Log.trace("case",{ fileName : "src/Main.hx", lineNumber : 112, className : "Main", methodName : "onStateChange", customParams : ["pauseOverlay"]});
+				haxe_Log.trace("case",{ fileName : "src/Main.hx", lineNumber : 118, className : "Main", methodName : "onStateChange", customParams : ["pauseOverlay"]});
 				break;
 			case "players":
 				break;
@@ -419,15 +423,18 @@ Main.prototype = $extend(hxd_App.prototype,{
 					case "Tut2":
 						this.goToScene(scenes_Tut2);
 						break;
+					case "Tut3":
+						this.goToScene(scenes_Tut3);
+						break;
 					default:
-						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 108, className : "Main", methodName : "onStateChange"});
+						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 114, className : "Main", methodName : "onStateChange"});
 					}
 				}
 				break;
 			case "tutStep":
 				break;
 			default:
-				haxe_Log.trace("WARN: unhandled change in Main.onStateChange: " + change.field,{ fileName : "src/Main.hx", lineNumber : 117, className : "Main", methodName : "onStateChange"});
+				haxe_Log.trace("WARN: unhandled change in Main.onStateChange: " + change.field,{ fileName : "src/Main.hx", lineNumber : 123, className : "Main", methodName : "onStateChange"});
 			}
 		}
 	}
@@ -64073,11 +64080,12 @@ var scenes_Tut1 = function() {
 	step4.y = y + yspace * 4;
 	this.steps = [step,step1,step2,step3,step4];
 	var stepVals = Main.instance.room.get_state().tutStep.items;
-	this.steps[0].set_visible(stepVals[0]);
-	this.steps[1].set_visible(stepVals[1]);
-	this.steps[2].set_visible(stepVals[2]);
-	this.steps[3].set_visible(stepVals[3]);
-	this.steps[4].set_visible(stepVals[4]);
+	var _g2 = 0;
+	var _g11 = this.steps.length;
+	while(_g2 < _g11) {
+		var i = _g2++;
+		this.steps[i].set_visible(stepVals[i]);
+	}
 	Main.instance.room.get_state().tutStep.onAdd = Main.instance.room.get_state().tutStep.onRemove = Main.instance.room.get_state().tutStep.onChange = $bind(this,this.onTutStepChange);
 };
 $hxClasses["scenes.Tut1"] = scenes_Tut1;
@@ -64164,12 +64172,12 @@ var scenes_Tut2 = function() {
 	step5.y = y + yspace * 5;
 	this.steps = [step,step1,step2,step3,step4,step5];
 	var stepVals = Main.instance.room.get_state().tutStep.items;
-	this.steps[0].set_visible(stepVals[0]);
-	this.steps[1].set_visible(stepVals[1]);
-	this.steps[2].set_visible(stepVals[2]);
-	this.steps[3].set_visible(stepVals[3]);
-	this.steps[4].set_visible(stepVals[4]);
-	this.steps[5].set_visible(stepVals[5]);
+	var _g2 = 0;
+	var _g11 = this.steps.length;
+	while(_g2 < _g11) {
+		var i = _g2++;
+		this.steps[i].set_visible(stepVals[i]);
+	}
 	Main.instance.room.get_state().tutStep.onAdd = Main.instance.room.get_state().tutStep.onRemove = Main.instance.room.get_state().tutStep.onChange = $bind(this,this.onTutStepChange);
 };
 $hxClasses["scenes.Tut2"] = scenes_Tut2;
@@ -64196,6 +64204,116 @@ scenes_Tut2.prototype = $extend(h2d_Scene.prototype,{
 		h2d_Scene.prototype.dispose.call(this);
 	}
 	,__class__: scenes_Tut2
+});
+var scenes_Tut3 = function() {
+	h2d_Scene.call(this);
+	this.font = hxd_res_DefaultFont.get();
+	this.headline = new h2d_Text(this.font,this);
+	this.headline.set_text("HACKING INSTRUCTIONS");
+	var _this = this.headline;
+	var _g = _this;
+	_g.posChanged = true;
+	_g.scaleX *= 2;
+	var _g1 = _this;
+	_g1.posChanged = true;
+	_g1.scaleY *= 2;
+	var _this1 = this.headline;
+	_this1.posChanged = true;
+	_this1.x = 200;
+	var _this2 = this.headline;
+	_this2.posChanged = true;
+	_this2.y = 20;
+	var x = 20;
+	var y = 60;
+	var yspace = 40;
+	var step = new h2d_Text(this.font,this);
+	step.set_text("Choose a subsystem to make a run.");
+	step.posChanged = true;
+	step.x = x;
+	step.posChanged = true;
+	step.y = y;
+	var step1 = new h2d_Text(this.font,this);
+	step1.set_text("You may jack out of a subsystem to run on another.");
+	step1.posChanged = true;
+	step1.x = x;
+	step1.posChanged = true;
+	step1.y = y + yspace;
+	var step2 = new h2d_Text(this.font,this);
+	step2.set_text("Run Programs on subsystems to break in.");
+	step2.posChanged = true;
+	step2.x = x;
+	step2.posChanged = true;
+	step2.y = y + yspace * 2;
+	var step3 = new h2d_Text(this.font,this);
+	step3.set_text("To run a program, simply drag the program onto the subsystem.");
+	step3.posChanged = true;
+	step3.x = x;
+	step3.posChanged = true;
+	step3.y = y + yspace * 3;
+	var step4 = new h2d_Text(this.font,this);
+	step4.set_text("If the program was not the correct one, it will flash red.");
+	step4.posChanged = true;
+	step4.x = x;
+	step4.posChanged = true;
+	step4.y = y + yspace * 4;
+	var step5 = new h2d_Text(this.font,this);
+	step5.set_text("If the program was the correct one, it will flash blue,\n  the subsystem will be ACCESSED and your team can now connect to any connected subsystems.");
+	step5.posChanged = true;
+	step5.x = x;
+	step5.posChanged = true;
+	step5.y = y + yspace * 5;
+	var step6 = new h2d_Text(this.font,this);
+	step6.set_text("Firewalls block programs, avoid them!");
+	step6.posChanged = true;
+	step6.x = x;
+	step6.posChanged = true;
+	step6.y = y + yspace * 6;
+	var step7 = new h2d_Text(this.font,this);
+	step7.set_text("Multiple programs can be used to access a subsystem, having lots of programs is generally a good thing.");
+	step7.posChanged = true;
+	step7.x = x;
+	step7.posChanged = true;
+	step7.y = y + yspace * 7;
+	var step8 = new h2d_Text(this.font,this);
+	step8.set_text("Depending on your Skills and Int levels, you will each have different programs.");
+	step8.posChanged = true;
+	step8.x = x;
+	step8.posChanged = true;
+	step8.y = y + yspace * 8;
+	this.steps = [step,step1,step2,step3,step4,step5,step6,step7,step8];
+	var stepVals = Main.instance.room.get_state().tutStep.items;
+	var _g2 = 0;
+	var _g11 = this.steps.length;
+	while(_g2 < _g11) {
+		var i = _g2++;
+		this.steps[i].set_visible(stepVals[i]);
+	}
+	Main.instance.room.get_state().tutStep.onAdd = Main.instance.room.get_state().tutStep.onRemove = Main.instance.room.get_state().tutStep.onChange = $bind(this,this.onTutStepChange);
+};
+$hxClasses["scenes.Tut3"] = scenes_Tut3;
+scenes_Tut3.__name__ = "scenes.Tut3";
+scenes_Tut3.__super__ = h2d_Scene;
+scenes_Tut3.prototype = $extend(h2d_Scene.prototype,{
+	createStep: function(text,x,y) {
+		var step = new h2d_Text(this.font,this);
+		step.set_text(text);
+		step.posChanged = true;
+		step.x = x;
+		step.posChanged = true;
+		step.y = y;
+		return step;
+	}
+	,onTutStepChange: function(item,key) {
+		var stepVals = Main.instance.room.get_state().tutStep.items;
+		this.steps[key].set_visible(item);
+	}
+	,destroy: function() {
+		if(($_=Main.instance.room.get_state().tutStep,$bind($_,$_.onChange)) == $bind(this,this.onTutStepChange)) {
+			Main.instance.room.get_state().tutStep.onChange = null;
+		}
+		h2d_Scene.prototype.dispose.call(this);
+	}
+	,__class__: scenes_Tut3
 });
 function $getIterator(o) { if( o instanceof Array ) return HxOverrides.iter(o); else return o.iterator(); }
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $global.$haxeUID++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = m.bind(o); o.hx__closures__[m.__id__] = f; } return f; }

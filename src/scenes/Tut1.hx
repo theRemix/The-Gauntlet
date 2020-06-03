@@ -41,11 +41,7 @@ class Tut1 extends h2d.Scene{
     ];
 
     var stepVals = Main.instance.room.state.tutStep.items;
-    steps[0].visible = stepVals[0];
-    steps[1].visible = stepVals[1];
-    steps[2].visible = stepVals[2];
-    steps[3].visible = stepVals[3];
-    steps[4].visible = stepVals[4];
+    for(i in 0...steps.length) steps[i].visible = stepVals[i];
 
     Main.instance.room.state.tutStep.onAdd =
     Main.instance.room.state.tutStep.onRemove =
