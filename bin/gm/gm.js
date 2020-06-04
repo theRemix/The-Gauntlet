@@ -517,6 +517,9 @@ GMain.prototype = {
 			case "Practice":
 				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
 				break;
+			case "RealNet":
+				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
+				break;
 			case "Tut1":
 				_gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
 				_gthis.scene_tut1_controls.hidden = false;

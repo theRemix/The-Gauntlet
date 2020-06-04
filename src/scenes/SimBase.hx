@@ -61,10 +61,11 @@ class SimBase extends h2d.Scene{
     _stageBounds = Bounds.fromValues(0,0,1000,1000);
 
     Main.instance.sceneUpdate = update;
-    // Main.instance.room.state.practiceNet.onChange = onPracticeNetChange;
+    Main.instance.room.state.practiceNet.onChange =
+    Main.instance.room.state.realNet.onChange = onNetChange;
   }
 
-  private inline function onPracticeNetChange(ss:SubSystem, key:Int) {
+  private inline function onNetChange(ss:SubSystem, key:Int) {
     trace(ss);
     subsystems[key].syncProps(ss);
   }
@@ -107,10 +108,14 @@ class SimBase extends h2d.Scene{
 
   public override function dispose(){
     super.dispose();
-    Main.instance.sceneUpdate = null;
-
-    if(Main.instance.room.state.practiceNet.onChange == onPracticeNetChange){
+    if(Main.instance.sceneUpdate == update){
+      Main.instance.sceneUpdate = null;
+    }
+    if(Main.instance.room.state.practiceNet.onChange == onNetChange){
       Main.instance.room.state.practiceNet.onChange = null;
+    }
+    if(Main.instance.room.state.realNet.onChange == onNetChange){
+      Main.instance.room.state.realNet.onChange = null;
     }
   }
 

@@ -18,23 +18,39 @@ class RealNet extends SimBase{
     var font = hxd.res.DefaultFont.get();
 
     var tf = new h2d.Text(font, this);
-    // tf.text = "MegaCorp Network";
+    tf.text = "MegaCorp Network";
     tf.scale(2);
     tf.x = 20;
     tf.y = 10;
 
-    // for(s in Main.instance.room.state.practiceNet){
-    //   subsystems.push(new Box(this, s.name, s.x, s.y));
-    // }
-    designSubSystems();
+    var net = switch (Main.instance.room.state.scene) {
+      case "Practice":
+        Main.instance.room.state.practiceNet;
+      case "RealNet":
+        Main.instance.room.state.realNet;
+      default:
+        trace('ERROR: unhandled scene ${Main.instance.room.state.scene}');
+        null;
+    }
 
-    loadNoobProgs();
-    // loadHackerProgs();
+    for(s in net){
+      subsystems.push(new Box(this, s.name, s.x, s.y));
+    }
+
+    if( Main.instance.curPlayer.hacking > 0 || Main.instance.curPlayer.sysops > 0 ){
+      loadHackerProgs();
+    } else {
+      loadNoobProgs();
+    }
+
+    // only for dev
+    // designSubSystems();
 
     for(p in programs){
       p.colliders = firewalls.map(function(f) return f.getBounds());
     }
 
+    createNetConns();
   }
 
   function loadNoobProgs(){
@@ -222,6 +238,29 @@ class RealNet extends SimBase{
     firewalls.add(new Firewall(this, 1000, 550, 3, 280));
   }
 
+
+  function createNetConns(){
+    createNetCnx(subsystems[0], subsystems[3]);
+    createNetCnx(subsystems[1], subsystems[5]);
+    createNetCnx(subsystems[2], subsystems[6]);
+    createNetCnx(subsystems[3], subsystems[7]);
+    createNetCnx(subsystems[4], subsystems[8]);
+    createNetCnx(subsystems[5], subsystems[9]);
+    createNetCnx(subsystems[5], subsystems[4]);
+    createNetCnx(subsystems[6], subsystems[10]);
+    createNetCnx(subsystems[7], subsystems[11]);
+    createNetCnx(subsystems[8], subsystems[12]);
+    createNetCnx(subsystems[9], subsystems[10]);
+    createNetCnx(subsystems[10], subsystems[14]);
+    createNetCnx(subsystems[10], subsystems[9]);
+    createNetCnx(subsystems[11], subsystems[12]);
+    createNetCnx(subsystems[12], subsystems[13]);
+    createNetCnx(subsystems[13], subsystems[15]);
+    createNetCnx(subsystems[14], subsystems[16]);
+    createNetCnx(subsystems[16], subsystems[15]);
+  }
+
+
   // this is only used for design, these will be loaded on server state
   // this function won't be called in real game
   function designSubSystems(){
@@ -247,33 +286,14 @@ class RealNet extends SimBase{
     subsystems.push(new Box(this, "R&D Beta svc",        cols[3], rows[2]));
 
     // 4th layer [11]
-    subsystems.push(new Box(this, "FIREWALL\nCONTROLLER",cols[0], rows[3]));
+    subsystems.push(new Box(this, "FIREWALL A\nCONTROLLER",cols[0], rows[3]));
     subsystems.push(new Box(this, "Admin Portal",        cols[1], rows[3]));
     subsystems.push(new Box(this, "Admin DB",            cols[2], rows[3]));
     subsystems.push(new Box(this, "AI/ML Control",       cols[3], rows[3]));
 
     // 5th layer [15]
     subsystems.push(new Box(this, "ENCRYPTED\nDATA STORE",cols[2], rows[4]));
-    subsystems.push(new Box(this, "FIREWALL\nCONTROLLER", cols[3], rows[4]));
-
-    createNetCnx(subsystems[0], subsystems[3]);
-    createNetCnx(subsystems[1], subsystems[5]);
-    createNetCnx(subsystems[2], subsystems[6]);
-    createNetCnx(subsystems[3], subsystems[7]);
-    createNetCnx(subsystems[4], subsystems[8]);
-    createNetCnx(subsystems[5], subsystems[9]);
-    createNetCnx(subsystems[5], subsystems[4]);
-    createNetCnx(subsystems[6], subsystems[10]);
-    createNetCnx(subsystems[7], subsystems[11]);
-    createNetCnx(subsystems[8], subsystems[12]);
-    createNetCnx(subsystems[9], subsystems[10]);
-    createNetCnx(subsystems[10], subsystems[14]);
-    createNetCnx(subsystems[10], subsystems[9]);
-    createNetCnx(subsystems[11], subsystems[12]);
-    createNetCnx(subsystems[12], subsystems[13]);
-    createNetCnx(subsystems[13], subsystems[15]);
-    createNetCnx(subsystems[14], subsystems[16]);
-    createNetCnx(subsystems[16], subsystems[15]);
+    subsystems.push(new Box(this, "FIREWALL B\nCONTROLLER", cols[3], rows[4]));
 
   }
 }

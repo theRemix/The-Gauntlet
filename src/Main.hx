@@ -15,7 +15,7 @@ class Main extends hxd.App {
   // heaps
   override function init() {
     this.goToScene(scenes.FormServer);
-    // this.goToScene(scenes.Practice);
+    // this.goToScene(scenes.RealNet);
   }
 
   // colyseus

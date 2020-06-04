@@ -22,9 +22,6 @@ class Box extends Graphics {
   public var outboundCnx:List<Box>;
 
   var label:Text;
-  // var runnersTxt:Text;
-
-  // var runners:List<String>;
 
   public function new(scene:SimBase, name:String, x:Int, y:Int) {
     super(scene);
@@ -68,8 +65,8 @@ class Box extends Graphics {
 
   public function hackAttempt(program){
     if(!this.accessible) return;
+
     Main.instance.room.send(State.HACK_ATTEMPT, [
-      "mode" => "practice",
       "playerAlias" => Main.instance.curPlayer.alias,
       "subsystem" => this.name,
       "program" => program.name,
@@ -93,7 +90,8 @@ class Box extends Graphics {
       scene.onBoxOwned(this);
 
     }else if(ss.runners.length > 0){
-      label.text = name + "\nrunners:\n";
+      // label.text = name + "\nrunners:\n";
+      label.text = name + "\n";
       for(r in ss.runners){
         label.text += r + "\n";
       }

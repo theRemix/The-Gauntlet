@@ -85,13 +85,13 @@ class State extends Schema {
     this.tutStep[step] = visible;
   }
 
-  hackAttempt(mode, playerAlias, subsystem, program){
+  hackAttempt(playerAlias, subsystem, program){
     let net;
-    switch(mode){
-      case "practice":
+    switch(this.scene){
+      case "Practice":
         net = this.practiceNet;
         break;
-      case "real":
+      case "RealNet":
         net = this.realNet;
         break;
       default:
@@ -160,11 +160,11 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
       this.state.setTutStep(step, value);
     });
 
-    this.onMessage("hackAttempt", (client, {mode, playerAlias, subsystem, program}) => {
+    this.onMessage("hackAttempt", (client, {playerAlias, subsystem, program}) => {
       if(!this.state.players[client.sessionId])
         return console.warn('WARN: hackAttempt, unknown client sessionId', client.sessionId);
 
-      this.state.hackAttempt(mode, playerAlias, subsystem, program)
+      this.state.hackAttempt(playerAlias, subsystem, program)
     });
 
   }
@@ -228,23 +228,23 @@ const createRealNet = () => {
   const rows = [ 440, 330, 220, 110, 2 ];
   const a = new ArraySchema();
   [
-    new SubSystem({x: cols[0], y: rows[0], name: "Mail Server", keys: []}),
-    new SubSystem({x: cols[2], y: rows[0], name: "Proxy", keys: []}),
-    new SubSystem({x: cols[3], y: rows[0], name: "VPN", keys: []}),
-    new SubSystem({x: cols[0], y: rows[1], name: "Backup Server", keys: []}),
-    new SubSystem({x: cols[1], y: rows[1], name: "Web Server", keys: []}),
-    new SubSystem({x: cols[2], y: rows[1], name: "Router", keys: []}),
-    new SubSystem({x: cols[3], y: rows[1], name: "Intranet svc", keys: []}),
-    new SubSystem({x: cols[0], y: rows[2], name: "Domain Control", keys: []}),
-    new SubSystem({x: cols[1], y: rows[2], name: "Web Database", keys: []}),
-    new SubSystem({x: cols[2], y: rows[2], name: "Auth Control", keys: []}),
-    new SubSystem({x: cols[3], y: rows[2], name: "R&D Beta svc", keys: []}),
-    new SubSystem({x: cols[0], y: rows[3], name: "FIREWALL\nCONTROLLER", keys: []}),
-    new SubSystem({x: cols[1], y: rows[3], name: "Admin Portal", keys: []}),
-    new SubSystem({x: cols[2], y: rows[3], name: "Admin DB", keys: []}),
-    new SubSystem({x: cols[3], y: rows[3], name: "AI/ML Control", keys: []}),
-    new SubSystem({x: cols[2], y: rows[4], name: "ENCRYPTED\nDATA STORE", keys: []}),
-    new SubSystem({x: cols[3], y: rows[4], name: "FIREWALL\nCONTROLLER", keys: []}),
+    new SubSystem({x: cols[0], y: rows[0], name: "Mail Server", keys: ["Kosmokrator", "Prime Radiant", "LEVIN", "XMultivac", "Bossy", "Arius", "The Engine", "Mandarax" ]}),
+    new SubSystem({x: cols[2], y: rows[0], name: "Proxy", keys: ["Mega ML", "Logic", "XMARK V", "Bossy", "Proteus", "AOHell", "Kosmokrator", "VALIS"]}),
+    new SubSystem({x: cols[3], y: rows[0], name: "VPN", keys: ["Mima", "Mega ML", "Project 79", "Mandarax"]}),
+    new SubSystem({x: cols[0], y: rows[1], name: "Backup Server", keys: ["Subzero", "Daemon", "Ghostwheel", "Misfit", "Kosmokrator", "JEVEX", "XGold", "Merlin"]}),
+    new SubSystem({x: cols[1], y: rows[1], name: "Web Server", keys: ["Firetoolz", "MARAK", "VALIS", "XMultivac", "JEVEX", "LEVIN", "Vulcan 3", "Teletran"]}),
+    new SubSystem({x: cols[2], y: rows[1], name: "Router", keys: ["Logic", "Mega ML", "Pallas Athena", "Ghostwheel", "Spartacus", "Vulcan 3", "Tokugawa", "Little Brother"]}),
+    new SubSystem({x: cols[3], y: rows[1], name: "Intranet svc", keys: ["Lambda", "GodPunter", "The Berserker", "Extro"]}),
+    new SubSystem({x: cols[0], y: rows[2], name: "Domain Control", keys: ["Kosmokrator", "Tron", "LEVIN", "Minerva", "Little Brother", "Merlin", "EPICAC", "Logic"]}),
+    new SubSystem({x: cols[1], y: rows[2], name: "Web Database", keys: ["Shodan", "The Brain", "Little Brother", "Proteus"]}),
+    new SubSystem({x: cols[2], y: rows[2], name: "Auth Control", keys: ["Lambda", "XMARK V", "Teletran", "Minerva"]}),
+    new SubSystem({x: cols[3], y: rows[2], name: "R&D Beta svc", keys: ["AOHell", "Logic", "JEVEX", "Spartacus", "Mima", "Tokugawa", "Project 79", "The Berserker"]}),
+    new SubSystem({x: cols[0], y: rows[3], name: "FIREWALL A\nCONTROLLER", keys: ["Shodan", "Proteus"]}),
+    new SubSystem({x: cols[1], y: rows[3], name: "Admin Portal", keys: ["Prime Radiant", "XMultivac", "Little Brother", "LEVIN"]}),
+    new SubSystem({x: cols[2], y: rows[3], name: "Admin DB", keys: ["XGold", "AOHell", "Vulcan 3", "Extro"]}),
+    new SubSystem({x: cols[3], y: rows[3], name: "AI/ML Control", keys: ["Bossy", "Mega ML", "Cyclops", "UNITRACK"]}),
+    new SubSystem({x: cols[2], y: rows[4], name: "ENCRYPTED\nDATA STORE", keys: ["Prime Radiant", "Frost"]}),
+    new SubSystem({x: cols[3], y: rows[4], name: "FIREWALL B\nCONTROLLER", keys: ["Misfit", "Arius"]}),
   ].forEach(b => a.push(b))
   return a;
 }

@@ -371,6 +371,10 @@ Main.prototype = $extend(hxd_App.prototype,{
 			this.scene = new scenes_Practice();
 			this.setScene(this.scene,true);
 			break;
+		case scenes_RealNet:
+			this.scene = new scenes_RealNet();
+			this.setScene(this.scene,true);
+			break;
 		case scenes_Tut1:
 			this.scene = new scenes_Tut1();
 			this.setScene(this.scene,true);
@@ -384,7 +388,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 			this.setScene(this.scene,true);
 			break;
 		default:
-			haxe_Log.trace("WARN! No handler for scene = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 63, className : "Main", methodName : "goToScene"});
+			haxe_Log.trace("WARN! No handler for scene = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 67, className : "Main", methodName : "goToScene"});
 		}
 		return this.scene;
 	}
@@ -396,17 +400,17 @@ Main.prototype = $extend(hxd_App.prototype,{
 			tf.set_text(err.message);
 			tf.posChanged = true;
 			tf.y = 20;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 76, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 80, className : "Main", methodName : "onJoin"});
 			return;
 		}
 		this.room = room;
 		this.room.get_state().onChange = $bind(this,this.onStateChange);
 		var onError = function(code,message) {
-			haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Main.hx", lineNumber : 84, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Main.hx", lineNumber : 88, className : "Main", methodName : "onJoin"});
 		};
 		this.room.onError.push(onError);
 		var onLeave = function() {
-			haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Main.hx", lineNumber : 87, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Main.hx", lineNumber : 91, className : "Main", methodName : "onJoin"});
 			window.alert("Server Disconnected! Will reload the browser.");
 			window.document.location.reload();
 		};
@@ -425,7 +429,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 			++_g;
 			switch(change.field) {
 			case "pauseOverlay":
-				haxe_Log.trace("Main.onStateChange pauseOverlay",{ fileName : "src/Main.hx", lineNumber : 128, className : "Main", methodName : "onStateChange"});
+				haxe_Log.trace("Main.onStateChange pauseOverlay",{ fileName : "src/Main.hx", lineNumber : 134, className : "Main", methodName : "onStateChange"});
 				break;
 			case "scene":
 				if(this.gmControlledScenes) {
@@ -435,6 +439,9 @@ Main.prototype = $extend(hxd_App.prototype,{
 						break;
 					case "Practice":
 						this.goToScene(scenes_Practice);
+						break;
+					case "RealNet":
+						this.goToScene(scenes_RealNet);
 						break;
 					case "Tut1":
 						this.goToScene(scenes_Tut1);
@@ -446,7 +453,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 						this.goToScene(scenes_Tut3);
 						break;
 					default:
-						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 124, className : "Main", methodName : "onStateChange"});
+						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 130, className : "Main", methodName : "onStateChange"});
 					}
 				}
 				break;
@@ -4312,13 +4319,17 @@ h2d_Graphics.prototype = $extend(h2d_Drawable.prototype,{
 });
 var entities_Box = function(scene,name,x,y) {
 	h2d_Graphics.call(this,scene);
+	this.scene = scene;
 	this.name = name;
 	this.posChanged = true;
 	this.x = x;
 	this.posChanged = true;
 	this.y = y;
+	this.accessible = true;
+	this.inboundCnx = new haxe_ds_List();
+	this.outboundCnx = new haxe_ds_List();
 	this.beginFill(16753522);
-	this.drawRect(0,0,100,100);
+	this.drawRect(0,0,100,80);
 	this.endFill();
 	var font = hxd_res_DefaultFont.get();
 	this.label = new h2d_Text(font,this);
@@ -4335,14 +4346,26 @@ $hxClasses["entities.Box"] = entities_Box;
 entities_Box.__name__ = "entities.Box";
 entities_Box.__super__ = h2d_Graphics;
 entities_Box.prototype = $extend(h2d_Graphics.prototype,{
-	hackAttempt: function(program) {
+	cnxFrom: function(a) {
+		this.accessible = false;
+		this.inboundCnx.add(a);
+		a.outboundCnx.add(this);
+		this.beginFill(1002625);
+		this.drawRect(0,0,100,80);
+		this.endFill();
+	}
+	,makeAccessible: function() {
+		this.accessible = true;
+		this.beginFill(16753522);
+		this.drawRect(0,0,100,80);
+		this.endFill();
+	}
+	,hackAttempt: function(program) {
+		if(!this.accessible) {
+			return;
+		}
 		var tmp = Main.instance.room;
 		var _g = new haxe_ds_StringMap();
-		if(__map_reserved["mode"] != null) {
-			_g.setReserved("mode","practice");
-		} else {
-			_g.h["mode"] = "practice";
-		}
 		var value = Main.instance.curPlayer.alias;
 		if(__map_reserved["playerAlias"] != null) {
 			_g.setReserved("playerAlias",value);
@@ -4368,10 +4391,20 @@ entities_Box.prototype = $extend(h2d_Graphics.prototype,{
 			this.owned = ss.owned;
 			this.label.set_text(this.name + "\nPWNED BY:\n" + ss.ownedBy);
 			this.beginFill(15558243);
-			this.drawRect(0,0,100,100);
+			this.drawRect(0,0,100,80);
 			this.endFill();
+			var _g_head = this.outboundCnx.filter(function(s) {
+				return !s.owned;
+			}).h;
+			while(_g_head != null) {
+				var val = _g_head.item;
+				_g_head = _g_head.next;
+				var b = val;
+				b.makeAccessible();
+			}
+			this.scene.onBoxOwned(this);
 		} else if(ss.runners.get_length() > 0) {
-			this.label.set_text(this.name + "\nrunners:\n");
+			this.label.set_text(this.name + "\n");
 			var r = ss.runners.iterator();
 			while(r.hasNext()) {
 				var r1 = r.next();
@@ -41026,6 +41059,18 @@ haxe_ds_List.prototype = {
 	,iterator: function() {
 		return new haxe_ds__$List_ListIterator(this.h);
 	}
+	,filter: function(f) {
+		var l2 = new haxe_ds_List();
+		var l = this.h;
+		while(l != null) {
+			var v = l.item;
+			l = l.next;
+			if(f(v)) {
+				l2.add(v);
+			}
+		}
+		return l2;
+	}
 	,map: function(f) {
 		var b = new haxe_ds_List();
 		var l = this.h;
@@ -67367,6 +67412,10 @@ scenes_Lobby.prototype = $extend(h2d_Scene.prototype,{
 });
 var scenes_SimBase = function() {
 	h2d_Scene.call(this);
+	this.programs = new haxe_ds_List();
+	this.firewalls = new haxe_ds_List();
+	this.subsystems = [];
+	this.cnx = new haxe_ds_List();
 	var b = new h2d_col_Bounds();
 	b.xMin = 0;
 	b.yMin = 0;
@@ -67374,14 +67423,14 @@ var scenes_SimBase = function() {
 	b.yMax = 1000;
 	this._stageBounds = b;
 	Main.instance.sceneUpdate = $bind(this,this.update);
-	Main.instance.room.get_state().practiceNet.onChange = $bind(this,this.onPracticeNetChange);
+	Main.instance.room.get_state().practiceNet.onChange = Main.instance.room.get_state().realNet.onChange = $bind(this,this.onNetChange);
 };
 $hxClasses["scenes.SimBase"] = scenes_SimBase;
 scenes_SimBase.__name__ = "scenes.SimBase";
 scenes_SimBase.__super__ = h2d_Scene;
 scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
-	onPracticeNetChange: function(ss,key) {
-		haxe_Log.trace(ss,{ fileName : "src/scenes/SimBase.hx", lineNumber : 30, className : "scenes.SimBase", methodName : "onPracticeNetChange"});
+	onNetChange: function(ss,key) {
+		haxe_Log.trace(ss,{ fileName : "src/scenes/SimBase.hx", lineNumber : 69, className : "scenes.SimBase", methodName : "onNetChange"});
 		this.subsystems[key].syncProps(ss);
 	}
 	,update: function(dt) {
@@ -67398,9 +67447,19 @@ scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
 		});
 		if(activeProgram != null) {
 			var _g = 0;
-			var _g1 = this.subsystems;
-			while(_g < _g1.length) {
-				var s = _g1[_g];
+			var _g1 = [];
+			var _g11 = 0;
+			var _g2 = this.subsystems;
+			while(_g11 < _g2.length) {
+				var v = _g2[_g11];
+				++_g11;
+				if(!v.owned) {
+					_g1.push(v);
+				}
+			}
+			var _g12 = _g1;
+			while(_g < _g12.length) {
+				var s = _g12[_g];
 				++_g;
 				var _this = s.getBounds();
 				var b = activeProgram.getBounds();
@@ -67432,9 +67491,19 @@ scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
 			return;
 		}
 		var _g = 0;
-		var _g1 = this.subsystems;
-		while(_g < _g1.length) {
-			var s = _g1[_g];
+		var _g1 = [];
+		var _g11 = 0;
+		var _g2 = this.subsystems;
+		while(_g11 < _g2.length) {
+			var v = _g2[_g11];
+			++_g11;
+			if(!v.owned) {
+				_g1.push(v);
+			}
+		}
+		var _g12 = _g1;
+		while(_g < _g12.length) {
+			var s = _g12[_g];
 			++_g;
 			var _this = s.getBounds();
 			var b = activeProgram.getBounds();
@@ -67449,11 +67518,33 @@ scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
 			activeProgram.resetPos();
 		}
 	}
+	,onBoxOwned: function(b) {
+		var _g_head = this.cnx.filter(function(a) {
+			return a.source == b;
+		}).h;
+		while(_g_head != null) {
+			var val = _g_head.item;
+			_g_head = _g_head.next;
+			var c = val;
+			c.enableCnx();
+		}
+	}
+	,createNetCnx: function(a,b) {
+		b.cnxFrom(a);
+		this.cnx.add(new scenes_SystemCnxLine(this,a,b));
+		this.children.push(this.children.splice(this.children.indexOf(a),1)[0]);
+		this.children.push(this.children.splice(this.children.indexOf(b),1)[0]);
+	}
 	,dispose: function() {
 		h2d_Scene.prototype.dispose.call(this);
-		Main.instance.sceneUpdate = null;
-		if(($_=Main.instance.room.get_state().practiceNet,$bind($_,$_.onChange)) == $bind(this,this.onPracticeNetChange)) {
+		if(Main.instance.sceneUpdate == $bind(this,this.update)) {
+			Main.instance.sceneUpdate = null;
+		}
+		if(($_=Main.instance.room.get_state().practiceNet,$bind($_,$_.onChange)) == $bind(this,this.onNetChange)) {
 			Main.instance.room.get_state().practiceNet.onChange = null;
+		}
+		if(($_=Main.instance.room.get_state().realNet,$bind($_,$_.onChange)) == $bind(this,this.onNetChange)) {
+			Main.instance.room.get_state().realNet.onChange = null;
 		}
 	}
 	,__class__: scenes_SimBase
@@ -67480,9 +67571,9 @@ var scenes_Practice = function() {
 	this.programs.add(new entities_Program(this,"Subzero",1470576,100,860));
 	this.programs.add(new entities_Program(this,"Firetoolz",1470576,200,860));
 	this.programs.add(new entities_Program(this,"Daemon",1470576,300,860));
-	this.programs.add(new entities_Program(this,"Lambda",15705,610,800));
-	this.programs.add(new entities_Program(this,"Shodan",15705,710,800));
-	this.programs.add(new entities_Program(this,"Tron",15705,810,800));
+	this.programs.add(new entities_Program(this,"Lambda",1138041,610,800));
+	this.programs.add(new entities_Program(this,"Shodan",1138041,710,800));
+	this.programs.add(new entities_Program(this,"Tron",1138041,810,800));
 	this.programs.add(new entities_Program(this,"Supr AI",16487220,610,860));
 	this.programs.add(new entities_Program(this,"Mega ML",16487220,710,860));
 	this.programs.add(new entities_Program(this,"The Engine",16487220,810,860));
@@ -67511,6 +67602,280 @@ scenes_Practice.__name__ = "scenes.Practice";
 scenes_Practice.__super__ = scenes_SimBase;
 scenes_Practice.prototype = $extend(scenes_SimBase.prototype,{
 	__class__: scenes_Practice
+});
+var scenes_RealNet = function() {
+	scenes_SimBase.call(this);
+	var font = hxd_res_DefaultFont.get();
+	var tf = new h2d_Text(font,this);
+	tf.set_text("MegaCorp Network");
+	var _g = tf;
+	_g.posChanged = true;
+	_g.scaleX *= 2;
+	var _g1 = tf;
+	_g1.posChanged = true;
+	_g1.scaleY *= 2;
+	tf.posChanged = true;
+	tf.x = 20;
+	tf.posChanged = true;
+	tf.y = 10;
+	var net;
+	switch(Main.instance.room.get_state().scene) {
+	case "Practice":
+		net = Main.instance.room.get_state().practiceNet;
+		break;
+	case "RealNet":
+		net = Main.instance.room.get_state().realNet;
+		break;
+	default:
+		haxe_Log.trace("ERROR: unhandled scene " + Main.instance.room.get_state().scene,{ fileName : "src/scenes/RealNet.hx", lineNumber : 32, className : "scenes.RealNet", methodName : "new"});
+		net = null;
+	}
+	var s = net.iterator();
+	while(s.hasNext()) {
+		var s1 = s.next();
+		this.subsystems.push(new entities_Box(this,s1.name,s1.x,s1.y));
+	}
+	if(Main.instance.curPlayer.hacking > 0 || Main.instance.curPlayer.sysops > 0) {
+		this.loadHackerProgs();
+	} else {
+		this.loadNoobProgs();
+	}
+	var _g1_head = this.programs.h;
+	while(_g1_head != null) {
+		var val = _g1_head.item;
+		_g1_head = _g1_head.next;
+		var p = val;
+		p.colliders = this.firewalls.map(function(f) {
+			return f.getBounds();
+		});
+	}
+	this.createNetConns();
+};
+$hxClasses["scenes.RealNet"] = scenes_RealNet;
+scenes_RealNet.__name__ = "scenes.RealNet";
+scenes_RealNet.__super__ = scenes_SimBase;
+scenes_RealNet.prototype = $extend(scenes_SimBase.prototype,{
+	loadNoobProgs: function() {
+		var group_0_x = 110;
+		var group_0_y = 870;
+		var group_1_x = 210;
+		var group_1_y = 870;
+		var group_2_x = 310;
+		var group_2_y = 870;
+		var group_3_x = 410;
+		var group_3_y = 870;
+		var group_4_x = 510;
+		var group_4_y = 870;
+		var group_5_x = 610;
+		var group_5_y = 870;
+		var group_6_x = 710;
+		var group_6_y = 870;
+		var group_7_x = 810;
+		var group_7_y = 870;
+		this.programs.add(new entities_Program(this,"Shroomz",1470576,group_0_x,group_0_y));
+		this.programs.add(new entities_Program(this,"AOHell",1138041,group_0_x,group_0_y + 40));
+		this.programs.add(new entities_Program(this,"GodPunter",4278863,group_0_x,group_0_y + 80));
+		this.programs.add(new entities_Program(this,"Subzero",1470576,group_1_x,group_1_y));
+		this.programs.add(new entities_Program(this,"Firetoolz",1138041,group_1_x,group_1_y + 40));
+		this.programs.add(new entities_Program(this,"Daemon",4278863,group_1_x,group_1_y + 80));
+		this.programs.add(new entities_Program(this,"Lambda",1470576,group_2_x,group_2_y));
+		this.programs.add(new entities_Program(this,"Shodan",1138041,group_2_x,group_2_y + 40));
+		this.programs.add(new entities_Program(this,"Tron",4278863,group_2_x,group_2_y + 80));
+		this.programs.add(new entities_Program(this,"Supr AI",1470576,group_3_x,group_3_y));
+		this.programs.add(new entities_Program(this,"Mega ML",1138041,group_3_x,group_3_y + 40));
+		this.programs.add(new entities_Program(this,"The Engine",4278863,group_3_x,group_3_y + 80));
+		this.programs.add(new entities_Program(this,"Misfit",1470576,group_4_x,group_4_y));
+		this.programs.add(new entities_Program(this,"The Brain",1138041,group_4_x,group_4_y + 40));
+		this.programs.add(new entities_Program(this,"Logic",4278863,group_4_x,group_4_y + 80));
+		this.programs.add(new entities_Program(this,"MARAK",1470576,group_5_x,group_5_y));
+		this.programs.add(new entities_Program(this,"Kosmokrator",1138041,group_5_x,group_5_y + 40));
+		this.programs.add(new entities_Program(this,"EPICAC",4278863,group_5_x,group_5_y + 80));
+		this.programs.add(new entities_Program(this,"XMARK V",1470576,group_6_x,group_6_y));
+		this.programs.add(new entities_Program(this,"Prime Radiant",1138041,group_6_x,group_6_y + 40));
+		this.programs.add(new entities_Program(this,"Mima",4278863,group_6_x,group_6_y + 80));
+		this.programs.add(new entities_Program(this,"XGold",1470576,group_7_x,group_7_y));
+		this.programs.add(new entities_Program(this,"Bossy",1138041,group_7_x,group_7_y + 40));
+		this.programs.add(new entities_Program(this,"XMultivac",4278863,group_7_x,group_7_y + 80));
+		this.firewalls.add(new entities_Firewall(this,0,830,400,3));
+		this.firewalls.add(new entities_Firewall(this,600,830,400,3));
+		this.firewalls.add(new entities_Firewall(this,120,760,760,3));
+		this.firewalls.add(new entities_Firewall(this,0,690,400,3));
+		this.firewalls.add(new entities_Firewall(this,120,620,400,3));
+		this.firewalls.add(new entities_Firewall(this,0,550,400,3));
+		this.firewalls.add(new entities_Firewall(this,520,550,3,170));
+		this.firewalls.add(new entities_Firewall(this,780,690,100,3));
+		this.firewalls.add(new entities_Firewall(this,880,690,3,73));
+		this.firewalls.add(new entities_Firewall(this,660,620,360,3));
+		this.firewalls.add(new entities_Firewall(this,660,620,3,73));
+		this.firewalls.add(new entities_Firewall(this,520,550,320,3));
+		this.firewalls.add(new entities_Firewall(this,-3,550,3,280));
+		this.firewalls.add(new entities_Firewall(this,1000,550,3,280));
+	}
+	,loadHackerProgs: function() {
+		var group_0_x = 110;
+		var group_0_y = 720;
+		var group_1_x = 210;
+		var group_1_y = 720;
+		var group_2_x = 310;
+		var group_2_y = 720;
+		var group_3_x = 410;
+		var group_3_y = 720;
+		var group_4_x = 510;
+		var group_4_y = 720;
+		var group_5_x = 610;
+		var group_5_y = 720;
+		var group_6_x = 710;
+		var group_6_y = 720;
+		var group_7_x = 810;
+		var group_7_y = 720;
+		var group_8_x = 110;
+		var group_8_y = 860;
+		var group_9_x = 210;
+		var group_9_y = 860;
+		var group_10_x = 310;
+		var group_10_y = 860;
+		var group_11_x = 410;
+		var group_11_y = 860;
+		var group_12_x = 510;
+		var group_12_y = 860;
+		var group_13_x = 610;
+		var group_13_y = 860;
+		var group_14_x = 710;
+		var group_14_y = 860;
+		var group_15_x = 810;
+		var group_15_y = 860;
+		this.programs.add(new entities_Program(this,"Shroomz",1470576,group_0_x,group_0_y));
+		this.programs.add(new entities_Program(this,"AOHell",1138041,group_0_x,group_0_y + 40));
+		this.programs.add(new entities_Program(this,"GodPunter",4278863,group_0_x,group_0_y + 80));
+		this.programs.add(new entities_Program(this,"Subzero",1470576,group_1_x,group_1_y));
+		this.programs.add(new entities_Program(this,"Firetoolz",1138041,group_1_x,group_1_y + 40));
+		this.programs.add(new entities_Program(this,"Daemon",4278863,group_1_x,group_1_y + 80));
+		this.programs.add(new entities_Program(this,"Lambda",1470576,group_2_x,group_2_y));
+		this.programs.add(new entities_Program(this,"Shodan",1138041,group_2_x,group_2_y + 40));
+		this.programs.add(new entities_Program(this,"Tron",4278863,group_2_x,group_2_y + 80));
+		this.programs.add(new entities_Program(this,"Supr AI",1470576,group_3_x,group_3_y));
+		this.programs.add(new entities_Program(this,"Mega ML",1138041,group_3_x,group_3_y + 40));
+		this.programs.add(new entities_Program(this,"The Engine",4278863,group_3_x,group_3_y + 80));
+		this.programs.add(new entities_Program(this,"Misfit",1470576,group_4_x,group_4_y));
+		this.programs.add(new entities_Program(this,"The Brain",1138041,group_4_x,group_4_y + 40));
+		this.programs.add(new entities_Program(this,"Logic",4278863,group_4_x,group_4_y + 80));
+		this.programs.add(new entities_Program(this,"MARAK",1470576,group_5_x,group_5_y));
+		this.programs.add(new entities_Program(this,"Kosmokrator",1138041,group_5_x,group_5_y + 40));
+		this.programs.add(new entities_Program(this,"EPICAC",4278863,group_5_x,group_5_y + 80));
+		this.programs.add(new entities_Program(this,"XMARK V",1470576,group_6_x,group_6_y));
+		this.programs.add(new entities_Program(this,"Prime Radiant",1138041,group_6_x,group_6_y + 40));
+		this.programs.add(new entities_Program(this,"Mima",4278863,group_6_x,group_6_y + 80));
+		this.programs.add(new entities_Program(this,"XGold",1470576,group_7_x,group_7_y));
+		this.programs.add(new entities_Program(this,"Bossy",1138041,group_7_x,group_7_y + 40));
+		this.programs.add(new entities_Program(this,"XMultivac",4278863,group_7_x,group_7_y + 80));
+		this.programs.add(new entities_Program(this,"LEVIN",16487220,group_8_x,group_8_y));
+		this.programs.add(new entities_Program(this,"Arius",16487220,group_8_x,group_8_y + 40));
+		this.programs.add(new entities_Program(this,"Tokugawa",16487220,group_8_x,group_8_y + 80));
+		this.programs.add(new entities_Program(this,"Ghostwheel",1470576,group_9_x,group_9_y));
+		this.programs.add(new entities_Program(this,"Mandarax",1470576,group_9_x,group_9_y + 40));
+		this.programs.add(new entities_Program(this,"Teletran",16487220,group_9_x,group_9_y + 80));
+		this.programs.add(new entities_Program(this,"Valentina",1138041,group_10_x,group_10_y));
+		this.programs.add(new entities_Program(this,"Loki 7281",1138041,group_10_x,group_10_y + 40));
+		this.programs.add(new entities_Program(this,"Cyclops",16487220,group_10_x,group_10_y + 80));
+		this.programs.add(new entities_Program(this,"VALIS",4278863,group_11_x,group_11_y));
+		this.programs.add(new entities_Program(this,"Spartacus",4278863,group_11_x,group_11_y + 40));
+		this.programs.add(new entities_Program(this,"JEVEX",16487220,group_11_x,group_11_y + 80));
+		this.programs.add(new entities_Program(this,"UNITRACK",4278863,group_12_x,group_12_y));
+		this.programs.add(new entities_Program(this,"Proteus",4278863,group_12_x,group_12_y + 40));
+		this.programs.add(new entities_Program(this,"Extro",16487220,group_12_x,group_12_y + 80));
+		this.programs.add(new entities_Program(this,"Minerva",1138041,group_13_x,group_13_y));
+		this.programs.add(new entities_Program(this,"Pallas Athena",1138041,group_13_x,group_13_y + 40));
+		this.programs.add(new entities_Program(this,"Project 79",16487220,group_13_x,group_13_y + 80));
+		this.programs.add(new entities_Program(this,"The Berserker",1470576,group_14_x,group_14_y));
+		this.programs.add(new entities_Program(this,"Little Brother",1470576,group_14_x,group_14_y + 40));
+		this.programs.add(new entities_Program(this,"Merlin",16487220,group_14_x,group_14_y + 80));
+		this.programs.add(new entities_Program(this,"Colossus",16487220,group_15_x,group_15_y));
+		this.programs.add(new entities_Program(this,"Frost",16487220,group_15_x,group_15_y + 40));
+		this.programs.add(new entities_Program(this,"Vulcan 3",16487220,group_15_x,group_15_y + 80));
+		this.firewalls.add(new entities_Firewall(this,0,680,400,3));
+		this.firewalls.add(new entities_Firewall(this,600,680,400,3));
+		this.firewalls.add(new entities_Firewall(this,120,610,720,3));
+		this.firewalls.add(new entities_Firewall(this,0,550,200,3));
+		this.firewalls.add(new entities_Firewall(this,400,550,200,3));
+		this.firewalls.add(new entities_Firewall(this,800,550,200,3));
+		this.firewalls.add(new entities_Firewall(this,-3,550,3,280));
+		this.firewalls.add(new entities_Firewall(this,1000,550,3,280));
+	}
+	,createNetConns: function() {
+		this.createNetCnx(this.subsystems[0],this.subsystems[3]);
+		this.createNetCnx(this.subsystems[1],this.subsystems[5]);
+		this.createNetCnx(this.subsystems[2],this.subsystems[6]);
+		this.createNetCnx(this.subsystems[3],this.subsystems[7]);
+		this.createNetCnx(this.subsystems[4],this.subsystems[8]);
+		this.createNetCnx(this.subsystems[5],this.subsystems[9]);
+		this.createNetCnx(this.subsystems[5],this.subsystems[4]);
+		this.createNetCnx(this.subsystems[6],this.subsystems[10]);
+		this.createNetCnx(this.subsystems[7],this.subsystems[11]);
+		this.createNetCnx(this.subsystems[8],this.subsystems[12]);
+		this.createNetCnx(this.subsystems[9],this.subsystems[10]);
+		this.createNetCnx(this.subsystems[10],this.subsystems[14]);
+		this.createNetCnx(this.subsystems[10],this.subsystems[9]);
+		this.createNetCnx(this.subsystems[11],this.subsystems[12]);
+		this.createNetCnx(this.subsystems[12],this.subsystems[13]);
+		this.createNetCnx(this.subsystems[13],this.subsystems[15]);
+		this.createNetCnx(this.subsystems[14],this.subsystems[16]);
+		this.createNetCnx(this.subsystems[16],this.subsystems[15]);
+	}
+	,designSubSystems: function() {
+		var cols_0 = 80;
+		var cols_1 = 325;
+		var cols_2 = 570;
+		var cols_3 = 815;
+		var rows_0 = 440;
+		var rows_1 = 330;
+		var rows_2 = 220;
+		var rows_3 = 110;
+		var rows_4 = 2;
+		this.subsystems.push(new entities_Box(this,"Mail Server",cols_0,rows_0));
+		this.subsystems.push(new entities_Box(this,"Proxy",cols_2,rows_0));
+		this.subsystems.push(new entities_Box(this,"VPN",cols_3,rows_0));
+		this.subsystems.push(new entities_Box(this,"Backup Server",cols_0,rows_1));
+		this.subsystems.push(new entities_Box(this,"Web Server",cols_1,rows_1));
+		this.subsystems.push(new entities_Box(this,"Router",cols_2,rows_1));
+		this.subsystems.push(new entities_Box(this,"Intranet svc",cols_3,rows_1));
+		this.subsystems.push(new entities_Box(this,"Domain Control",cols_0,rows_2));
+		this.subsystems.push(new entities_Box(this,"Web Database",cols_1,rows_2));
+		this.subsystems.push(new entities_Box(this,"Auth Control",cols_2,rows_2));
+		this.subsystems.push(new entities_Box(this,"R&D Beta svc",cols_3,rows_2));
+		this.subsystems.push(new entities_Box(this,"FIREWALL A\nCONTROLLER",cols_0,rows_3));
+		this.subsystems.push(new entities_Box(this,"Admin Portal",cols_1,rows_3));
+		this.subsystems.push(new entities_Box(this,"Admin DB",cols_2,rows_3));
+		this.subsystems.push(new entities_Box(this,"AI/ML Control",cols_3,rows_3));
+		this.subsystems.push(new entities_Box(this,"ENCRYPTED\nDATA STORE",cols_2,rows_4));
+		this.subsystems.push(new entities_Box(this,"FIREWALL B\nCONTROLLER",cols_3,rows_4));
+	}
+	,__class__: scenes_RealNet
+});
+var scenes_SystemCnxLine = function(scene,source,dest) {
+	h2d_Graphics.call(this,scene);
+	this.source = source;
+	this.dest = dest;
+	this.beginFill(1002625);
+	this.drawLine();
+	this.endFill();
+};
+$hxClasses["scenes.SystemCnxLine"] = scenes_SystemCnxLine;
+scenes_SystemCnxLine.__name__ = "scenes.SystemCnxLine";
+scenes_SystemCnxLine.__super__ = h2d_Graphics;
+scenes_SystemCnxLine.prototype = $extend(h2d_Graphics.prototype,{
+	enableCnx: function() {
+		this.beginFill(15558243);
+		this.drawLine();
+		this.endFill();
+	}
+	,drawLine: function() {
+		if(this.source.x == this.dest.x) {
+			this.drawRect(this.source.x + 50.,this.source.y + 40.,3,this.dest.y - this.source.y);
+		} else {
+			this.drawRect(this.source.x + 50.,this.source.y + 40.,this.dest.x - this.source.x,3);
+		}
+	}
+	,__class__: scenes_SystemCnxLine
 });
 var scenes_Tut1 = function() {
 	h2d_Scene.call(this);
@@ -67858,13 +68223,15 @@ if(ArrayBuffer.prototype.slice == null) {
 	ArrayBuffer.prototype.slice = js_lib__$ArrayBuffer_ArrayBufferCompat.sliceImpl;
 }
 Colors.PROG_1 = 4278863;
-Colors.PROG_2 = 15705;
+Colors.PROG_2 = 1138041;
 Colors.PROG_3 = 1470576;
 Colors.PROG_4 = 16487220;
 Colors.FIREWALL = 16672293;
 Colors.SYS_ACCESS = 16753522;
 Colors.SYS_NO_ACCESS = 1002625;
 Colors.SYS_OWNED = 15558243;
+Colors.NET_NO_ACCESS = 1002625;
+Colors.NET_ACCESS = 15558243;
 io_colyseus_serializer_schema_Schema.decoder = new io_colyseus_serializer_schema_Decoder();
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
 State.SET_ALIAS_STATS = "setAliasAndStats";
@@ -67877,7 +68244,7 @@ Xml.DocType = 4;
 Xml.ProcessingInstruction = 5;
 Xml.Document = 6;
 entities_Box.WIDTH = 100;
-entities_Box.HEIGHT = 100;
+entities_Box.HEIGHT = 80;
 entities_Program.WIDTH = 80;
 entities_Program.HEIGHT = 30;
 format_gif_Tools.LN2 = Math.log(2);
@@ -68449,6 +68816,7 @@ org_msgpack_Encoder.FLOAT_SINGLE_MIN = 1.40129846432481707e-45;
 org_msgpack_Encoder.FLOAT_SINGLE_MAX = 3.40282346638528860e+38;
 org_msgpack_Encoder.FLOAT_DOUBLE_MIN = 4.94065645841246544e-324;
 org_msgpack_Encoder.FLOAT_DOUBLE_MAX = 1.79769313486231570e+308;
+scenes_SystemCnxLine.LINE_THICKNESS = 3;
 {
 	Main.main();
 	haxe_EntryPoint.run();
