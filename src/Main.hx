@@ -59,6 +59,10 @@ class Main extends hxd.App {
         this.scene = new scenes.Practice();
         this.setScene(this.scene, true);
 
+      case scenes.RealNet:
+        this.scene = new scenes.RealNet();
+        this.setScene(this.scene, true);
+
       default:
         trace('WARN! No handler for scene = $scene');
     }
@@ -120,6 +124,8 @@ class Main extends hxd.App {
                 goToScene(scenes.Tut3);
               case "Practice":
                 goToScene(scenes.Practice);
+              case "RealNet":
+                goToScene(scenes.RealNet);
               default:
                 trace('WARN: unhandled change scene in Main.onStateChange[scene]: ${change.value}');
             }

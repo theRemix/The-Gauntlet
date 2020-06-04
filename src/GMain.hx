@@ -244,6 +244,10 @@ class GMain {
           scene_tut1_controls.hidden =
           scene_tut2_controls.hidden =
           scene_tut3_controls.hidden = true;
+        case "RealNet":
+          scene_tut1_controls.hidden =
+          scene_tut2_controls.hidden =
+          scene_tut3_controls.hidden = true;
       }
 
       // this happens on server, just going to sync it manually

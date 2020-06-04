@@ -126,7 +126,6 @@ class Program extends Graphics{
   EPICAC
   MARK V
   Prime Radiant
-  Karl
   Mima
   Gold
   Bossy

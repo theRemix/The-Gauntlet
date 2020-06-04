@@ -10,7 +10,7 @@ import h2d.col.Bounds;
 class Box extends Graphics{
 
   static inline var WIDTH = 100;
-  static inline var HEIGHT = 100;
+  static inline var HEIGHT = 80;
 
   var owned:Bool;
 

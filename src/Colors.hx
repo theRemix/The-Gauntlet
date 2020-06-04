@@ -1,7 +1,7 @@
 class Colors {
 
   public static inline var PROG_1 = 0x414a4f;
-  public static inline var PROG_2 = 0x003d59;
+  public static inline var PROG_2 = 0x115d79;
   public static inline var PROG_3 = 0x167070; // hackers
   public static inline var PROG_4 = 0xfb9334; // leet hackers
 
