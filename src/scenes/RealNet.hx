@@ -266,7 +266,6 @@ class RealNet extends SimBase{
     createNetCnx(subsystems[6], subsystems[10]);
     createNetCnx(subsystems[7], subsystems[11]);
     createNetCnx(subsystems[8], subsystems[12]);
-    createNetCnx(subsystems[9], subsystems[13]);
     createNetCnx(subsystems[9], subsystems[10]);
     createNetCnx(subsystems[10], subsystems[14]);
     createNetCnx(subsystems[10], subsystems[9]);

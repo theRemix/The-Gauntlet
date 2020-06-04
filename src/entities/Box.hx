@@ -12,11 +12,11 @@ class Box extends Graphics {
   public static inline var WIDTH = 100;
   public static inline var HEIGHT = 80;
 
-  var owned:Bool;
+  public var owned:Bool;
+  var accessible:Bool;
 
-  // var accessible(get,null):Bool;
-  // any incomingCnx are owned
-
+  private var inboundCnx:List<Box>;
+  public var outboundCnx:List<Box>;
 
   var label:Text;
   // var runnersTxt:Text;
@@ -28,6 +28,9 @@ class Box extends Graphics {
     this.name = name;
     this.x = x;
     this.y = y;
+    this.accessible = true;
+    this.inboundCnx = new List<Box>();
+    this.outboundCnx = new List<Box>();
 
     beginFill(Colors.SYS_ACCESS);
     drawRect(0, 0, WIDTH, HEIGHT);
@@ -41,7 +44,26 @@ class Box extends Graphics {
     label.textColor = 0x0;
   }
 
+  public function cnxFrom(a:Box){
+    this.accessible = false;
+    this.inboundCnx.add(a);
+    a.outboundCnx.add(this);
+
+    beginFill(Colors.SYS_NO_ACCESS);
+    drawRect(0, 0, WIDTH, HEIGHT);
+    endFill();
+  }
+
+  public function makeAccessible(){
+    this.accessible = true;
+
+    beginFill(Colors.SYS_ACCESS);
+    drawRect(0, 0, WIDTH, HEIGHT);
+    endFill();
+  }
+
   public function hackAttempt(program){
+    if(!this.accessible) return;
     Main.instance.room.send(State.HACK_ATTEMPT, [
       "mode" => "practice",
       "playerAlias" => Main.instance.curPlayer.alias,
@@ -58,6 +80,11 @@ class Box extends Graphics {
       beginFill(Colors.SYS_OWNED);
       drawRect(0, 0, WIDTH, HEIGHT);
       endFill();
+
+      // remove cnx to make accessible
+      for(b in outboundCnx.filter(function(s) return !s.owned)){
+        b.makeAccessible();
+      }
 
     }else if(ss.runners.length > 0){
       label.text = name + "\nrunners:\n";

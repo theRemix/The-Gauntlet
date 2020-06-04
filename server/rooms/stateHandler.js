@@ -224,9 +224,27 @@ const createPracticeNet = () => {
 }
 
 const createRealNet = () => {
+  const cols = [ 80, 325, 570, 815 ];
+  const rows = [ 440, 330, 220, 110, 2 ];
   const a = new ArraySchema();
   [
-    new SubSystem({x: 280, y: 100, name: "REAL X", keys: []}),
+    new SubSystem({x: cols[0], y: rows[0], name: "Mail Server", keys: []}),
+    new SubSystem({x: cols[2], y: rows[0], name: "Proxy", keys: []}),
+    new SubSystem({x: cols[3], y: rows[0], name: "VPN", keys: []}),
+    new SubSystem({x: cols[0], y: rows[1], name: "Backup Server", keys: []}),
+    new SubSystem({x: cols[1], y: rows[1], name: "Web Server", keys: []}),
+    new SubSystem({x: cols[2], y: rows[1], name: "Router", keys: []}),
+    new SubSystem({x: cols[3], y: rows[1], name: "Intranet svc", keys: []}),
+    new SubSystem({x: cols[0], y: rows[2], name: "Domain Control", keys: []}),
+    new SubSystem({x: cols[1], y: rows[2], name: "Web Database", keys: []}),
+    new SubSystem({x: cols[2], y: rows[2], name: "Auth Control", keys: []}),
+    new SubSystem({x: cols[3], y: rows[2], name: "R&D Beta svc", keys: []}),
+    new SubSystem({x: cols[0], y: rows[3], name: "FIREWALL\nCONTROLLER", keys: []}),
+    new SubSystem({x: cols[1], y: rows[3], name: "Admin Portal", keys: []}),
+    new SubSystem({x: cols[2], y: rows[3], name: "Admin DB", keys: []}),
+    new SubSystem({x: cols[3], y: rows[3], name: "AI/ML Control", keys: []}),
+    new SubSystem({x: cols[2], y: rows[4], name: "ENCRYPTED\nDATA STORE", keys: []}),
+    new SubSystem({x: cols[3], y: rows[4], name: "FIREWALL\nCONTROLLER", keys: []}),
   ].forEach(b => a.push(b))
   return a;
 }

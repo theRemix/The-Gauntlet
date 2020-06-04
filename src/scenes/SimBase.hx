@@ -63,7 +63,7 @@ class SimBase extends h2d.Scene{
 
     if(activeProgram == null) return;
 
-    for(s in subsystems){
+    for(s in subsystems.filter(function(s) return !s.owned)){
       if(s.getBounds().intersects(activeProgram.getBounds())){
         s.hackAttempt(activeProgram);
         activeProgram.resetPos();
@@ -77,6 +77,7 @@ class SimBase extends h2d.Scene{
   }
 
   public function createNetCnx(a:Box, b:Box){
+    b.cnxFrom(a);
     cnx.add(new SystemCnxLine(this, a, b));
     // bring boxes forward
 		this.children.push(this.children.splice(this.children.indexOf(a), 1)[0]);
