@@ -7,10 +7,10 @@ import h2d.Text;
 import hxd.Event;
 import h2d.col.Bounds;
 
-class Box extends Graphics{
+class Box extends Graphics {
 
-  static inline var WIDTH = 100;
-  static inline var HEIGHT = 80;
+  public static inline var WIDTH = 100;
+  public static inline var HEIGHT = 80;
 
   var owned:Bool;
 
@@ -20,7 +20,6 @@ class Box extends Graphics{
 
   var label:Text;
   // var runnersTxt:Text;
-  // var cnxLines:List<SystemCnxLine>;
 
   // var runners:List<String>;
 

@@ -18,22 +18,18 @@ class RealNet extends SimBase{
     var font = hxd.res.DefaultFont.get();
 
     var tf = new h2d.Text(font, this);
-    tf.text = "The NET";
+    // tf.text = "MegaCorp Network";
     tf.scale(2);
     tf.x = 20;
     tf.y = 10;
 
-    programs = new List<Program>();
-    firewalls = new List<Firewall>();
-
-    subsystems = new Array<Box>();
     // for(s in Main.instance.room.state.practiceNet){
     //   subsystems.push(new Box(this, s.name, s.x, s.y));
     // }
     designSubSystems();
 
-    // loadNoobProgs();
-    loadHackerProgs();
+    loadNoobProgs();
+    // loadHackerProgs();
 
     for(p in programs){
       p.colliders = firewalls.map(function(f) return f.getBounds());
@@ -233,32 +229,52 @@ class RealNet extends SimBase{
     var cols = [ 80, 325, 570, 815 ];
     var rows = [ 440, 330, 220, 110, 2 ];
 
-    // 1st layer
+    // 1st layer [0]
     subsystems.push(new Box(this, "Mail Server",         cols[0], rows[0]));
     subsystems.push(new Box(this, "Proxy",               cols[2], rows[0]));
     subsystems.push(new Box(this, "VPN",                 cols[3], rows[0]));
 
-    // 2nd layer
+    // 2nd layer [3]
     subsystems.push(new Box(this, "Backup Server",       cols[0], rows[1]));
     subsystems.push(new Box(this, "Web Server",          cols[1], rows[1]));
     subsystems.push(new Box(this, "Router",              cols[2], rows[1]));
     subsystems.push(new Box(this, "Intranet svc",        cols[3], rows[1]));
 
-    // 3rd layer
+    // 3rd layer [7]
     subsystems.push(new Box(this, "Domain Control",      cols[0], rows[2]));
     subsystems.push(new Box(this, "Web Database",        cols[1], rows[2]));
     subsystems.push(new Box(this, "Auth Control",        cols[2], rows[2]));
     subsystems.push(new Box(this, "R&D Beta svc",        cols[3], rows[2]));
 
-    // 4th layer
+    // 4th layer [11]
     subsystems.push(new Box(this, "FIREWALL\nCONTROLLER",cols[0], rows[3]));
     subsystems.push(new Box(this, "Admin Portal",        cols[1], rows[3]));
     subsystems.push(new Box(this, "Admin DB",            cols[2], rows[3]));
     subsystems.push(new Box(this, "AI/ML Control",       cols[3], rows[3]));
 
-    // 5th layer
+    // 5th layer [15]
     subsystems.push(new Box(this, "ENCRYPTED\nDATA STORE",cols[2], rows[4]));
     subsystems.push(new Box(this, "FIREWALL\nCONTROLLER", cols[3], rows[4]));
+
+    createNetCnx(subsystems[0], subsystems[3]);
+    createNetCnx(subsystems[1], subsystems[5]);
+    createNetCnx(subsystems[2], subsystems[6]);
+    createNetCnx(subsystems[3], subsystems[7]);
+    createNetCnx(subsystems[4], subsystems[8]);
+    createNetCnx(subsystems[5], subsystems[9]);
+    createNetCnx(subsystems[5], subsystems[4]);
+    createNetCnx(subsystems[6], subsystems[10]);
+    createNetCnx(subsystems[7], subsystems[11]);
+    createNetCnx(subsystems[8], subsystems[12]);
+    createNetCnx(subsystems[9], subsystems[13]);
+    createNetCnx(subsystems[9], subsystems[10]);
+    createNetCnx(subsystems[10], subsystems[14]);
+    createNetCnx(subsystems[10], subsystems[9]);
+    createNetCnx(subsystems[11], subsystems[12]);
+    createNetCnx(subsystems[12], subsystems[13]);
+    createNetCnx(subsystems[13], subsystems[15]);
+    createNetCnx(subsystems[14], subsystems[16]);
+    createNetCnx(subsystems[16], subsystems[15]);
 
   }
 }
