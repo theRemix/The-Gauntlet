@@ -4,6 +4,7 @@ import js.html.DOMElement;
 import js.html.InputElement;
 import js.html.SelectElement;
 import js.html.FormElement;
+import js.html.ButtonElement;
 import io.colyseus.Client;
 import io.colyseus.Room;
 import io.colyseus.serializer.schema.Schema;
@@ -22,6 +23,7 @@ class GState extends Schema {
   public static inline var UNPAUSE = "unpause";
   public static inline var FIREWALLS_UP = "disableFirewalls";
   public static inline var FIREWALLS_DOWN = "enableFirewalls";
+  public static inline var KICK = "kick";
 
 	@:type("number")
 	public var dummy:Int = 0;
@@ -209,7 +211,7 @@ class GMain {
       }
 
       for(player in room.state.players.items){
-        createPlayerTableRow(players_table, player);
+        createPlayerTableRow(room, players_table, player);
       }
     }
     room.state.players.onRemove = function removePlayerList(player, key){
@@ -339,13 +341,12 @@ class GMain {
   static function main() new GMain();
 
 
-  static inline function createPlayerTableRow(table, player){
+  static inline function createPlayerTableRow(room, table, player){
     var row = document.createElement("tr");
     var key = document.createElement("td");
     var alias = document.createElement("td");
     var stats = document.createElement("td");
-    var pause = document.createElement("td");
-    var connect = document.createElement("td");
+    var dc = document.createElement("td");
 
     row.className = "player_row";
     key.className = "player_key";
@@ -355,7 +356,15 @@ class GMain {
       stats.innerHTML = 'hacking:${Std.string(player.hacking)}<br>sysops:${Std.string(player.sysops)}<br>skullduggery:${Std.string(player.skullduggery)}<br>int:${Std.string(player.intellect)}';
     }
 
-    row.append(key, alias, stats, pause, connect);
+    var dcBtn:ButtonElement = cast(document.createElement("button"), ButtonElement);
+    dcBtn.type = "button";
+    dcBtn.innerText = "Kick";
+    dcBtn.onclick = function(_){
+      room.send(GState.KICK, player.key);
+    };
+    dc.append(dcBtn);
+
+    row.append(key, alias, stats, dc);
     // row.appendChild(key);
     table.appendChild(row);
   }

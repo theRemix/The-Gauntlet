@@ -66,8 +66,13 @@ class State extends Schema {
   }
 
   removePlayer (id) {
-    delete this.players[ id ];
-    console.log('removed player', id)
+    if(this.players[id]){
+      var alias = this.players[ id ].alias
+      delete this.players[ id ]
+      console.log('removed player', id, alias)
+    } else {
+      console.log('could not remove player', id)
+    }
   }
 
   setAliasAndStats(id, aliasAndStats) {
@@ -255,6 +260,18 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
         return console.warn('WARN: non GM attempted to run enableFirewalls');
 
       this.state.enableFirewalls()
+    });
+
+    this.onMessage("kick", (client, key) => {
+      if(client.sessionId != this.state.gm.key)
+        return console.warn('WARN: non GM attempted to run enableFirewalls');
+
+      if(client.sessionId == key)
+        return console.warn('WARN: GM attempted to kick GM');
+
+      for(let c of this.clients){
+        if(c.sessionId == key) c.leave()
+      }
     });
 
   }

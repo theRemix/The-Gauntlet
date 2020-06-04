@@ -362,13 +362,12 @@ GMain.__name__ = "GMain";
 GMain.main = function() {
 	new GMain();
 };
-GMain.createPlayerTableRow = function(table,player) {
+GMain.createPlayerTableRow = function(room,table,player) {
 	var row = window.document.createElement("tr");
 	var key = window.document.createElement("td");
 	var alias = window.document.createElement("td");
 	var stats = window.document.createElement("td");
-	var pause = window.document.createElement("td");
-	var connect = window.document.createElement("td");
+	var dc = window.document.createElement("td");
 	row.className = "player_row";
 	key.className = "player_key";
 	key.innerText = player.key;
@@ -376,7 +375,14 @@ GMain.createPlayerTableRow = function(table,player) {
 	if(player.alias != "GM") {
 		stats.innerHTML = "hacking:" + (player.hacking == null ? "null" : "" + player.hacking) + "<br>sysops:" + (player.sysops == null ? "null" : "" + player.sysops) + "<br>skullduggery:" + (player.skullduggery == null ? "null" : "" + player.skullduggery) + "<br>int:" + (player.intellect == null ? "null" : "" + player.intellect);
 	}
-	row.append(key,alias,stats,pause,connect);
+	var dcBtn = js_Boot.__cast(window.document.createElement("button") , HTMLButtonElement);
+	dcBtn.type = "button";
+	dcBtn.innerText = "Kick";
+	dcBtn.onclick = function(_) {
+		room.send("kick",player.key);
+	};
+	dc.append(dcBtn);
+	row.append(key,alias,stats,dc);
 	table.appendChild(row);
 };
 GMain.prototype = {
@@ -413,7 +419,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:143:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:145:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.servers_container.hidden = false;
@@ -448,7 +454,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:192:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:194:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.players_container.hidden = false;
@@ -466,26 +472,36 @@ GMain.prototype = {
 			var player1 = room.get_state().players.items.iterator();
 			while(player1.hasNext()) {
 				var player2 = player1.next();
+				var room1 = [room];
 				var table = _gthis.players_table;
+				var player3 = [player2];
 				var row1 = window.document.createElement("tr");
 				var key1 = window.document.createElement("td");
 				var alias = window.document.createElement("td");
 				var stats = window.document.createElement("td");
-				var pause = window.document.createElement("td");
-				var connect = window.document.createElement("td");
+				var dc = window.document.createElement("td");
 				row1.className = "player_row";
 				key1.className = "player_key";
-				key1.innerText = player2.key;
-				alias.innerText = player2.alias;
-				if(player2.alias != "GM") {
-					stats.innerHTML = "hacking:" + (player2.hacking == null ? "null" : "" + player2.hacking) + "<br>sysops:" + (player2.sysops == null ? "null" : "" + player2.sysops) + "<br>skullduggery:" + (player2.skullduggery == null ? "null" : "" + player2.skullduggery) + "<br>int:" + (player2.intellect == null ? "null" : "" + player2.intellect);
+				key1.innerText = player3[0].key;
+				alias.innerText = player3[0].alias;
+				if(player3[0].alias != "GM") {
+					stats.innerHTML = "hacking:" + Std.string(player3[0].hacking) + "<br>sysops:" + Std.string(player3[0].sysops) + "<br>skullduggery:" + Std.string(player3[0].skullduggery) + "<br>int:" + Std.string(player3[0].intellect);
 				}
-				row1.append(key1,alias,stats,pause,connect);
+				var dcBtn = js_Boot.__cast(window.document.createElement("button") , HTMLButtonElement);
+				dcBtn.type = "button";
+				dcBtn.innerText = "Kick";
+				dcBtn.onclick = (function(player4,room2) {
+					return function(_) {
+						room2[0].send("kick",player4[0].key);
+					};
+				})(player3,room1);
+				dc.append(dcBtn);
+				row1.append(key1,alias,stats,dc);
 				table.appendChild(row1);
 			}
 		};
 		room.get_state().players.onChange = updatePlayerList;
-		var removePlayerList = function(player3,key2) {
+		var removePlayerList = function(player5,key2) {
 			var rows1 = _gthis.players_table.getElementsByClassName("player_row");
 			var _g1 = 0;
 			while(_g1 < rows1.length) {
@@ -514,19 +530,19 @@ GMain.prototype = {
 			}
 		};
 		room.get_state().onChange = roomOnChange;
-		this.sim_running.onclick = function(_) {
+		this.sim_running.onclick = function(_1) {
 			room.send("unpause");
 		};
-		this.sim_pause_dim.onclick = function(_1) {
+		this.sim_pause_dim.onclick = function(_2) {
 			room.send("pause","dim");
 		};
-		this.sim_pause_dark.onclick = function(_2) {
+		this.sim_pause_dark.onclick = function(_3) {
 			room.send("pause","dark");
 		};
-		this.fw_up.onclick = function(_3) {
+		this.fw_up.onclick = function(_4) {
 			room.send("enableFirewalls");
 		};
-		this.fw_down.onclick = function(_4) {
+		this.fw_down.onclick = function(_5) {
 			room.send("disableFirewalls");
 		};
 		this.cur_scene.onchange = function(e) {
@@ -659,7 +675,7 @@ GMain.prototype = {
 			_gthis.status.innerText = "👷 Setting Timer to: " + seconds;
 			room.send("setTimer",seconds);
 		};
-		window.onbeforeunload = function(_5) {
+		window.onbeforeunload = function(_6) {
 			room.leave();
 			return null;
 		};
@@ -3841,6 +3857,7 @@ GState.PAUSE = "pause";
 GState.UNPAUSE = "unpause";
 GState.FIREWALLS_UP = "disableFirewalls";
 GState.FIREWALLS_DOWN = "enableFirewalls";
+GState.KICK = "kick";
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
 State.SET_ALIAS_STATS = "setAliasAndStats";
 State.HACK_ATTEMPT = "hackAttempt";
