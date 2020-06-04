@@ -2,13 +2,9 @@ package scenes;
 
 import entities.Program;
 import entities.SubSystem;
-
-using Lambda;
+import entities.Firewall;
 
 class Practice extends SimBase{
-
-  private var subsystems:List<SubSystem>;
-  private var programs:List<Program>;
 
   public function new(){
     super();
@@ -22,29 +18,35 @@ class Practice extends SimBase{
     tf.y = 20;
 
     programs = new List<Program>();
-    programs.add(new Program(this, "test 1", 0xaaffcc, 200, 300, 50, 50));
-    programs.add(new Program(this, "test 2", 0xffccaa, 350, 300, 50, 50));
+    programs.add(new Program(this, "Shroomz",    Colors.PROG_1, 100, 800));
+    programs.add(new Program(this, "AOHell",     Colors.PROG_1, 200, 800));
+    programs.add(new Program(this, "GodPunter",  Colors.PROG_1, 300, 800));
+    programs.add(new Program(this, "Subzero",    Colors.PROG_3, 100, 860));
+    programs.add(new Program(this, "Firetoolz",  Colors.PROG_3, 200, 860));
+    programs.add(new Program(this, "Daemon",     Colors.PROG_3, 300, 860));
+
+    programs.add(new Program(this, "Lambda",     Colors.PROG_2, 610, 800));
+    programs.add(new Program(this, "Shodan",     Colors.PROG_2, 710, 800));
+    programs.add(new Program(this, "Tron",       Colors.PROG_2, 810, 800));
+    programs.add(new Program(this, "Supr AI",    Colors.PROG_4, 610, 860));
+    programs.add(new Program(this, "Mega ML",    Colors.PROG_4, 710, 860));
+    programs.add(new Program(this, "The Engine", Colors.PROG_4, 810, 860));
 
     subsystems = new List<SubSystem>();
-    subsystems.add(new SubSystem(this, "system 1", 0xaaffcc, 180, 100, 100, 100));
-    subsystems.add(new SubSystem(this, "system 2", 0xffccaa, 360, 100, 100, 100));
+    subsystems.add(new SubSystem(this, "Database",       Colors.SYS_ACCESS, 280, 100));
+    subsystems.add(new SubSystem(this, "Admin Terminal", Colors.SYS_ACCESS, 450, 100));
+    subsystems.add(new SubSystem(this, "Data Vault",     Colors.SYS_ACCESS, 620, 100));
 
-    Main.instance.sceneUpdate = update;
-  }
+    firewalls = new List<Firewall>();
+    firewalls.add(new Firewall(this,   0, 350, 220, 3));
+    firewalls.add(new Firewall(this, 400, 350, 220, 3));
+    firewalls.add(new Firewall(this, 800, 350, 220, 3));
 
-  private inline function checkCollisions(){
-
-    var activeProgram = programs.find(function(p) return p.active);
-
-    if(activeProgram == null) return;
-
-    for(s in subsystems){
-      if(s.getBounds().intersects(activeProgram.getBounds())){
-        s.hackAttempt(activeProgram);
-        activeProgram.resetPos();
-      }
+    for(p in programs){
+      p.colliders = firewalls.map(function(f) return f.getBounds());
     }
 
+    Main.instance.sceneUpdate = update;
   }
 
   public function update(dt:Float) {

@@ -7,6 +7,9 @@ function $extend(from, fields) {
 	if( fields.toString !== Object.prototype.toString ) proto.toString = fields.toString;
 	return proto;
 }
+var Colors = function() { };
+$hxClasses["Colors"] = Colors;
+Colors.__name__ = "Colors";
 var EReg = function(r,opt) {
 	this.r = new RegExp(r,opt.split("u").join(""));
 };
@@ -156,6 +159,16 @@ Lambda.count = function(it,pred) {
 		}
 	}
 	return n;
+};
+Lambda.find = function(it,f) {
+	var v = $getIterator(it);
+	while(v.hasNext()) {
+		var v1 = v.next();
+		if(f(v1)) {
+			return v1;
+		}
+	}
+	return null;
 };
 var h3d_IDrawable = function() { };
 $hxClasses["h3d.IDrawable"] = h3d_IDrawable;
@@ -324,7 +337,6 @@ hxd_App.prototype = {
 };
 var Main = function() {
 	hxd_App.call(this);
-	this.client = new io_colyseus_Client("ws://localhost:3000");
 };
 $hxClasses["Main"] = Main;
 Main.__name__ = "Main";
@@ -334,7 +346,7 @@ Main.main = function() {
 Main.__super__ = hxd_App;
 Main.prototype = $extend(hxd_App.prototype,{
 	init: function() {
-		this.goToScene(scenes_FormServer);
+		this.goToScene(scenes_Practice);
 	}
 	,goToScene: function(scene) {
 		switch(scene) {
@@ -371,7 +383,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 			this.setScene(this.scene,true);
 			break;
 		default:
-			haxe_Log.trace("WARN! No handler for scene = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 62, className : "Main", methodName : "goToScene"});
+			haxe_Log.trace("WARN! No handler for scene = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 63, className : "Main", methodName : "goToScene"});
 		}
 		return this.scene;
 	}
@@ -383,17 +395,17 @@ Main.prototype = $extend(hxd_App.prototype,{
 			tf.set_text(err.message);
 			tf.posChanged = true;
 			tf.y = 20;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 75, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 76, className : "Main", methodName : "onJoin"});
 			return;
 		}
 		this.room = room;
 		this.room.get_state().onChange = $bind(this,this.onStateChange);
 		var onError = function(code,message) {
-			haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Main.hx", lineNumber : 83, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Main.hx", lineNumber : 84, className : "Main", methodName : "onJoin"});
 		};
 		this.room.onError.push(onError);
 		var onLeave = function() {
-			haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Main.hx", lineNumber : 86, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Main.hx", lineNumber : 87, className : "Main", methodName : "onJoin"});
 		};
 		this.room.onLeave.push(onLeave);
 		window.onbeforeunload = function(_) {
@@ -411,7 +423,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 			case "gm":
 				break;
 			case "pauseOverlay":
-				haxe_Log.trace("case",{ fileName : "src/Main.hx", lineNumber : 123, className : "Main", methodName : "onStateChange", customParams : ["pauseOverlay"]});
+				haxe_Log.trace("case",{ fileName : "src/Main.hx", lineNumber : 124, className : "Main", methodName : "onStateChange", customParams : ["pauseOverlay"]});
 				break;
 			case "players":
 				break;
@@ -434,18 +446,21 @@ Main.prototype = $extend(hxd_App.prototype,{
 						this.goToScene(scenes_Tut3);
 						break;
 					default:
-						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 119, className : "Main", methodName : "onStateChange"});
+						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 120, className : "Main", methodName : "onStateChange"});
 					}
 				}
 				break;
 			case "tutStep":
 				break;
 			default:
-				haxe_Log.trace("WARN: unhandled change in Main.onStateChange: " + change.field,{ fileName : "src/Main.hx", lineNumber : 128, className : "Main", methodName : "onStateChange"});
+				haxe_Log.trace("WARN: unhandled change in Main.onStateChange: " + change.field,{ fileName : "src/Main.hx", lineNumber : 129, className : "Main", methodName : "onStateChange"});
 			}
 		}
 	}
 	,update: function(dt) {
+		if(this.sceneUpdate != null) {
+			this.sceneUpdate(dt);
+		}
 	}
 	,__class__: Main
 });
@@ -4263,28 +4278,47 @@ h2d_Graphics.prototype = $extend(h2d_Drawable.prototype,{
 	}
 	,__class__: h2d_Graphics
 });
-var entities_Program = function(scene,name,color,x,y,w,h) {
+var entities_Firewall = function(scene,x,y,w,h) {
 	h2d_Graphics.call(this,scene);
 	this.posChanged = true;
 	this.x = x;
 	this.posChanged = true;
 	this.y = y;
-	this.last = { x : x, y : y};
-	this.offset = { x : x, y : y};
-	this.beginFill(color);
+	this.colLine = new h2d_col_Line(new h2d_col_Point(x,y),new h2d_col_Point(x + w,y + h));
+	this.beginFill(16672293);
 	this.drawRect(0,0,w,h);
+	this.endFill();
+};
+$hxClasses["entities.Firewall"] = entities_Firewall;
+entities_Firewall.__name__ = "entities.Firewall";
+entities_Firewall.__super__ = h2d_Graphics;
+entities_Firewall.prototype = $extend(h2d_Graphics.prototype,{
+	__class__: entities_Firewall
+});
+var entities_Program = function(scene,name,color,x,y) {
+	h2d_Graphics.call(this,scene);
+	this.name = name;
+	this.posChanged = true;
+	this.x = x;
+	this.posChanged = true;
+	this.y = y;
+	this.origin = { x : x, y : y};
+	this.offset = { x : x, y : y};
+	this.colliders = new haxe_ds_List();
+	this.beginFill(color);
+	this.drawRect(0,0,80,30);
 	this.endFill();
 	var font = hxd_res_DefaultFont.get();
 	this.label = new h2d_Text(font,this);
 	var _this = this.label;
 	_this.posChanged = true;
-	_this.x = 10;
+	_this.x = 3;
 	var _this1 = this.label;
 	_this1.posChanged = true;
-	_this1.y = 10;
+	_this1.y = 6;
 	this.label.set_text(name);
 	this.label.set_textColor(0);
-	this.int = new h2d_Interactive(w,h,this);
+	this.int = new h2d_Interactive(80,30,this);
 	this.int.onPush = $bind(this,this.click);
 	this.int.onRelease = $bind(this,this.release);
 };
@@ -4292,28 +4326,112 @@ $hxClasses["entities.Program"] = entities_Program;
 entities_Program.__name__ = "entities.Program";
 entities_Program.__super__ = h2d_Graphics;
 entities_Program.prototype = $extend(h2d_Graphics.prototype,{
-	click: function(e) {
+	get_active: function() {
+		if(this.int.isOver()) {
+			if(this.x == this.origin.x) {
+				return this.y != this.origin.y;
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
+	,resetPos: function() {
+		this.posChanged = true;
+		this.x = this.origin.x;
+		this.posChanged = true;
+		this.y = this.origin.y;
+		this.int.stopDrag();
+	}
+	,_move: function(x,y) {
+		var maxStep = 5;
+		var dx = x - this.x;
+		var dy = y - this.y;
+		var steps = Math.ceil(Math.sqrt(dx * dx + dy * dy) / maxStep);
+		var step = 1 / steps;
+		var b = this.getBounds();
+		var _g = 0;
+		var _g1 = steps;
+		while(_g < _g1) {
+			var i = _g++;
+			var x0 = x + dx * step * i;
+			var y0 = y + dy * step * i;
+			var a_xMin = 1e20;
+			var a_yMin = 1e20;
+			var a_xMax = -1e20;
+			var a_yMax = -1e20;
+			a_xMin = x0;
+			a_yMin = y0;
+			a_xMax = x0 + 80;
+			a_yMax = y0 + 30;
+			var _g_head = this.colliders.h;
+			while(_g_head != null) {
+				var val = _g_head.item;
+				_g_head = _g_head.next;
+				var c = val;
+				if(!(c.xMin > a_xMax || c.yMin > a_yMax || c.xMax < a_xMin || c.yMax < a_yMin)) {
+					return false;
+				}
+			}
+		}
+		this.posChanged = true;
+		this.x = x;
+		this.posChanged = true;
+		this.y = y;
+		return true;
+	}
+	,click: function(e) {
 		this.bring_to_front();
 		this.int.startDrag($bind(this,this.drag));
 		this.offset = { x : e.relX, y : e.relY};
-		this.last.x = this.x;
-		this.last.y = this.y;
 	}
 	,release: function(e) {
-		this.int.stopDrag();
+		this.resetPos();
 	}
 	,drag: function(e) {
-		var _g = this;
-		_g.posChanged = true;
-		_g.x += e.relX - this.offset.x;
-		var _g1 = this;
-		_g1.posChanged = true;
-		_g1.y += e.relY - this.offset.y;
+		if(e.kind != hxd_EventKind.EMove) {
+			return;
+		}
+		if(!this._move(this.x + e.relX - this.offset.x,this.y + e.relY - this.offset.y)) {
+			this.resetPos();
+		}
 	}
 	,bring_to_front: function() {
 		this.parent.children.push(this.parent.children.splice(this.parent.children.indexOf(this),1)[0]);
 	}
 	,__class__: entities_Program
+	,__properties__: $extend(h2d_Graphics.prototype.__properties__,{get_active:"get_active"})
+});
+var entities_SubSystem = function(scene,name,color,x,y) {
+	h2d_Graphics.call(this,scene);
+	this.name = name;
+	this.posChanged = true;
+	this.x = x;
+	this.posChanged = true;
+	this.y = y;
+	this.beginFill(color);
+	this.drawRect(0,0,100,100);
+	this.endFill();
+	var font = hxd_res_DefaultFont.get();
+	this.label = new h2d_Text(font,this);
+	var _this = this.label;
+	_this.posChanged = true;
+	_this.x = 8;
+	var _this1 = this.label;
+	_this1.posChanged = true;
+	_this1.y = 8;
+	this.label.set_text(name);
+	this.label.set_textColor(0);
+};
+$hxClasses["entities.SubSystem"] = entities_SubSystem;
+entities_SubSystem.__name__ = "entities.SubSystem";
+entities_SubSystem.__super__ = h2d_Graphics;
+entities_SubSystem.prototype = $extend(h2d_Graphics.prototype,{
+	hackAttempt: function(program) {
+		haxe_Log.trace("HACK ATTEMPT",{ fileName : "src/entities/SubSystem.hx", lineNumber : 47, className : "entities.SubSystem", methodName : "hackAttempt", customParams : [this.name,program.name]});
+	}
+	,__class__: entities_SubSystem
 });
 var format_gif_Block = $hxEnums["format.gif.Block"] = { __ename__ : true, __constructs__ : ["BFrame","BExtension","BEOF"]
 	,BFrame: ($_=function(frame) { return {_hx_index:0,frame:frame,__enum__:"format.gif.Block",toString:$estr}; },$_.__params__ = ["frame"],$_)
@@ -14599,6 +14717,74 @@ h2d_col_IPoint.prototype = {
 		return new h2d_col_IPoint(this.x,this.y);
 	}
 	,__class__: h2d_col_IPoint
+};
+var h2d_col_Line = function(p1,p2) {
+	this.p1 = p1;
+	this.p2 = p2;
+};
+$hxClasses["h2d.col.Line"] = h2d_col_Line;
+h2d_col_Line.__name__ = "h2d.col.Line";
+h2d_col_Line.prototype = {
+	side: function(p) {
+		return (this.p2.x - this.p1.x) * (p.y - this.p1.y) - (this.p2.y - this.p1.y) * (p.x - this.p1.x);
+	}
+	,project: function(p) {
+		var dx = this.p2.x - this.p1.x;
+		var dy = this.p2.y - this.p1.y;
+		var k = ((p.x - this.p1.x) * dx + (p.y - this.p1.y) * dy) / (dx * dx + dy * dy);
+		return new h2d_col_Point(dx * k + this.p1.x,dy * k + this.p1.y);
+	}
+	,intersect: function(l) {
+		var d = (this.p1.x - this.p2.x) * (l.p1.y - l.p2.y) - (this.p1.y - this.p2.y) * (l.p1.x - l.p2.x);
+		if((d < 0 ? -d : d) < 1e-10) {
+			return null;
+		}
+		var a = this.p1.x * this.p2.y - this.p1.y * this.p2.x;
+		var b = l.p1.x * l.p2.y - l.p1.y * l.p2.x;
+		return new h2d_col_Point((a * (l.p1.x - l.p2.x) - (this.p1.x - this.p2.x) * b) / d,(a * (l.p1.y - l.p2.y) - (this.p1.y - this.p2.y) * b) / d);
+	}
+	,intersectWith: function(l,pt) {
+		var d = (this.p1.x - this.p2.x) * (l.p1.y - l.p2.y) - (this.p1.y - this.p2.y) * (l.p1.x - l.p2.x);
+		if((d < 0 ? -d : d) < 1e-10) {
+			return false;
+		}
+		var a = this.p1.x * this.p2.y - this.p1.y * this.p2.x;
+		var b = l.p1.x * l.p2.y - l.p1.y * l.p2.x;
+		pt.x = (a * (l.p1.x - l.p2.x) - (this.p1.x - this.p2.x) * b) / d;
+		pt.y = (a * (l.p1.y - l.p2.y) - (this.p1.y - this.p2.y) * b) / d;
+		return true;
+	}
+	,distanceSq: function(p) {
+		var dx = this.p2.x - this.p1.x;
+		var dy = this.p2.y - this.p1.y;
+		var k = ((p.x - this.p1.x) * dx + (p.y - this.p1.y) * dy) / (dx * dx + dy * dy);
+		var mx = dx * k + this.p1.x - p.x;
+		var my = dy * k + this.p1.y - p.y;
+		return mx * mx + my * my;
+	}
+	,distance: function(p) {
+		var dx = this.p2.x - this.p1.x;
+		var dy = this.p2.y - this.p1.y;
+		var k = ((p.x - this.p1.x) * dx + (p.y - this.p1.y) * dy) / (dx * dx + dy * dy);
+		var mx = dx * k + this.p1.x - p.x;
+		var my = dy * k + this.p1.y - p.y;
+		return Math.sqrt(mx * mx + my * my);
+	}
+	,angle: function() {
+		var dx = this.p2.x - this.p1.x;
+		var dy = this.p2.y - this.p1.y;
+		return Math.atan2(dy,dx);
+	}
+	,length: function() {
+		var dx = this.p2.x - this.p1.x;
+		var dy = this.p2.y - this.p1.y;
+		var dz = 0.;
+		if(dz == null) {
+			dz = 0.;
+		}
+		return Math.sqrt(dx * dx + dy * dy + dz * dz);
+	}
+	,__class__: h2d_col_Line
 };
 var h2d_col_Matrix = function() {
 	this.a = 1;
@@ -40763,6 +40949,19 @@ haxe_ds_List.prototype = {
 		}
 		return false;
 	}
+	,iterator: function() {
+		return new haxe_ds__$List_ListIterator(this.h);
+	}
+	,map: function(f) {
+		var b = new haxe_ds_List();
+		var l = this.h;
+		while(l != null) {
+			var v = l.item;
+			l = l.next;
+			b.add(f(v));
+		}
+		return b;
+	}
 	,__class__: haxe_ds_List
 };
 var haxe_ds__$List_ListNode = function(item,next) {
@@ -40773,6 +40972,22 @@ $hxClasses["haxe.ds._List.ListNode"] = haxe_ds__$List_ListNode;
 haxe_ds__$List_ListNode.__name__ = "haxe.ds._List.ListNode";
 haxe_ds__$List_ListNode.prototype = {
 	__class__: haxe_ds__$List_ListNode
+};
+var haxe_ds__$List_ListIterator = function(head) {
+	this.head = head;
+};
+$hxClasses["haxe.ds._List.ListIterator"] = haxe_ds__$List_ListIterator;
+haxe_ds__$List_ListIterator.__name__ = "haxe.ds._List.ListIterator";
+haxe_ds__$List_ListIterator.prototype = {
+	hasNext: function() {
+		return this.head != null;
+	}
+	,next: function() {
+		var val = this.head.item;
+		this.head = this.head.next;
+		return val;
+	}
+	,__class__: haxe_ds__$List_ListIterator
 };
 var haxe_ds_ObjectMap = function() {
 	this.h = { __keys__ : { }};
@@ -66813,7 +67028,7 @@ scenes_FormAlias.prototype = $extend(h2d_Scene.prototype,{
 		this.submitBtn.set_textColor(16777215);
 		var tmp = Main.instance.room;
 		var _g = new haxe_ds_StringMap();
-		var value = this.aliasInput.text;
+		var value = StringTools.trim(this.aliasInput.text);
 		if(__map_reserved["alias"] != null) {
 			_g.setReserved("alias",value);
 		} else {
@@ -66846,10 +67061,16 @@ scenes_FormAlias.prototype = $extend(h2d_Scene.prototype,{
 		tmp.send("setAliasAndStats",_g);
 	}
 	,onMessageAliasEntered: function(_) {
+		Main.instance.curPlayer = new Player();
+		Main.instance.curPlayer.alias = StringTools.trim(this.aliasInput.text);
+		Main.instance.curPlayer.hacking = Std.parseInt(this.hackingInput.text);
+		Main.instance.curPlayer.sysops = Std.parseInt(this.sysopsInput.text);
+		Main.instance.curPlayer.skullduggery = Std.parseInt(this.skullduggeryInput.text);
+		Main.instance.curPlayer.intellect = Std.parseInt(this.intInput.text);
 		Main.instance.goToScene(scenes_Lobby);
 	}
 	,dispose: function() {
-		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/FormAlias.hx", lineNumber : 102, className : "scenes.FormAlias", methodName : "dispose"});
+		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/FormAlias.hx", lineNumber : 111, className : "scenes.FormAlias", methodName : "dispose"});
 		Main.instance.room.onMessage("ALIAS_ENTERED",null);
 		h2d_Scene.prototype.dispose.call(this);
 	}
@@ -66992,13 +67213,49 @@ scenes_Lobby.prototype = $extend(h2d_Scene.prototype,{
 });
 var scenes_SimBase = function() {
 	h2d_Scene.call(this);
+	var b = new h2d_col_Bounds();
+	b.xMin = 0;
+	b.yMin = 0;
+	b.xMax = 1000;
+	b.yMax = 1000;
+	this._stageBounds = b;
 };
 $hxClasses["scenes.SimBase"] = scenes_SimBase;
 scenes_SimBase.__name__ = "scenes.SimBase";
 scenes_SimBase.__super__ = h2d_Scene;
 scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
-	createProgram: function(name,color,x,y,w,h) {
-		return null;
+	checkCollisions: function() {
+		var activeProgram = Lambda.find(this.programs,function(p) {
+			if(p.int.isOver()) {
+				if(p.x == p.origin.x) {
+					return p.y != p.origin.y;
+				} else {
+					return true;
+				}
+			} else {
+				return false;
+			}
+		});
+		if(activeProgram == null) {
+			return;
+		}
+		var _g_head = this.subsystems.h;
+		while(_g_head != null) {
+			var val = _g_head.item;
+			_g_head = _g_head.next;
+			var s = val;
+			var _this = s.getBounds();
+			var b = activeProgram.getBounds();
+			if(!(_this.xMin > b.xMax || _this.yMin > b.yMax || _this.xMax < b.xMin || _this.yMax < b.yMin)) {
+				s.hackAttempt(activeProgram);
+				activeProgram.resetPos();
+			}
+		}
+		var _this1 = this._stageBounds;
+		var b1 = activeProgram.getBounds();
+		if(!(!(_this1.xMin > b1.xMax || _this1.yMin > b1.yMax || _this1.xMax < b1.xMin || _this1.yMax < b1.yMin))) {
+			activeProgram.resetPos();
+		}
 	}
 	,__class__: scenes_SimBase
 });
@@ -67017,15 +67274,77 @@ var scenes_Practice = function() {
 	tf.x = 200;
 	tf.posChanged = true;
 	tf.y = 20;
-	var p1 = new entities_Program(this,"test 1",11206604,200,200,250,50);
-	var p2 = new entities_Program(this,"test 2",16764074,250,300,250,50);
+	this.programs = new haxe_ds_List();
+	this.programs.add(new entities_Program(this,"Shroomz",1470576,100,800));
+	this.programs.add(new entities_Program(this,"AOHell",1470576,200,800));
+	this.programs.add(new entities_Program(this,"GodPunter",1470576,300,800));
+	this.programs.add(new entities_Program(this,"Subzero",16487220,100,860));
+	this.programs.add(new entities_Program(this,"Firetoolz",16487220,200,860));
+	this.programs.add(new entities_Program(this,"Daemon",16487220,300,860));
+	this.programs.add(new entities_Program(this,"Lambda",15705,610,800));
+	this.programs.add(new entities_Program(this,"Shodan",15705,710,800));
+	this.programs.add(new entities_Program(this,"Tron",15705,810,800));
+	this.programs.add(new entities_Program(this,"Supr AI",4278863,610,860));
+	this.programs.add(new entities_Program(this,"Mega ML",4278863,710,860));
+	this.programs.add(new entities_Program(this,"The Engine",4278863,810,860));
+	this.subsystems = new haxe_ds_List();
+	this.subsystems.add(new entities_SubSystem(this,"Database",15558243,280,100));
+	this.subsystems.add(new entities_SubSystem(this,"Admin Terminal",15558243,450,100));
+	this.subsystems.add(new entities_SubSystem(this,"Data Vault",15558243,620,100));
+	this.firewalls = new haxe_ds_List();
+	this.firewalls.add(new entities_Firewall(this,0,350,220,3));
+	this.firewalls.add(new entities_Firewall(this,400,350,220,3));
+	this.firewalls.add(new entities_Firewall(this,800,350,220,3));
+	var _g_head = this.programs.h;
+	while(_g_head != null) {
+		var val = _g_head.item;
+		_g_head = _g_head.next;
+		var p = val;
+		p.colliders = this.firewalls.map(function(f) {
+			return f.getBounds();
+		});
+	}
+	Main.instance.sceneUpdate = $bind(this,this.update);
 };
 $hxClasses["scenes.Practice"] = scenes_Practice;
 scenes_Practice.__name__ = "scenes.Practice";
 scenes_Practice.__super__ = scenes_SimBase;
 scenes_Practice.prototype = $extend(scenes_SimBase.prototype,{
-	dispose: function() {
+	update: function(dt) {
+		var activeProgram = Lambda.find(this.programs,function(p) {
+			if(p.int.isOver()) {
+				if(p.x == p.origin.x) {
+					return p.y != p.origin.y;
+				} else {
+					return true;
+				}
+			} else {
+				return false;
+			}
+		});
+		if(activeProgram != null) {
+			var _g_head = this.subsystems.h;
+			while(_g_head != null) {
+				var val = _g_head.item;
+				_g_head = _g_head.next;
+				var s = val;
+				var _this = s.getBounds();
+				var b = activeProgram.getBounds();
+				if(!(_this.xMin > b.xMax || _this.yMin > b.yMax || _this.xMax < b.xMin || _this.yMax < b.yMin)) {
+					s.hackAttempt(activeProgram);
+					activeProgram.resetPos();
+				}
+			}
+			var _this1 = this._stageBounds;
+			var b1 = activeProgram.getBounds();
+			if(!(!(_this1.xMin > b1.xMax || _this1.yMin > b1.yMax || _this1.xMax < b1.xMin || _this1.yMax < b1.yMin))) {
+				activeProgram.resetPos();
+			}
+		}
+	}
+	,dispose: function() {
 		scenes_SimBase.prototype.dispose.call(this);
+		Main.instance.sceneUpdate = null;
 	}
 	,__class__: scenes_Practice
 });
@@ -67172,7 +67491,19 @@ var scenes_Tut2 = function() {
 	step5.x = x;
 	step5.posChanged = true;
 	step5.y = y + yspace * 5;
-	this.steps = [step,step1,step2,step3,step4,step5];
+	var step6 = new h2d_Text(this.font,this);
+	step6.set_text("Program names don't have meaning.");
+	step6.posChanged = true;
+	step6.x = x;
+	step6.posChanged = true;
+	step6.y = y + yspace * 6;
+	var step7 = new h2d_Text(this.font,this);
+	step7.set_text("SubSystem names DO have meaning.");
+	step7.posChanged = true;
+	step7.x = x;
+	step7.posChanged = true;
+	step7.y = y + yspace * 7;
+	this.steps = [step,step1,step2,step3,step4,step5,step6,step7];
 	var stepVals = Main.instance.room.get_state().tutStep.items;
 	var _g2 = 0;
 	var _g11 = this.steps.length;
@@ -67229,60 +67560,54 @@ var scenes_Tut3 = function() {
 	var y = 60;
 	var yspace = 40;
 	var step = new h2d_Text(this.font,this);
-	step.set_text("Choose a subsystem to make a run.");
+	step.set_text("Run Programs on subsystems to break in.");
 	step.posChanged = true;
 	step.x = x;
 	step.posChanged = true;
-	step.y = y;
+	step.y = y + yspace;
 	var step1 = new h2d_Text(this.font,this);
-	step1.set_text("You may jack out of a subsystem to run on another.");
+	step1.set_text("To run a program, simply drag the program onto the subsystem.");
 	step1.posChanged = true;
 	step1.x = x;
 	step1.posChanged = true;
-	step1.y = y + yspace;
+	step1.y = y + yspace * 2;
 	var step2 = new h2d_Text(this.font,this);
-	step2.set_text("Run Programs on subsystems to break in.");
+	step2.set_text("If the program was not the correct one, it will flash red.");
 	step2.posChanged = true;
 	step2.x = x;
 	step2.posChanged = true;
-	step2.y = y + yspace * 2;
+	step2.y = y + yspace * 3;
 	var step3 = new h2d_Text(this.font,this);
-	step3.set_text("To run a program, simply drag the program onto the subsystem.");
+	step3.set_text("If the program was the correct one, it will flash blue,\n  the subsystem will be ACCESSED and your team can now connect to any connected subsystems.");
 	step3.posChanged = true;
 	step3.x = x;
 	step3.posChanged = true;
-	step3.y = y + yspace * 3;
+	step3.y = y + yspace * 4;
 	var step4 = new h2d_Text(this.font,this);
-	step4.set_text("If the program was not the correct one, it will flash red.");
+	step4.set_text("Some subsystems are not accessible from the net, so you must enter through other systems.");
 	step4.posChanged = true;
 	step4.x = x;
 	step4.posChanged = true;
 	step4.y = y + yspace * 4;
 	var step5 = new h2d_Text(this.font,this);
-	step5.set_text("If the program was the correct one, it will flash blue,\n  the subsystem will be ACCESSED and your team can now connect to any connected subsystems.");
+	step5.set_text("Firewalls block programs, avoid them!");
 	step5.posChanged = true;
 	step5.x = x;
 	step5.posChanged = true;
 	step5.y = y + yspace * 5;
 	var step6 = new h2d_Text(this.font,this);
-	step6.set_text("Firewalls block programs, avoid them!");
+	step6.set_text("Multiple programs can be used to access a subsystem, having lots of programs is generally a good thing.");
 	step6.posChanged = true;
 	step6.x = x;
 	step6.posChanged = true;
 	step6.y = y + yspace * 6;
 	var step7 = new h2d_Text(this.font,this);
-	step7.set_text("Multiple programs can be used to access a subsystem, having lots of programs is generally a good thing.");
+	step7.set_text("Depending on your Skills and Int levels, you will each have different programs.");
 	step7.posChanged = true;
 	step7.x = x;
 	step7.posChanged = true;
 	step7.y = y + yspace * 7;
-	var step8 = new h2d_Text(this.font,this);
-	step8.set_text("Depending on your Skills and Int levels, you will each have different programs.");
-	step8.posChanged = true;
-	step8.x = x;
-	step8.posChanged = true;
-	step8.y = y + yspace * 8;
-	this.steps = [step,step1,step2,step3,step4,step5,step6,step7,step8];
+	this.steps = [step,step1,step2,step3,step4,step5,step6,step7];
 	var stepVals = Main.instance.room.get_state().tutStep.items;
 	var _g2 = 0;
 	var _g11 = this.steps.length;
@@ -67362,6 +67687,14 @@ Object.defineProperty(js__$Boot_HaxeError.prototype,"message",{ get : function()
 if(ArrayBuffer.prototype.slice == null) {
 	ArrayBuffer.prototype.slice = js_lib__$ArrayBuffer_ArrayBufferCompat.sliceImpl;
 }
+Colors.PROG_1 = 1470576;
+Colors.PROG_2 = 15705;
+Colors.PROG_3 = 16487220;
+Colors.PROG_4 = 4278863;
+Colors.FIREWALL = 16672293;
+Colors.SYS_ACCESS = 15558243;
+Colors.SYS_NO_ACCESS = 1002625;
+Colors.SYS_OWNED = 16753522;
 io_colyseus_serializer_schema_Schema.decoder = new io_colyseus_serializer_schema_Decoder();
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
 State.SET_ALIAS_STATS = "setAliasAndStats";
@@ -67372,6 +67705,10 @@ Xml.Comment = 3;
 Xml.DocType = 4;
 Xml.ProcessingInstruction = 5;
 Xml.Document = 6;
+entities_Program.WIDTH = 80;
+entities_Program.HEIGHT = 30;
+entities_SubSystem.WIDTH = 100;
+entities_SubSystem.HEIGHT = 100;
 format_gif_Tools.LN2 = Math.log(2);
 format_mp3_MPEG.V1 = 3;
 format_mp3_MPEG.V2 = 2;

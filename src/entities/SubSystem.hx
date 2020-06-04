@@ -9,6 +9,9 @@ import h2d.col.Bounds;
 
 class SubSystem extends Graphics{
 
+  static inline var WIDTH = 100;
+  static inline var HEIGHT = 100;
+
   var owned:Bool;
 
   // var accessible(get,null):Bool;
@@ -21,14 +24,14 @@ class SubSystem extends Graphics{
 
   // var runners:List<RunnerAlias>;
 
-  public function new(scene:Scene, name:String, color:Int, x:Int, y:Int, w:Int, h:Int) {
+  public function new(scene:Scene, name:String, color:Int, x:Int, y:Int) {
     super(scene);
     this.name = name;
     this.x = x;
     this.y = y;
 
     beginFill(color);
-    drawRect(0, 0, w, h);
+    drawRect(0, 0, WIDTH, HEIGHT);
     endFill();
 
     var font = hxd.res.DefaultFont.get();
