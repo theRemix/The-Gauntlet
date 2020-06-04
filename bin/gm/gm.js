@@ -401,14 +401,18 @@ GMain.prototype = {
 		this.scene_tut2_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut2_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_5") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_6") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_7") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_8") , HTMLInputElement)];
 		this.scene_tut3_controls = window.document.getElementById("scene_tut3_controls");
 		this.scene_tut3_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut3_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_5") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_6") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_7") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_8") , HTMLInputElement)];
-		this.server_address.hidden = this.servers_container.hidden = this.players_container.hidden = this.controls_container.hidden = this.scene_tut1_controls.hidden = this.scene_tut2_controls.hidden = this.scene_tut3_controls.hidden = true;
+		this.current_timer = window.document.getElementById("current_timer");
+		this.scene_sim_base_controls = window.document.getElementById("scene_sim_base_controls");
+		this.timer_form = js_Boot.__cast(window.document.getElementById("timer_form") , HTMLFormElement);
+		this.timer_seconds_input = js_Boot.__cast(window.document.getElementById("timer_seconds_input") , HTMLInputElement);
+		this.server_address.hidden = this.servers_container.hidden = this.players_container.hidden = this.controls_container.hidden = this.scene_tut1_controls.hidden = this.scene_tut2_controls.hidden = this.scene_tut3_controls.hidden = this.scene_sim_base_controls.hidden = true;
 		this.status.innerText = "📡 Connecting to Room Controller";
 	}
 	,onRoomJoinOrCreate: function(err,room) {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/GMain.hx", lineNumber : 126, className : "GMain", methodName : "onRoomJoinOrCreate"});
+			console.log("src/GMain.hx:138:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.servers_container.hidden = false;
@@ -443,7 +447,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/GMain.hx", lineNumber : 175, className : "GMain", methodName : "onGameJoinOrCreate"});
+			console.log("src/GMain.hx:187:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.players_container.hidden = false;
@@ -498,38 +502,50 @@ GMain.prototype = {
 			}
 		};
 		room.get_state().players.onRemove = removePlayerList;
+		var roomOnChange = function(changes) {
+			var _g3 = 0;
+			while(_g3 < changes.length) {
+				var change = changes[_g3];
+				++_g3;
+				if(change.field == "timer") {
+					_gthis.current_timer.innerText = change.value;
+				}
+			}
+		};
+		room.get_state().onChange = roomOnChange;
 		this.sim_running.onclick = function(_) {
-			haxe_Log.trace("sim_running.onclick",{ fileName : "src/GMain.hx", lineNumber : 214, className : "GMain", methodName : "onGameJoinOrCreate"});
+			room.send("unpause");
 		};
 		this.sim_pause_dim.onclick = function(_1) {
-			haxe_Log.trace("sim_pause_dim.onclick",{ fileName : "src/GMain.hx", lineNumber : 217, className : "GMain", methodName : "onGameJoinOrCreate"});
+			room.send("pause","dim");
 		};
 		this.sim_pause_dark.onclick = function(_2) {
-			haxe_Log.trace("sim_pause_dark.onclick",{ fileName : "src/GMain.hx", lineNumber : 220, className : "GMain", methodName : "onGameJoinOrCreate"});
+			room.send("pause","dark");
 		};
 		this.cur_scene.onchange = function(e) {
-			haxe_Log.trace("cur_scene.onchange",{ fileName : "src/GMain.hx", lineNumber : 223, className : "GMain", methodName : "onGameJoinOrCreate", customParams : [e.target.value]});
 			room.send("setScene",e.target.value);
 			switch(e.target.value) {
 			case "Lobby":
-				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
+				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = _gthis.scene_sim_base_controls.hidden = true;
 				break;
 			case "Practice":
 				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
+				_gthis.scene_sim_base_controls.hidden = false;
 				break;
 			case "RealNet":
 				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
+				_gthis.scene_sim_base_controls.hidden = false;
 				break;
 			case "Tut1":
-				_gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
+				_gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = _gthis.scene_sim_base_controls.hidden = true;
 				_gthis.scene_tut1_controls.hidden = false;
 				break;
 			case "Tut2":
-				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
+				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut3_controls.hidden = _gthis.scene_sim_base_controls.hidden = true;
 				_gthis.scene_tut2_controls.hidden = false;
 				break;
 			case "Tut3":
-				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = true;
+				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = _gthis.scene_sim_base_controls.hidden = true;
 				_gthis.scene_tut3_controls.hidden = false;
 				break;
 			}
@@ -540,11 +556,11 @@ GMain.prototype = {
 				++_g11;
 				i.checked = false;
 			}
-			var _g3 = 0;
+			var _g31 = 0;
 			var _g4 = _gthis.scene_tut2_control_inputs;
-			while(_g3 < _g4.length) {
-				var i1 = _g4[_g3];
-				++_g3;
+			while(_g31 < _g4.length) {
+				var i1 = _g4[_g31];
+				++_g31;
 				i1.checked = false;
 			}
 			var _g5 = 0;
@@ -578,8 +594,8 @@ GMain.prototype = {
 			})(i3);
 		}
 		var _g22 = 0;
-		var _g31 = this.scene_tut2_control_inputs.length;
-		while(_g22 < _g31) {
+		var _g32 = this.scene_tut2_control_inputs.length;
+		while(_g22 < _g32) {
 			var i5 = [_g22++];
 			this.scene_tut2_control_inputs[i5[0]].onchange = (function(i6) {
 				return function(e2) {
@@ -621,6 +637,21 @@ GMain.prototype = {
 				};
 			})(i7);
 		}
+		var secondsInput = "";
+		this.timer_seconds_input.onchange = function(e4) {
+			secondsInput = e4.currentTarget.value.trim();
+		};
+		this.timer_form.onsubmit = function(e5) {
+			e5.preventDefault();
+			if(secondsInput.length == 0) {
+				_gthis.status.innerText = "❌ You must enter seconds";
+				e5.currentTarget.reset();
+				return;
+			}
+			var seconds = Std.parseInt(secondsInput);
+			_gthis.status.innerText = "👷 Setting Timer to: " + seconds;
+			room.send("setTimer",seconds);
+		};
 		window.onbeforeunload = function(_3) {
 			room.leave();
 			return null;
@@ -788,6 +819,8 @@ var State = function() {
 	this._indexes.h[6] = "realNet";
 	this._types.h[6] = "array";
 	this._childSchemaTypes.h[6] = SubSystem;
+	this._indexes.h[7] = "timer";
+	this._types.h[7] = "number";
 };
 State.__name__ = "State";
 State.__super__ = io_colyseus_serializer_schema_Schema;
@@ -798,6 +831,25 @@ var Std = function() { };
 Std.__name__ = "Std";
 Std.string = function(s) {
 	return js_Boot.__string_rec(s,"");
+};
+Std.parseInt = function(x) {
+	if(x != null) {
+		var _g = 0;
+		var _g1 = x.length;
+		while(_g < _g1) {
+			var i = _g++;
+			var c = x.charCodeAt(i);
+			if(c <= 8 || c >= 14 && c != 32 && c != 45) {
+				var v = parseInt(x, (x[(i + 1)]=="x" || x[(i + 1)]=="X") ? 16 : 10);
+				if(isNaN(v)) {
+					return null;
+				} else {
+					return v;
+				}
+			}
+		}
+	}
+	return null;
 };
 var StringTools = function() { };
 StringTools.__name__ = "StringTools";
@@ -892,31 +944,6 @@ var haxe__$Int64__$_$_$Int64 = function(high,low) {
 haxe__$Int64__$_$_$Int64.__name__ = "haxe._Int64.___Int64";
 haxe__$Int64__$_$_$Int64.prototype = {
 	__class__: haxe__$Int64__$_$_$Int64
-};
-var haxe_Log = function() { };
-haxe_Log.__name__ = "haxe.Log";
-haxe_Log.formatOutput = function(v,infos) {
-	var str = Std.string(v);
-	if(infos == null) {
-		return str;
-	}
-	var pstr = infos.fileName + ":" + infos.lineNumber;
-	if(infos.customParams != null) {
-		var _g = 0;
-		var _g1 = infos.customParams;
-		while(_g < _g1.length) {
-			var v1 = _g1[_g];
-			++_g;
-			str += ", " + Std.string(v1);
-		}
-	}
-	return pstr + ": " + str;
-};
-haxe_Log.trace = function(v,infos) {
-	var str = haxe_Log.formatOutput(v,infos);
-	if(typeof(console) != "undefined" && console.log != null) {
-		console.log(str);
-	}
 };
 var haxe_Timer = function(time_ms) {
 	var me = this;
@@ -1831,7 +1858,7 @@ var haxe_net_impl_WebSocketJs = function(url,protocols) {
 			};
 			fileReader.readAsArrayBuffer(js_Boot.__cast(m , Blob));
 		} else {
-			haxe_Log.trace("Unhandled websocket onmessage " + m,{ fileName : "haxe/net/impl/WebSocketJs.hx", lineNumber : 47, className : "haxe.net.impl.WebSocketJs", methodName : "new"});
+			console.log("haxe/net/impl/WebSocketJs.hx:47:","Unhandled websocket onmessage " + m);
 		}
 	};
 };
@@ -1911,11 +1938,11 @@ io_colyseus_Auth.prototype = {
 		}
 		req.setHeader("Accept","application/json");
 		req.onData = function(json) {
-			haxe_Log.trace("RESPONSE:" + json,{ fileName : "io/colyseus/Auth.hx", lineNumber : 64, className : "io.colyseus.Auth", methodName : "request"});
+			console.log("io/colyseus/Auth.hx:64:","RESPONSE:" + json);
 		};
 		req.onError = function(err) {
-			haxe_Log.trace("onError",{ fileName : "io/colyseus/Auth.hx", lineNumber : 68, className : "io.colyseus.Auth", methodName : "request"});
-			haxe_Log.trace(err,{ fileName : "io/colyseus/Auth.hx", lineNumber : 69, className : "io.colyseus.Auth", methodName : "request"});
+			console.log("io/colyseus/Auth.hx:68:","onError");
+			console.log("io/colyseus/Auth.hx:69:",err);
 		};
 		req.setHeader("X-HTTP-Method-Override",method);
 		req.request(true);
@@ -2272,7 +2299,7 @@ io_colyseus_Room.prototype = {
 		} else if(code == io_colyseus_Protocol.ERROR) {
 			var errorCode = io_colyseus_serializer_schema_Schema.decoder.number(data,it);
 			var message = io_colyseus_serializer_schema_Schema.decoder.string(data,it);
-			haxe_Log.trace("Room error: code => " + errorCode + ", message => " + message,{ fileName : "io/colyseus/Room.hx", lineNumber : 150, className : "io.colyseus.Room", methodName : "onMessageCallback"});
+			console.log("io/colyseus/Room.hx:150:","Room error: code => " + errorCode + ", message => " + message);
 			var _g2 = 0;
 			var _g11 = this.onError;
 			while(_g2 < _g11.length) {
@@ -2333,7 +2360,7 @@ io_colyseus_Room.prototype = {
 			var _this1 = this.onMessageHandlers;
 			(__map_reserved[messageType] != null ? _this1.getReserved(messageType) : _this1.h[messageType])(message);
 		} else {
-			haxe_Log.trace("onMessage not registered for type " + Std.string(type),{ fileName : "io/colyseus/Room.hx", lineNumber : 195, className : "io.colyseus.Room", methodName : "dispatchMessage"});
+			console.log("io/colyseus/Room.hx:195:","onMessage not registered for type " + Std.string(type));
 		}
 	}
 	,getMessageHandlerKey: function(type) {
@@ -3800,6 +3827,9 @@ GState.CREATE_SERVER = "createServer";
 GState.SET_PLAYER_SCENE = "setPlayerScene";
 GState.SET_SCENE = "setScene";
 GState.SET_TUT_STEP = "setTutStep";
+GState.SET_TIMER = "setTimer";
+GState.PAUSE = "pause";
+GState.UNPAUSE = "unpause";
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
 State.SET_ALIAS_STATS = "setAliasAndStats";
 State.HACK_ATTEMPT = "hackAttempt";

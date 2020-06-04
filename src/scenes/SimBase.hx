@@ -1,6 +1,7 @@
 package scenes;
 
 import h2d.Graphics;
+import h2d.Text;
 import h2d.col.Bounds;
 
 import entities.Program;
@@ -50,6 +51,8 @@ class SimBase extends h2d.Scene{
 
   private var _stageBounds:Bounds;
 
+  private var timerText:Text;
+
   public function new(){
     super();
 
@@ -60,18 +63,27 @@ class SimBase extends h2d.Scene{
 
     _stageBounds = Bounds.fromValues(0,0,1000,1000);
 
+    var font = hxd.res.DefaultFont.get();
+
+    timerText = new h2d.Text(font, this);
+    timerText.scale(2);
+    timerText.x = 20;
+    timerText.y = 40;
+
     Main.instance.sceneUpdate = update;
     Main.instance.room.state.practiceNet.onChange =
     Main.instance.room.state.realNet.onChange = onNetChange;
   }
 
   private inline function onNetChange(ss:SubSystem, key:Int) {
-    trace(ss);
     subsystems[key].syncProps(ss);
   }
 
   public function update(dt:Float) {
     checkCollisions();
+    if(timerText.text != Std.string(Main.instance.room.state.timer)){
+      timerText.text = Std.string(Main.instance.room.state.timer);
+    }
   }
 
   private inline function checkCollisions(){

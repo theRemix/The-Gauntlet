@@ -17,6 +17,9 @@ class GState extends Schema {
   public static inline var SET_PLAYER_SCENE = "setPlayerScene";
   public static inline var SET_SCENE = "setScene";
   public static inline var SET_TUT_STEP = "setTutStep";
+  public static inline var SET_TIMER = "setTimer";
+  public static inline var PAUSE = "pause";
+  public static inline var UNPAUSE = "unpause";
 
 	@:type("number")
 	public var dummy:Int = 0;
@@ -47,6 +50,10 @@ class GMain {
   var scene_tut3_controls:DOMElement;
   var scene_tut3_control_inputs:Array<InputElement>;
 
+  var current_timer:DOMElement;
+  var scene_sim_base_controls:DOMElement;
+  var timer_form:FormElement;
+  var timer_seconds_input:InputElement;
 
   var server_name:String;
 
@@ -104,6 +111,10 @@ class GMain {
       cast(document.getElementById("scene_tut3_controls_7"), InputElement),
       cast(document.getElementById("scene_tut3_controls_8"), InputElement),
     ];
+    current_timer = document.getElementById("current_timer");
+    scene_sim_base_controls = document.getElementById("scene_sim_base_controls");
+    timer_form = cast(document.getElementById("timer_form"), FormElement);
+    timer_seconds_input = cast(document.getElementById("timer_seconds_input"), InputElement);
 
     server_address.hidden =
     servers_container.hidden =
@@ -111,7 +122,8 @@ class GMain {
     controls_container.hidden =
     scene_tut1_controls.hidden =
     scene_tut2_controls.hidden =
-    scene_tut3_controls.hidden = true;
+    scene_tut3_controls.hidden =
+    scene_sim_base_controls.hidden = true;
 
     status.innerText = "📡 Connecting to Room Controller";
 
@@ -208,46 +220,60 @@ class GMain {
     }
     // FAST DEV END
 
+    room.state.onChange = function roomOnChange(changes){
+      for(change in changes){
+        switch(change.field){
+          case "timer":
+            current_timer.innerText = change.value;
+        }
+      }
+    }
+
 
     // CONTROLS
     sim_running.onclick = function(_){
-      trace('sim_running.onclick');
+      room.send(GState.UNPAUSE);
     }
     sim_pause_dim.onclick = function(_){
-      trace('sim_pause_dim.onclick');
+      room.send(GState.PAUSE, "dim");
     }
     sim_pause_dark.onclick = function(_){
-      trace('sim_pause_dark.onclick');
+      room.send(GState.PAUSE, "dark");
     }
     cur_scene.onchange = function(e){
-      trace('cur_scene.onchange', e.target.value);
       room.send(GState.SET_SCENE, e.target.value);
 
       switch(e.target.value){
         case "Lobby":
           scene_tut1_controls.hidden =
           scene_tut2_controls.hidden =
-          scene_tut3_controls.hidden = true;
+          scene_tut3_controls.hidden =
+          scene_sim_base_controls.hidden = true;
         case "Tut1":
           scene_tut2_controls.hidden =
-          scene_tut3_controls.hidden = true;
+          scene_tut3_controls.hidden =
+          scene_sim_base_controls.hidden = true;
           scene_tut1_controls.hidden = false;
         case "Tut2":
           scene_tut1_controls.hidden =
-          scene_tut3_controls.hidden = true;
+          scene_tut3_controls.hidden =
+          scene_sim_base_controls.hidden = true;
           scene_tut2_controls.hidden = false;
         case "Tut3":
           scene_tut1_controls.hidden =
-          scene_tut2_controls.hidden = true;
+          scene_tut2_controls.hidden =
+          scene_sim_base_controls.hidden = true;
           scene_tut3_controls.hidden = false;
         case "Practice":
           scene_tut1_controls.hidden =
           scene_tut2_controls.hidden =
           scene_tut3_controls.hidden = true;
+          scene_sim_base_controls.hidden = false;
         case "RealNet":
           scene_tut1_controls.hidden =
           scene_tut2_controls.hidden =
           scene_tut3_controls.hidden = true;
+          scene_sim_base_controls.hidden = false;
       }
 
       // this happens on server, just going to sync it manually
@@ -269,6 +295,23 @@ class GMain {
         room.send(GState.SET_TUT_STEP, ["step" => i, "value" => e.target.checked]);
       }
 
+    var secondsInput = "";
+    timer_seconds_input.onchange = function(e){
+      secondsInput = e.currentTarget.value.trim();
+    }
+
+    timer_form.onsubmit = function(e){
+      e.preventDefault();
+      if(secondsInput.length == 0){
+        status.innerText = "❌ You must enter seconds";
+        e.currentTarget.reset();
+        return;
+      }
+
+      var seconds = Std.parseInt(secondsInput);
+      status.innerText = "👷 Setting Timer to: "+seconds;
+      room.send(GState.SET_TIMER, seconds);
+    }
 
     window.onbeforeunload = function(_){
       room.leave();

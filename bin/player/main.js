@@ -926,6 +926,8 @@ var State = function() {
 	this._indexes.h[6] = "realNet";
 	this._types.h[6] = "array";
 	this._childSchemaTypes.h[6] = SubSystem;
+	this._indexes.h[7] = "timer";
+	this._types.h[7] = "number";
 };
 $hxClasses["State"] = State;
 State.__name__ = "State";
@@ -67422,6 +67424,21 @@ var scenes_SimBase = function() {
 	b.xMax = 1000;
 	b.yMax = 1000;
 	this._stageBounds = b;
+	var font = hxd_res_DefaultFont.get();
+	this.timerText = new h2d_Text(font,this);
+	var _this = this.timerText;
+	var _g = _this;
+	_g.posChanged = true;
+	_g.scaleX *= 2;
+	var _g1 = _this;
+	_g1.posChanged = true;
+	_g1.scaleY *= 2;
+	var _this1 = this.timerText;
+	_this1.posChanged = true;
+	_this1.x = 20;
+	var _this2 = this.timerText;
+	_this2.posChanged = true;
+	_this2.y = 40;
 	Main.instance.sceneUpdate = $bind(this,this.update);
 	Main.instance.room.get_state().practiceNet.onChange = Main.instance.room.get_state().realNet.onChange = $bind(this,this.onNetChange);
 };
@@ -67430,7 +67447,6 @@ scenes_SimBase.__name__ = "scenes.SimBase";
 scenes_SimBase.__super__ = h2d_Scene;
 scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
 	onNetChange: function(ss,key) {
-		haxe_Log.trace(ss,{ fileName : "src/scenes/SimBase.hx", lineNumber : 69, className : "scenes.SimBase", methodName : "onNetChange"});
 		this.subsystems[key].syncProps(ss);
 	}
 	,update: function(dt) {
@@ -67473,6 +67489,9 @@ scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
 			if(!(!(_this1.xMin > b1.xMax || _this1.yMin > b1.yMax || _this1.xMax < b1.xMin || _this1.yMax < b1.yMin))) {
 				activeProgram.resetPos();
 			}
+		}
+		if(this.timerText.text != Std.string(Main.instance.room.get_state().timer)) {
+			this.timerText.set_text(Std.string(Main.instance.room.get_state().timer));
 		}
 	}
 	,checkCollisions: function() {

@@ -41,7 +41,7 @@
     <fieldset>
       <label for="sim_running">
         Running
-        <input type="radio" name="sim_state" id="sim_running" />
+        <input type="radio" name="sim_state" id="sim_running" checked="checked" />
       </label>
       <label for="sim_pause_dim">
         Pause Dim
@@ -174,12 +174,19 @@
           <input type="checkbox" id="scene_tut3_controls_8">
         </label>
       </div>
+      <div id="scene_sim_base_controls">
+        <form id="timer_form" action="#">
+          <input type="text" name="timer_seconds" id="timer_seconds_input" placeholder="Set Timer in Seconds" value=""/>
+          <button type="submit">Set Timer</button>
+        </form>
+      </div>
     </div>
 
   </div>
   <div id="status_container">
     <h2>Status</h2>
     <div id="status"></div>
+    <h2>Current Time: <span id="current_timer"></span></h2>
   </div>
   <script type="text/javascript" src="./gm.js"></script>
 </body>

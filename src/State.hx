@@ -31,4 +31,7 @@ class State extends Schema {
 	@:type("array", SubSystem)
 	public var realNet: ArraySchema<SubSystem> = new ArraySchema<SubSystem>();
 
+	@:type("number")
+	public var timer: Int; // seconds
+
 }

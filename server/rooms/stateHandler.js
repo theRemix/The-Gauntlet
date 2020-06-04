@@ -46,6 +46,7 @@ class State extends Schema {
     this.tutStep = new ArraySchema();
     this.practiceNet = createPracticeNet();
     this.realNet = createRealNet();
+    this.timer = 600;
   }
 
   something = "This attribute won't be sent to the client-side";
@@ -75,10 +76,46 @@ class State extends Schema {
     this.players[ id ].intellect = parseInt(aliasAndStats.intellect);
   }
 
+  stopTimer () {
+    clearInterval(this.timeTicker)
+    console.log('stopped Timer')
+  }
+
+  startTimer () {
+    this.timeTicker = setInterval(() => {
+      this.timer -= 1;
+      if(this.timer <= 0){
+        this.pause("dim")
+        console.log('timer ran out')
+      }
+    }, 1000)
+    console.log('stopped Timer')
+  }
+
+  setTimer (seconds) {
+    this.timer = seconds;
+    console.log('set time to ', seconds)
+  }
+
+  pause (overlay) {
+    this.stopTimer();
+    this.pauseOverlay = overlay
+  }
+
+  unpause () {
+    this.pauseOverlay = ""
+    this.startTimer();
+  }
+
   setScene(sceneName) {
     this.scene = sceneName;
     // reset
     this.tutStep = new ArraySchema();
+
+    if(!this.timeTicker && (this.scene == "Practice" || this.scene == "RealNet")){
+      this.timer = 600;
+      this.startTimer();
+    }
   }
 
   setTutStep(step, visible) {
@@ -125,6 +162,7 @@ schema.defineTypes(State, {
 	tutStep: ["boolean"],
 	practiceNet: [SubSystem],
 	realNet: [SubSystem],
+	timer: "number",
 });
 
 module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
@@ -165,6 +203,27 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
         return console.warn('WARN: hackAttempt, unknown client sessionId', client.sessionId);
 
       this.state.hackAttempt(playerAlias, subsystem, program)
+    });
+
+    this.onMessage("setTimer", (client, seconds) => {
+      if(client.sessionId != this.state.gm.key)
+        return console.warn('WARN: non GM attempted to run setTimer');
+
+      this.state.setTimer(seconds)
+    });
+
+    this.onMessage("pause", (client, overlay) => {
+      if(client.sessionId != this.state.gm.key)
+        return console.warn('WARN: non GM attempted to run pause');
+
+      this.state.pause(overlay)
+    });
+
+    this.onMessage("unpause", (client) => {
+      if(client.sessionId != this.state.gm.key)
+        return console.warn('WARN: non GM attempted to run unpause');
+
+      this.state.unpause()
     });
 
   }
