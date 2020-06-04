@@ -89,7 +89,9 @@ class GMain {
       cast(document.getElementById("scene_tut2_controls_3"), InputElement),
       cast(document.getElementById("scene_tut2_controls_4"), InputElement),
       cast(document.getElementById("scene_tut2_controls_5"), InputElement),
-      cast(document.getElementById("scene_tut2_controls_6"), InputElement)
+      cast(document.getElementById("scene_tut2_controls_6"), InputElement),
+      cast(document.getElementById("scene_tut2_controls_7"), InputElement),
+      cast(document.getElementById("scene_tut2_controls_8"), InputElement),
     ];
     scene_tut3_controls = document.getElementById("scene_tut3_controls");
     scene_tut3_control_inputs = [
@@ -101,7 +103,6 @@ class GMain {
       cast(document.getElementById("scene_tut3_controls_6"), InputElement),
       cast(document.getElementById("scene_tut3_controls_7"), InputElement),
       cast(document.getElementById("scene_tut3_controls_8"), InputElement),
-      cast(document.getElementById("scene_tut3_controls_9"), InputElement)
     ];
 
     server_address.hidden =
@@ -239,6 +240,10 @@ class GMain {
           scene_tut1_controls.hidden =
           scene_tut2_controls.hidden = true;
           scene_tut3_controls.hidden = false;
+        case "Practice":
+          scene_tut1_controls.hidden =
+          scene_tut2_controls.hidden =
+          scene_tut3_controls.hidden = true;
       }
 
       // this happens on server, just going to sync it manually

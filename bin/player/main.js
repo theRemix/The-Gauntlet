@@ -337,6 +337,7 @@ hxd_App.prototype = {
 };
 var Main = function() {
 	hxd_App.call(this);
+	this.client = new io_colyseus_Client("ws://localhost:3000");
 };
 $hxClasses["Main"] = Main;
 Main.__name__ = "Main";
@@ -346,7 +347,7 @@ Main.main = function() {
 Main.__super__ = hxd_App;
 Main.prototype = $extend(hxd_App.prototype,{
 	init: function() {
-		this.goToScene(scenes_Practice);
+		this.goToScene(scenes_FormServer);
 	}
 	,goToScene: function(scene) {
 		switch(scene) {
@@ -406,9 +407,12 @@ Main.prototype = $extend(hxd_App.prototype,{
 		this.room.onError.push(onError);
 		var onLeave = function() {
 			haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Main.hx", lineNumber : 87, className : "Main", methodName : "onJoin"});
+			window.alert("Server Disconnected! Will reload the browser.");
+			window.document.location.reload();
 		};
 		this.room.onLeave.push(onLeave);
 		window.onbeforeunload = function(_) {
+			HxOverrides.remove(_gthis.room.onLeave,onLeave);
 			_gthis.room.leave();
 			return null;
 		};
@@ -420,12 +424,8 @@ Main.prototype = $extend(hxd_App.prototype,{
 			var change = changes[_g];
 			++_g;
 			switch(change.field) {
-			case "gm":
-				break;
 			case "pauseOverlay":
-				haxe_Log.trace("case",{ fileName : "src/Main.hx", lineNumber : 124, className : "Main", methodName : "onStateChange", customParams : ["pauseOverlay"]});
-				break;
-			case "players":
+				haxe_Log.trace("Main.onStateChange pauseOverlay",{ fileName : "src/Main.hx", lineNumber : 128, className : "Main", methodName : "onStateChange"});
 				break;
 			case "scene":
 				if(this.gmControlledScenes) {
@@ -446,14 +446,10 @@ Main.prototype = $extend(hxd_App.prototype,{
 						this.goToScene(scenes_Tut3);
 						break;
 					default:
-						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 120, className : "Main", methodName : "onStateChange"});
+						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 124, className : "Main", methodName : "onStateChange"});
 					}
 				}
 				break;
-			case "tutStep":
-				break;
-			default:
-				haxe_Log.trace("WARN: unhandled change in Main.onStateChange: " + change.field,{ fileName : "src/Main.hx", lineNumber : 129, className : "Main", methodName : "onStateChange"});
 			}
 		}
 	}
@@ -896,7 +892,12 @@ Reflect.deleteField = function(o,field) {
 	return true;
 };
 var State = function() {
+	this.realNet = new io_colyseus_serializer_schema_ArraySchema_$SubSystem();
+	this.practiceNet = new io_colyseus_serializer_schema_ArraySchema_$SubSystem();
 	this.tutStep = new io_colyseus_serializer_schema_ArraySchema_$Bool();
+	this.pauseOverlay = "";
+	this.scene = "";
+	this.gm = new Player();
 	this.players = new io_colyseus_serializer_schema_MapSchema_$Player();
 	io_colyseus_serializer_schema_Schema.call(this);
 	this._indexes.h[0] = "players";
@@ -912,6 +913,12 @@ var State = function() {
 	this._indexes.h[4] = "tutStep";
 	this._types.h[4] = "array";
 	this._childPrimitiveTypes.h[4] = "boolean";
+	this._indexes.h[5] = "practiceNet";
+	this._types.h[5] = "array";
+	this._childSchemaTypes.h[5] = SubSystem;
+	this._indexes.h[6] = "realNet";
+	this._types.h[6] = "array";
+	this._childSchemaTypes.h[6] = SubSystem;
 };
 $hxClasses["State"] = State;
 State.__name__ = "State";
@@ -1064,6 +1071,31 @@ StringTools.hex = function(n,digits) {
 	}
 	return s;
 };
+var SubSystem = function() {
+	io_colyseus_serializer_schema_Schema.call(this);
+	this._indexes.h[0] = "name";
+	this._types.h[0] = "string";
+	this._indexes.h[1] = "x";
+	this._types.h[1] = "number";
+	this._indexes.h[2] = "y";
+	this._types.h[2] = "number";
+	this._indexes.h[3] = "keys";
+	this._types.h[3] = "array";
+	this._childPrimitiveTypes.h[3] = "string";
+	this._indexes.h[4] = "owned";
+	this._types.h[4] = "boolean";
+	this._indexes.h[5] = "ownedBy";
+	this._types.h[5] = "string";
+	this._indexes.h[6] = "runners";
+	this._types.h[6] = "array";
+	this._childPrimitiveTypes.h[6] = "string";
+};
+$hxClasses["SubSystem"] = SubSystem;
+SubSystem.__name__ = "SubSystem";
+SubSystem.__super__ = io_colyseus_serializer_schema_Schema;
+SubSystem.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
+	__class__: SubSystem
+});
 var ValueType = $hxEnums["ValueType"] = { __ename__ : true, __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"]
 	,TNull: {_hx_index:0,__enum__:"ValueType",toString:$estr}
 	,TInt: {_hx_index:1,__enum__:"ValueType",toString:$estr}
@@ -4278,6 +4310,78 @@ h2d_Graphics.prototype = $extend(h2d_Drawable.prototype,{
 	}
 	,__class__: h2d_Graphics
 });
+var entities_Box = function(scene,name,x,y) {
+	h2d_Graphics.call(this,scene);
+	this.name = name;
+	this.posChanged = true;
+	this.x = x;
+	this.posChanged = true;
+	this.y = y;
+	this.beginFill(16753522);
+	this.drawRect(0,0,100,100);
+	this.endFill();
+	var font = hxd_res_DefaultFont.get();
+	this.label = new h2d_Text(font,this);
+	var _this = this.label;
+	_this.posChanged = true;
+	_this.x = 8;
+	var _this1 = this.label;
+	_this1.posChanged = true;
+	_this1.y = 8;
+	this.label.set_text(name);
+	this.label.set_textColor(0);
+};
+$hxClasses["entities.Box"] = entities_Box;
+entities_Box.__name__ = "entities.Box";
+entities_Box.__super__ = h2d_Graphics;
+entities_Box.prototype = $extend(h2d_Graphics.prototype,{
+	hackAttempt: function(program) {
+		var tmp = Main.instance.room;
+		var _g = new haxe_ds_StringMap();
+		if(__map_reserved["mode"] != null) {
+			_g.setReserved("mode","practice");
+		} else {
+			_g.h["mode"] = "practice";
+		}
+		var value = Main.instance.curPlayer.alias;
+		if(__map_reserved["playerAlias"] != null) {
+			_g.setReserved("playerAlias",value);
+		} else {
+			_g.h["playerAlias"] = value;
+		}
+		var value1 = this.name;
+		if(__map_reserved["subsystem"] != null) {
+			_g.setReserved("subsystem",value1);
+		} else {
+			_g.h["subsystem"] = value1;
+		}
+		var value2 = program.name;
+		if(__map_reserved["program"] != null) {
+			_g.setReserved("program",value2);
+		} else {
+			_g.h["program"] = value2;
+		}
+		tmp.send("hackAttempt",_g);
+	}
+	,syncProps: function(ss) {
+		if(!this.owned && ss.owned) {
+			this.owned = ss.owned;
+			this.label.set_text(this.name + "\nPWNED BY:\n" + ss.ownedBy);
+			this.beginFill(15558243);
+			this.drawRect(0,0,100,100);
+			this.endFill();
+		} else if(ss.runners.get_length() > 0) {
+			this.label.set_text(this.name + "\nrunners:\n");
+			var r = ss.runners.iterator();
+			while(r.hasNext()) {
+				var r1 = r.next();
+				var _g = this.label;
+				_g.set_text(_g.text + (r1 + "\n"));
+			}
+		}
+	}
+	,__class__: entities_Box
+});
 var entities_Firewall = function(scene,x,y,w,h) {
 	h2d_Graphics.call(this,scene);
 	this.posChanged = true;
@@ -4402,36 +4506,6 @@ entities_Program.prototype = $extend(h2d_Graphics.prototype,{
 	}
 	,__class__: entities_Program
 	,__properties__: $extend(h2d_Graphics.prototype.__properties__,{get_active:"get_active"})
-});
-var entities_SubSystem = function(scene,name,color,x,y) {
-	h2d_Graphics.call(this,scene);
-	this.name = name;
-	this.posChanged = true;
-	this.x = x;
-	this.posChanged = true;
-	this.y = y;
-	this.beginFill(color);
-	this.drawRect(0,0,100,100);
-	this.endFill();
-	var font = hxd_res_DefaultFont.get();
-	this.label = new h2d_Text(font,this);
-	var _this = this.label;
-	_this.posChanged = true;
-	_this.x = 8;
-	var _this1 = this.label;
-	_this1.posChanged = true;
-	_this1.y = 8;
-	this.label.set_text(name);
-	this.label.set_textColor(0);
-};
-$hxClasses["entities.SubSystem"] = entities_SubSystem;
-entities_SubSystem.__name__ = "entities.SubSystem";
-entities_SubSystem.__super__ = h2d_Graphics;
-entities_SubSystem.prototype = $extend(h2d_Graphics.prototype,{
-	hackAttempt: function(program) {
-		haxe_Log.trace("HACK ATTEMPT",{ fileName : "src/entities/SubSystem.hx", lineNumber : 47, className : "entities.SubSystem", methodName : "hackAttempt", customParams : [this.name,program.name]});
-	}
-	,__class__: entities_SubSystem
 });
 var format_gif_Block = $hxEnums["format.gif.Block"] = { __ename__ : true, __constructs__ : ["BFrame","BExtension","BEOF"]
 	,BFrame: ($_=function(frame) { return {_hx_index:0,frame:frame,__enum__:"format.gif.Block",toString:$estr}; },$_.__params__ = ["frame"],$_)
@@ -65870,6 +65944,86 @@ io_colyseus_serializer_schema_ArraySchema_$Dynamic.prototype = {
 	,__class__: io_colyseus_serializer_schema_ArraySchema_$Dynamic
 	,__properties__: {get_length:"get_length"}
 };
+var io_colyseus_serializer_schema_ArraySchema_$String = function() {
+	this.items = [];
+};
+$hxClasses["io.colyseus.serializer.schema.ArraySchema_String"] = io_colyseus_serializer_schema_ArraySchema_$String;
+io_colyseus_serializer_schema_ArraySchema_$String.__name__ = "io.colyseus.serializer.schema.ArraySchema_String";
+io_colyseus_serializer_schema_ArraySchema_$String.prototype = {
+	get_length: function() {
+		return this.items.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_ArraySchema_$String();
+		cloned.items = this.items.slice();
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return HxOverrides.iter(this.items);
+	}
+	,toString: function() {
+		var data = [];
+		var _g = 0;
+		var _g1 = this.items;
+		while(_g < _g1.length) {
+			var item = _g1[_g];
+			++_g;
+			data.push("" + (item == null ? "null" : "" + item));
+		}
+		return "ArraySchema(" + Lambda.count(this.items) + ") { " + data.join(", ") + " } ";
+	}
+	,__class__: io_colyseus_serializer_schema_ArraySchema_$String
+	,__properties__: {get_length:"get_length"}
+};
+var io_colyseus_serializer_schema_ArraySchema_$SubSystem = function() {
+	this.items = [];
+};
+$hxClasses["io.colyseus.serializer.schema.ArraySchema_SubSystem"] = io_colyseus_serializer_schema_ArraySchema_$SubSystem;
+io_colyseus_serializer_schema_ArraySchema_$SubSystem.__name__ = "io.colyseus.serializer.schema.ArraySchema_SubSystem";
+io_colyseus_serializer_schema_ArraySchema_$SubSystem.prototype = {
+	get_length: function() {
+		return this.items.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_ArraySchema_$SubSystem();
+		cloned.items = this.items.slice();
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return HxOverrides.iter(this.items);
+	}
+	,toString: function() {
+		var data = [];
+		var _g = 0;
+		var _g1 = this.items;
+		while(_g < _g1.length) {
+			var item = _g1[_g];
+			++_g;
+			data.push("" + Std.string(item));
+		}
+		return "ArraySchema(" + Lambda.count(this.items) + ") { " + data.join(", ") + " } ";
+	}
+	,__class__: io_colyseus_serializer_schema_ArraySchema_$SubSystem
+	,__properties__: {get_length:"get_length"}
+};
 var io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionField = function() {
 	this.items = [];
 };
@@ -67219,12 +67373,50 @@ var scenes_SimBase = function() {
 	b.xMax = 1000;
 	b.yMax = 1000;
 	this._stageBounds = b;
+	Main.instance.sceneUpdate = $bind(this,this.update);
+	Main.instance.room.get_state().practiceNet.onChange = $bind(this,this.onPracticeNetChange);
 };
 $hxClasses["scenes.SimBase"] = scenes_SimBase;
 scenes_SimBase.__name__ = "scenes.SimBase";
 scenes_SimBase.__super__ = h2d_Scene;
 scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
-	checkCollisions: function() {
+	onPracticeNetChange: function(ss,key) {
+		haxe_Log.trace(ss,{ fileName : "src/scenes/SimBase.hx", lineNumber : 30, className : "scenes.SimBase", methodName : "onPracticeNetChange"});
+		this.subsystems[key].syncProps(ss);
+	}
+	,update: function(dt) {
+		var activeProgram = Lambda.find(this.programs,function(p) {
+			if(p.int.isOver()) {
+				if(p.x == p.origin.x) {
+					return p.y != p.origin.y;
+				} else {
+					return true;
+				}
+			} else {
+				return false;
+			}
+		});
+		if(activeProgram != null) {
+			var _g = 0;
+			var _g1 = this.subsystems;
+			while(_g < _g1.length) {
+				var s = _g1[_g];
+				++_g;
+				var _this = s.getBounds();
+				var b = activeProgram.getBounds();
+				if(!(_this.xMin > b.xMax || _this.yMin > b.yMax || _this.xMax < b.xMin || _this.yMax < b.yMin)) {
+					s.hackAttempt(activeProgram);
+					activeProgram.resetPos();
+				}
+			}
+			var _this1 = this._stageBounds;
+			var b1 = activeProgram.getBounds();
+			if(!(!(_this1.xMin > b1.xMax || _this1.yMin > b1.yMax || _this1.xMax < b1.xMin || _this1.yMax < b1.yMin))) {
+				activeProgram.resetPos();
+			}
+		}
+	}
+	,checkCollisions: function() {
 		var activeProgram = Lambda.find(this.programs,function(p) {
 			if(p.int.isOver()) {
 				if(p.x == p.origin.x) {
@@ -67239,11 +67431,11 @@ scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
 		if(activeProgram == null) {
 			return;
 		}
-		var _g_head = this.subsystems.h;
-		while(_g_head != null) {
-			var val = _g_head.item;
-			_g_head = _g_head.next;
-			var s = val;
+		var _g = 0;
+		var _g1 = this.subsystems;
+		while(_g < _g1.length) {
+			var s = _g1[_g];
+			++_g;
 			var _this = s.getBounds();
 			var b = activeProgram.getBounds();
 			if(!(_this.xMin > b.xMax || _this.yMin > b.yMax || _this.xMax < b.xMin || _this.yMax < b.yMin)) {
@@ -67255,6 +67447,13 @@ scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
 		var b1 = activeProgram.getBounds();
 		if(!(!(_this1.xMin > b1.xMax || _this1.yMin > b1.yMax || _this1.xMax < b1.xMin || _this1.yMax < b1.yMin))) {
 			activeProgram.resetPos();
+		}
+	}
+	,dispose: function() {
+		h2d_Scene.prototype.dispose.call(this);
+		Main.instance.sceneUpdate = null;
+		if(($_=Main.instance.room.get_state().practiceNet,$bind($_,$_.onChange)) == $bind(this,this.onPracticeNetChange)) {
+			Main.instance.room.get_state().practiceNet.onChange = null;
 		}
 	}
 	,__class__: scenes_SimBase
@@ -67275,22 +67474,24 @@ var scenes_Practice = function() {
 	tf.posChanged = true;
 	tf.y = 20;
 	this.programs = new haxe_ds_List();
-	this.programs.add(new entities_Program(this,"Shroomz",1470576,100,800));
-	this.programs.add(new entities_Program(this,"AOHell",1470576,200,800));
-	this.programs.add(new entities_Program(this,"GodPunter",1470576,300,800));
-	this.programs.add(new entities_Program(this,"Subzero",16487220,100,860));
-	this.programs.add(new entities_Program(this,"Firetoolz",16487220,200,860));
-	this.programs.add(new entities_Program(this,"Daemon",16487220,300,860));
+	this.programs.add(new entities_Program(this,"Shroomz",4278863,100,800));
+	this.programs.add(new entities_Program(this,"AOHell",4278863,200,800));
+	this.programs.add(new entities_Program(this,"GodPunter",4278863,300,800));
+	this.programs.add(new entities_Program(this,"Subzero",1470576,100,860));
+	this.programs.add(new entities_Program(this,"Firetoolz",1470576,200,860));
+	this.programs.add(new entities_Program(this,"Daemon",1470576,300,860));
 	this.programs.add(new entities_Program(this,"Lambda",15705,610,800));
 	this.programs.add(new entities_Program(this,"Shodan",15705,710,800));
 	this.programs.add(new entities_Program(this,"Tron",15705,810,800));
-	this.programs.add(new entities_Program(this,"Supr AI",4278863,610,860));
-	this.programs.add(new entities_Program(this,"Mega ML",4278863,710,860));
-	this.programs.add(new entities_Program(this,"The Engine",4278863,810,860));
-	this.subsystems = new haxe_ds_List();
-	this.subsystems.add(new entities_SubSystem(this,"Database",15558243,280,100));
-	this.subsystems.add(new entities_SubSystem(this,"Admin Terminal",15558243,450,100));
-	this.subsystems.add(new entities_SubSystem(this,"Data Vault",15558243,620,100));
+	this.programs.add(new entities_Program(this,"Supr AI",16487220,610,860));
+	this.programs.add(new entities_Program(this,"Mega ML",16487220,710,860));
+	this.programs.add(new entities_Program(this,"The Engine",16487220,810,860));
+	this.subsystems = [];
+	var s = Main.instance.room.get_state().practiceNet.iterator();
+	while(s.hasNext()) {
+		var s1 = s.next();
+		this.subsystems.push(new entities_Box(this,s1.name,s1.x,s1.y));
+	}
 	this.firewalls = new haxe_ds_List();
 	this.firewalls.add(new entities_Firewall(this,0,350,220,3));
 	this.firewalls.add(new entities_Firewall(this,400,350,220,3));
@@ -67304,49 +67505,12 @@ var scenes_Practice = function() {
 			return f.getBounds();
 		});
 	}
-	Main.instance.sceneUpdate = $bind(this,this.update);
 };
 $hxClasses["scenes.Practice"] = scenes_Practice;
 scenes_Practice.__name__ = "scenes.Practice";
 scenes_Practice.__super__ = scenes_SimBase;
 scenes_Practice.prototype = $extend(scenes_SimBase.prototype,{
-	update: function(dt) {
-		var activeProgram = Lambda.find(this.programs,function(p) {
-			if(p.int.isOver()) {
-				if(p.x == p.origin.x) {
-					return p.y != p.origin.y;
-				} else {
-					return true;
-				}
-			} else {
-				return false;
-			}
-		});
-		if(activeProgram != null) {
-			var _g_head = this.subsystems.h;
-			while(_g_head != null) {
-				var val = _g_head.item;
-				_g_head = _g_head.next;
-				var s = val;
-				var _this = s.getBounds();
-				var b = activeProgram.getBounds();
-				if(!(_this.xMin > b.xMax || _this.yMin > b.yMax || _this.xMax < b.xMin || _this.yMax < b.yMin)) {
-					s.hackAttempt(activeProgram);
-					activeProgram.resetPos();
-				}
-			}
-			var _this1 = this._stageBounds;
-			var b1 = activeProgram.getBounds();
-			if(!(!(_this1.xMin > b1.xMax || _this1.yMin > b1.yMax || _this1.xMax < b1.xMin || _this1.yMax < b1.yMin))) {
-				activeProgram.resetPos();
-			}
-		}
-	}
-	,dispose: function() {
-		scenes_SimBase.prototype.dispose.call(this);
-		Main.instance.sceneUpdate = null;
-	}
-	,__class__: scenes_Practice
+	__class__: scenes_Practice
 });
 var scenes_Tut1 = function() {
 	h2d_Scene.call(this);
@@ -67531,6 +67695,12 @@ scenes_Tut2.prototype = $extend(h2d_Scene.prototype,{
 		this.steps[key].set_visible(item);
 	}
 	,destroy: function() {
+		if(($_=Main.instance.room.get_state().tutStep,$bind($_,$_.onAdd)) == $bind(this,this.onTutStepChange)) {
+			Main.instance.room.get_state().tutStep.onAdd = null;
+		}
+		if(($_=Main.instance.room.get_state().tutStep,$bind($_,$_.onRemove)) == $bind(this,this.onTutStepChange)) {
+			Main.instance.room.get_state().tutStep.onRemove = null;
+		}
 		if(($_=Main.instance.room.get_state().tutStep,$bind($_,$_.onChange)) == $bind(this,this.onTutStepChange)) {
 			Main.instance.room.get_state().tutStep.onChange = null;
 		}
@@ -67687,17 +67857,18 @@ Object.defineProperty(js__$Boot_HaxeError.prototype,"message",{ get : function()
 if(ArrayBuffer.prototype.slice == null) {
 	ArrayBuffer.prototype.slice = js_lib__$ArrayBuffer_ArrayBufferCompat.sliceImpl;
 }
-Colors.PROG_1 = 1470576;
+Colors.PROG_1 = 4278863;
 Colors.PROG_2 = 15705;
-Colors.PROG_3 = 16487220;
-Colors.PROG_4 = 4278863;
+Colors.PROG_3 = 1470576;
+Colors.PROG_4 = 16487220;
 Colors.FIREWALL = 16672293;
-Colors.SYS_ACCESS = 15558243;
+Colors.SYS_ACCESS = 16753522;
 Colors.SYS_NO_ACCESS = 1002625;
-Colors.SYS_OWNED = 16753522;
+Colors.SYS_OWNED = 15558243;
 io_colyseus_serializer_schema_Schema.decoder = new io_colyseus_serializer_schema_Decoder();
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
 State.SET_ALIAS_STATS = "setAliasAndStats";
+State.HACK_ATTEMPT = "hackAttempt";
 Xml.Element = 0;
 Xml.PCData = 1;
 Xml.CData = 2;
@@ -67705,10 +67876,10 @@ Xml.Comment = 3;
 Xml.DocType = 4;
 Xml.ProcessingInstruction = 5;
 Xml.Document = 6;
+entities_Box.WIDTH = 100;
+entities_Box.HEIGHT = 100;
 entities_Program.WIDTH = 80;
 entities_Program.HEIGHT = 30;
-entities_SubSystem.WIDTH = 100;
-entities_SubSystem.HEIGHT = 100;
 format_gif_Tools.LN2 = Math.log(2);
 format_mp3_MPEG.V1 = 3;
 format_mp3_MPEG.V2 = 2;

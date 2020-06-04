@@ -70,6 +70,12 @@ class Tut2 extends h2d.Scene{
   }
 
   public function destroy(){
+    if(Main.instance.room.state.tutStep.onAdd == onTutStepChange){
+      Main.instance.room.state.tutStep.onAdd = null;
+    }
+    if(Main.instance.room.state.tutStep.onRemove == onTutStepChange){
+      Main.instance.room.state.tutStep.onRemove = null;
+    }
     if(Main.instance.room.state.tutStep.onChange == onTutStepChange){
       Main.instance.room.state.tutStep.onChange = null;
     }

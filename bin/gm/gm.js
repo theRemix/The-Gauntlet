@@ -398,9 +398,9 @@ GMain.prototype = {
 		this.scene_tut1_controls = window.document.getElementById("scene_tut1_controls");
 		this.scene_tut1_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut1_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_5") , HTMLInputElement)];
 		this.scene_tut2_controls = window.document.getElementById("scene_tut2_controls");
-		this.scene_tut2_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut2_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_5") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_6") , HTMLInputElement)];
+		this.scene_tut2_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut2_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_5") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_6") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_7") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_8") , HTMLInputElement)];
 		this.scene_tut3_controls = window.document.getElementById("scene_tut3_controls");
-		this.scene_tut3_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut3_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_5") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_6") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_7") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_8") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_9") , HTMLInputElement)];
+		this.scene_tut3_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut3_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_5") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_6") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_7") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_8") , HTMLInputElement)];
 		this.server_address.hidden = this.servers_container.hidden = this.players_container.hidden = this.controls_container.hidden = this.scene_tut1_controls.hidden = this.scene_tut2_controls.hidden = this.scene_tut3_controls.hidden = true;
 		this.status.innerText = "📡 Connecting to Room Controller";
 	}
@@ -408,7 +408,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/GMain.hx", lineNumber : 125, className : "GMain", methodName : "onRoomJoinOrCreate"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/GMain.hx", lineNumber : 126, className : "GMain", methodName : "onRoomJoinOrCreate"});
 			return;
 		}
 		this.servers_container.hidden = false;
@@ -443,7 +443,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/GMain.hx", lineNumber : 174, className : "GMain", methodName : "onGameJoinOrCreate"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/GMain.hx", lineNumber : 175, className : "GMain", methodName : "onGameJoinOrCreate"});
 			return;
 		}
 		this.players_container.hidden = false;
@@ -499,19 +499,22 @@ GMain.prototype = {
 		};
 		room.get_state().players.onRemove = removePlayerList;
 		this.sim_running.onclick = function(_) {
-			haxe_Log.trace("sim_running.onclick",{ fileName : "src/GMain.hx", lineNumber : 213, className : "GMain", methodName : "onGameJoinOrCreate"});
+			haxe_Log.trace("sim_running.onclick",{ fileName : "src/GMain.hx", lineNumber : 214, className : "GMain", methodName : "onGameJoinOrCreate"});
 		};
 		this.sim_pause_dim.onclick = function(_1) {
-			haxe_Log.trace("sim_pause_dim.onclick",{ fileName : "src/GMain.hx", lineNumber : 216, className : "GMain", methodName : "onGameJoinOrCreate"});
+			haxe_Log.trace("sim_pause_dim.onclick",{ fileName : "src/GMain.hx", lineNumber : 217, className : "GMain", methodName : "onGameJoinOrCreate"});
 		};
 		this.sim_pause_dark.onclick = function(_2) {
-			haxe_Log.trace("sim_pause_dark.onclick",{ fileName : "src/GMain.hx", lineNumber : 219, className : "GMain", methodName : "onGameJoinOrCreate"});
+			haxe_Log.trace("sim_pause_dark.onclick",{ fileName : "src/GMain.hx", lineNumber : 220, className : "GMain", methodName : "onGameJoinOrCreate"});
 		};
 		this.cur_scene.onchange = function(e) {
-			haxe_Log.trace("cur_scene.onchange",{ fileName : "src/GMain.hx", lineNumber : 222, className : "GMain", methodName : "onGameJoinOrCreate", customParams : [e.target.value]});
+			haxe_Log.trace("cur_scene.onchange",{ fileName : "src/GMain.hx", lineNumber : 223, className : "GMain", methodName : "onGameJoinOrCreate", customParams : [e.target.value]});
 			room.send("setScene",e.target.value);
 			switch(e.target.value) {
 			case "Lobby":
+				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
+				break;
+			case "Practice":
 				_gthis.scene_tut1_controls.hidden = _gthis.scene_tut2_controls.hidden = _gthis.scene_tut3_controls.hidden = true;
 				break;
 			case "Tut1":
@@ -755,7 +758,12 @@ Reflect.compareMethods = function(f1,f2) {
 	}
 };
 var State = function() {
+	this.realNet = new io_colyseus_serializer_schema_ArraySchema_$SubSystem();
+	this.practiceNet = new io_colyseus_serializer_schema_ArraySchema_$SubSystem();
 	this.tutStep = new io_colyseus_serializer_schema_ArraySchema_$Bool();
+	this.pauseOverlay = "";
+	this.scene = "";
+	this.gm = new Player();
 	this.players = new io_colyseus_serializer_schema_MapSchema_$Player();
 	io_colyseus_serializer_schema_Schema.call(this);
 	this._indexes.h[0] = "players";
@@ -771,6 +779,12 @@ var State = function() {
 	this._indexes.h[4] = "tutStep";
 	this._types.h[4] = "array";
 	this._childPrimitiveTypes.h[4] = "boolean";
+	this._indexes.h[5] = "practiceNet";
+	this._types.h[5] = "array";
+	this._childSchemaTypes.h[5] = SubSystem;
+	this._indexes.h[6] = "realNet";
+	this._types.h[6] = "array";
+	this._childSchemaTypes.h[6] = SubSystem;
 };
 State.__name__ = "State";
 State.__super__ = io_colyseus_serializer_schema_Schema;
@@ -787,6 +801,30 @@ StringTools.__name__ = "StringTools";
 StringTools.replace = function(s,sub,by) {
 	return s.split(sub).join(by);
 };
+var SubSystem = function() {
+	io_colyseus_serializer_schema_Schema.call(this);
+	this._indexes.h[0] = "name";
+	this._types.h[0] = "string";
+	this._indexes.h[1] = "x";
+	this._types.h[1] = "number";
+	this._indexes.h[2] = "y";
+	this._types.h[2] = "number";
+	this._indexes.h[3] = "keys";
+	this._types.h[3] = "array";
+	this._childPrimitiveTypes.h[3] = "string";
+	this._indexes.h[4] = "owned";
+	this._types.h[4] = "boolean";
+	this._indexes.h[5] = "ownedBy";
+	this._types.h[5] = "string";
+	this._indexes.h[6] = "runners";
+	this._types.h[6] = "array";
+	this._childPrimitiveTypes.h[6] = "string";
+};
+SubSystem.__name__ = "SubSystem";
+SubSystem.__super__ = io_colyseus_serializer_schema_Schema;
+SubSystem.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
+	__class__: SubSystem
+});
 var ValueType = $hxEnums["ValueType"] = { __ename__ : true, __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"]
 	,TNull: {_hx_index:0,__enum__:"ValueType",toString:$estr}
 	,TInt: {_hx_index:1,__enum__:"ValueType",toString:$estr}
@@ -2470,6 +2508,84 @@ io_colyseus_serializer_schema_ArraySchema_$Dynamic.prototype = {
 	,__class__: io_colyseus_serializer_schema_ArraySchema_$Dynamic
 	,__properties__: {get_length:"get_length"}
 };
+var io_colyseus_serializer_schema_ArraySchema_$String = function() {
+	this.items = [];
+};
+io_colyseus_serializer_schema_ArraySchema_$String.__name__ = "io.colyseus.serializer.schema.ArraySchema_String";
+io_colyseus_serializer_schema_ArraySchema_$String.prototype = {
+	get_length: function() {
+		return this.items.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_ArraySchema_$String();
+		cloned.items = this.items.slice();
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return HxOverrides.iter(this.items);
+	}
+	,toString: function() {
+		var data = [];
+		var _g = 0;
+		var _g1 = this.items;
+		while(_g < _g1.length) {
+			var item = _g1[_g];
+			++_g;
+			data.push("" + (item == null ? "null" : "" + item));
+		}
+		return "ArraySchema(" + Lambda.count(this.items) + ") { " + data.join(", ") + " } ";
+	}
+	,__class__: io_colyseus_serializer_schema_ArraySchema_$String
+	,__properties__: {get_length:"get_length"}
+};
+var io_colyseus_serializer_schema_ArraySchema_$SubSystem = function() {
+	this.items = [];
+};
+io_colyseus_serializer_schema_ArraySchema_$SubSystem.__name__ = "io.colyseus.serializer.schema.ArraySchema_SubSystem";
+io_colyseus_serializer_schema_ArraySchema_$SubSystem.prototype = {
+	get_length: function() {
+		return this.items.length;
+	}
+	,onAdd: function(item,key) {
+	}
+	,onChange: function(item,key) {
+	}
+	,onRemove: function(item,key) {
+	}
+	,clone: function() {
+		var cloned = new io_colyseus_serializer_schema_ArraySchema_$SubSystem();
+		cloned.items = this.items.slice();
+		cloned.onAdd = $bind(this,this.onAdd);
+		cloned.onChange = $bind(this,this.onChange);
+		cloned.onRemove = $bind(this,this.onRemove);
+		return cloned;
+	}
+	,iterator: function() {
+		return HxOverrides.iter(this.items);
+	}
+	,toString: function() {
+		var data = [];
+		var _g = 0;
+		var _g1 = this.items;
+		while(_g < _g1.length) {
+			var item = _g1[_g];
+			++_g;
+			data.push("" + Std.string(item));
+		}
+		return "ArraySchema(" + Lambda.count(this.items) + ") { " + data.join(", ") + " } ";
+	}
+	,__class__: io_colyseus_serializer_schema_ArraySchema_$SubSystem
+	,__properties__: {get_length:"get_length"}
+};
 var io_colyseus_serializer_schema_ArraySchema_$io_$colyseus_$serializer_$schema_$ReflectionField = function() {
 	this.items = [];
 };
@@ -3683,6 +3799,7 @@ GState.SET_SCENE = "setScene";
 GState.SET_TUT_STEP = "setTutStep";
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
 State.SET_ALIAS_STATS = "setAliasAndStats";
+State.HACK_ATTEMPT = "hackAttempt";
 haxe_io_FPHelper.i64tmp = (function($this) {
 	var $r;
 	var this1 = new haxe__$Int64__$_$_$Int64(0,0);

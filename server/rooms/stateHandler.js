@@ -13,12 +13,39 @@ schema.defineTypes(Player, {
   intellect: "number",
 });
 
+class SubSystem extends Schema {
+  constructor(props){
+    super();
+
+    const { x, y, name, keys } = props;
+    this.name = name;
+    this.x = x;
+    this.y = y;
+    this.keys = new ArraySchema();
+    keys.forEach(k => this.keys.push(k))
+    this.owned = false;
+    this.ownedBy = '';
+    this.runners = new ArraySchema();
+  }
+}
+schema.defineTypes(SubSystem, {
+  name: "string",
+  x: "number",
+  y: "number",
+  keys: ["string"],
+  owned: "boolean",
+  ownedBy: "string",
+  runners: ["string"],
+});
+
 class State extends Schema {
   constructor(){
     super();
 
     this.players = new MapSchema();
     this.tutStep = new ArraySchema();
+    this.practiceNet = createPracticeNet();
+    this.realNet = createRealNet();
   }
 
   something = "This attribute won't be sent to the client-side";
@@ -58,6 +85,36 @@ class State extends Schema {
     this.tutStep[step] = visible;
   }
 
+  hackAttempt(mode, playerAlias, subsystem, program){
+    let net;
+    switch(mode){
+      case "practice":
+        net = this.practiceNet;
+        break;
+      case "real":
+        net = this.realNet;
+        break;
+      default:
+        console.warn('WARN: unknown mode:', mode)
+        return;
+    }
+
+    let s = net.find((a) => a.name === subsystem);
+    if(s == null){
+      console.warn('WARN: could not find subsystem in net:', subsystem)
+      return;
+    }
+
+    if(s.keys.includes(program)){
+      s.owned = true;
+      s.ownedBy = playerAlias;
+    } else {
+      if(!s.runners.includes(playerAlias))
+        s.runners.push(playerAlias)
+    }
+
+  }
+
 
 }
 schema.defineTypes(State, {
@@ -66,6 +123,8 @@ schema.defineTypes(State, {
 	scene: "string",
 	pauseOverlay: "string",
 	tutStep: ["boolean"],
+	practiceNet: [SubSystem],
+	realNet: [SubSystem],
 });
 
 module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
@@ -99,6 +158,13 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
 
       console.log("StateHandlerRoom setTutStep", step, value);
       this.state.setTutStep(step, value);
+    });
+
+    this.onMessage("hackAttempt", (client, {mode, playerAlias, subsystem, program}) => {
+      if(!this.state.players[client.sessionId])
+        return console.warn('WARN: hackAttempt, unknown client sessionId', client.sessionId);
+
+      this.state.hackAttempt(mode, playerAlias, subsystem, program)
     });
 
   }
@@ -145,4 +211,22 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
     console.log("Dispose StateHandlerRoom");
   }
 
+}
+
+const createPracticeNet = () => {
+  const a = new ArraySchema();
+  [
+    new SubSystem({x: 280, y: 100, name: "Database", keys: ["Firetoolz"]}),
+    new SubSystem({x: 440, y: 100, name: "Admin Terminal", keys: ["Tron"]}),
+    new SubSystem({x: 620, y: 100, name: "Data Vault", keys: ["Firetoolz"]}),
+  ].forEach(b => a.push(b))
+  return a;
+}
+
+const createRealNet = () => {
+  const a = new ArraySchema();
+  [
+    new SubSystem({x: 280, y: 100, name: "REAL X", keys: []}),
+  ].forEach(b => a.push(b))
+  return a;
 }

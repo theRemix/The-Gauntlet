@@ -15,7 +15,7 @@ class Main extends hxd.App {
   // heaps
   override function init() {
     this.goToScene(scenes.FormServer);
-    // this.goToScene(scenes.Tut1);
+    // this.goToScene(scenes.Practice);
   }
 
   // colyseus
@@ -83,16 +83,19 @@ class Main extends hxd.App {
     this.room.onError += function onError(code: Int, message: String) {
       trace("ROOM ERROR: " + code + " => " + message);
     };
-    this.room.onLeave += function onLeave() {
+    var onLeave = function() {
       trace("ROOM LEAVE");
-  };
-
+      js.Browser.alert("Server Disconnected! Will reload the browser.");
+      document.location.reload();
+    };
+    this.room.onLeave += onLeave;
     // this.room.onMessage(State.DISCONNECTED, function(_){ // not handled yet
     //   js.Browser.alert("Server Disconnected! Will reload the browser.");
     //   document.location.reload();
     // });
 
     window.onbeforeunload = function(_){
+      this.room.onLeave -= onLeave;
       this.room.leave();
       return null;
     }
@@ -100,6 +103,7 @@ class Main extends hxd.App {
     this.goToScene(scenes.FormAlias);
   }
 
+  // ALWAYS ON
   private inline function onStateChange(changes:Array<DataChange>) {
     for(change in changes){
       switch(change.field){
@@ -121,12 +125,13 @@ class Main extends hxd.App {
             }
           }
         case "pauseOverlay":
-          trace('case', "pauseOverlay");
-        case "tutStep":
-        case "players":
-        case "gm":
-        default:
-          trace('WARN: unhandled change in Main.onStateChange: ${change.field}');
+          trace("Main.onStateChange pauseOverlay");
+        // case "tutStep":
+        // case "players":
+        // case "gm":
+        // case "practiceNet":
+        // default:
+        //   trace('WARN: unhandled change in Main.onStateChange: ${change.field}');
       }
     }
   }

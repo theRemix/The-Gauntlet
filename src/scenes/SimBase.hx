@@ -4,14 +4,14 @@ import h2d.Graphics;
 import h2d.col.Bounds;
 
 import entities.Program;
-import entities.SubSystem;
+import entities.Box;
 import entities.Firewall;
 
 using Lambda;
 
 class SimBase extends h2d.Scene{
 
-  private var subsystems:List<SubSystem>;
+  private var subsystems:Array<Box>;
   private var programs:List<Program>;
   private var firewalls:List<Firewall>;
 
@@ -21,6 +21,18 @@ class SimBase extends h2d.Scene{
     super();
 
     _stageBounds = Bounds.fromValues(0,0,1000,1000);
+
+    Main.instance.sceneUpdate = update;
+    Main.instance.room.state.practiceNet.onChange = onPracticeNetChange;
+  }
+
+  private inline function onPracticeNetChange(ss:SubSystem, key:Int) {
+    trace(ss);
+    subsystems[key].syncProps(ss);
+  }
+
+  public function update(dt:Float) {
+    checkCollisions();
   }
 
   private inline function checkCollisions(){
@@ -40,4 +52,14 @@ class SimBase extends h2d.Scene{
     }
 
   }
+
+  public override function dispose(){
+    super.dispose();
+    Main.instance.sceneUpdate = null;
+
+    if(Main.instance.room.state.practiceNet.onChange == onPracticeNetChange){
+      Main.instance.room.state.practiceNet.onChange = null;
+    }
+  }
+
 }
