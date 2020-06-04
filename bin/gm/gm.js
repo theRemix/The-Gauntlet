@@ -355,7 +355,7 @@ GState.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
 });
 var GMain = function() {
 	window.document.addEventListener("DOMContentLoaded",$bind(this,this.init));
-	this.client = new io_colyseus_Client("ws://localhost:3000");
+	this.client = new io_colyseus_Client("ws://" + window.location.host);
 	this.client.joinOrCreate_GState("room_controller",new haxe_ds_StringMap(),GState,$bind(this,this.onRoomJoinOrCreate));
 };
 GMain.__name__ = "GMain";
@@ -387,7 +387,6 @@ GMain.prototype = {
 		this.players_table_container = window.document.getElementById("players_table_container");
 		this.players_table = window.document.getElementById("players_table");
 		this.controls_container = window.document.getElementById("controls_container");
-		this.status_container = window.document.getElementById("status_container");
 		this.status = window.document.getElementById("status");
 		this.server_address_input = js_Boot.__cast(window.document.getElementById("server_address_input") , HTMLInputElement);
 		this.create_server_form = js_Boot.__cast(window.document.getElementById("create_server_form") , HTMLFormElement);
@@ -414,7 +413,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:145:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:143:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.servers_container.hidden = false;
@@ -449,7 +448,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:194:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:192:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.players_container.hidden = false;

@@ -337,7 +337,7 @@ hxd_App.prototype = {
 };
 var Main = function() {
 	hxd_App.call(this);
-	this.client = new io_colyseus_Client("ws://localhost:3000");
+	this.client = new io_colyseus_Client("ws://" + window.location.host);
 };
 $hxClasses["Main"] = Main;
 Main.__name__ = "Main";

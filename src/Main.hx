@@ -22,7 +22,7 @@ class Main extends hxd.App {
   public function new() {
     super();
 
-    this.client = new Client('ws://localhost:3000');
+    this.client = new Client('ws://${window.location.host}');
   }
 
   public function goToScene(scene:Class<h2d.Scene>):h2d.Scene {

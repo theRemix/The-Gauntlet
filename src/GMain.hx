@@ -36,7 +36,6 @@ class GMain {
   var players_table_container:DOMElement;
   var players_table:DOMElement;
   var controls_container:DOMElement;
-  var status_container:DOMElement;
   var status:DOMElement;
   var server_address_input:InputElement;
   var create_server_form:FormElement;
@@ -65,7 +64,7 @@ class GMain {
   function new() {
     document.addEventListener("DOMContentLoaded", init);
 
-    client = new Client('ws://localhost:3000');
+    client = new Client('ws://${window.location.host}');
     client.joinOrCreate("room_controller", [], GState, onRoomJoinOrCreate);
   }
 
@@ -77,7 +76,6 @@ class GMain {
     players_table_container = document.getElementById("players_table_container");
     players_table = document.getElementById("players_table");
     controls_container = document.getElementById("controls_container");
-    status_container = document.getElementById("status_container");
     status = document.getElementById("status");
     server_address_input = cast(document.getElementById("server_address_input"), InputElement);
     create_server_form = cast(document.getElementById("create_server_form"), FormElement);
