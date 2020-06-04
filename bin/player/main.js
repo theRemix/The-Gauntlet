@@ -67744,6 +67744,7 @@ var scenes_RealNet = function() {
 		var p = val;
 		p.colliders = this.firewalls;
 	}
+	this.createNetConns();
 };
 $hxClasses["scenes.RealNet"] = scenes_RealNet;
 scenes_RealNet.__name__ = "scenes.RealNet";

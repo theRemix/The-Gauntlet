@@ -1,6 +1,9 @@
 default:
 	docker run --rm -v ~/.local/haxelib/:/haxelib -v ${PWD}:/app -w /app haxe:4.0-alpine haxe build.hxml
 
+docker:
+	docker build -t theremix/the-gauntlet:latest .
+
 dev-server:
 	npm run dev
 

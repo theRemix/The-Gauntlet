@@ -4,7 +4,7 @@
   "description": "wss server for the gauntlet",
   "main": "index.js",
   "scripts": {
-    "start": "node .",
+    "start": "node server",
     "dev": "npx nodemon --watch server/ server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
