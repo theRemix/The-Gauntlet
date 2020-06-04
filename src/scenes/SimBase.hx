@@ -12,18 +12,33 @@ using Lambda;
 class SystemCnxLine extends Graphics {
   static inline var LINE_THICKNESS = 3;
 
+  public var source:Box;
+  var dest:Box;
+
   public function new(scene:SimBase, source:Box, dest:Box) {
     super(scene);
+    this.source = source;
+    this.dest = dest;
 
     beginFill(Colors.NET_NO_ACCESS);
+    drawLine();
+    endFill();
+  }
 
+  public function enableCnx(){
+    beginFill(Colors.NET_ACCESS);
+    drawLine();
+    endFill();
+  }
+
+  function drawLine(){
     if(source.x == dest.x){ // vertical
       drawRect(source.x + Box.WIDTH/2, source.y + Box.HEIGHT/2, LINE_THICKNESS, dest.y - source.y);
     } else { // horizontal
       drawRect(source.x + Box.WIDTH/2, source.y + Box.HEIGHT/2, dest.x - source.x, LINE_THICKNESS);
     }
-    endFill();
   }
+
 }
 
 class SimBase extends h2d.Scene{
@@ -74,6 +89,12 @@ class SimBase extends h2d.Scene{
       activeProgram.resetPos();
     }
 
+  }
+
+  public function onBoxOwned(b:Box){
+    for(c in cnx.filter(function(a) return a.source == b)){
+      c.enableCnx();
+    }
   }
 
   public function createNetCnx(a:Box, b:Box){

@@ -7,11 +7,14 @@ import h2d.Text;
 import hxd.Event;
 import h2d.col.Bounds;
 
+import scenes.SimBase;
+
 class Box extends Graphics {
 
   public static inline var WIDTH = 100;
   public static inline var HEIGHT = 80;
 
+  var scene:SimBase;
   public var owned:Bool;
   var accessible:Bool;
 
@@ -23,8 +26,9 @@ class Box extends Graphics {
 
   // var runners:List<String>;
 
-  public function new(scene:Scene, name:String, x:Int, y:Int) {
+  public function new(scene:SimBase, name:String, x:Int, y:Int) {
     super(scene);
+    this.scene = scene;
     this.name = name;
     this.x = x;
     this.y = y;
@@ -85,6 +89,8 @@ class Box extends Graphics {
       for(b in outboundCnx.filter(function(s) return !s.owned)){
         b.makeAccessible();
       }
+
+      scene.onBoxOwned(this);
 
     }else if(ss.runners.length > 0){
       label.text = name + "\nrunners:\n";
