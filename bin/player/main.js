@@ -67439,6 +67439,30 @@ var scenes_SimBase = function() {
 	var _this2 = this.timerText;
 	_this2.posChanged = true;
 	_this2.y = 40;
+	this.overlayText = new h2d_Text(font,this);
+	var _this3 = this.overlayText;
+	var _g2 = _this3;
+	_g2.posChanged = true;
+	_g2.scaleX *= 2;
+	var _g3 = _this3;
+	_g3.posChanged = true;
+	_g3.scaleY *= 2;
+	var _this4 = this.overlayText;
+	_this4.posChanged = true;
+	_this4.x = 400;
+	var _this5 = this.overlayText;
+	_this5.posChanged = true;
+	_this5.y = 400;
+	this.pauseOverlayDim = new h2d_Graphics(this);
+	this.pauseOverlayDim.beginFill(1002625,0.5);
+	this.pauseOverlayDim.drawRect(0,0,1000,1000);
+	this.pauseOverlayDim.endFill();
+	this.pauseOverlayDim.set_visible(false);
+	this.pauseOverlayDark = new h2d_Graphics(this);
+	this.pauseOverlayDark.beginFill(1002625,1);
+	this.pauseOverlayDark.drawRect(0,0,1000,1000);
+	this.pauseOverlayDark.endFill();
+	this.pauseOverlayDark.set_visible(false);
 	Main.instance.sceneUpdate = $bind(this,this.update);
 	Main.instance.room.get_state().practiceNet.onChange = Main.instance.room.get_state().realNet.onChange = $bind(this,this.onNetChange);
 };
@@ -67492,6 +67516,39 @@ scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
 		}
 		if(this.timerText.text != Std.string(Main.instance.room.get_state().timer)) {
 			this.timerText.set_text(Std.string(Main.instance.room.get_state().timer));
+		}
+		if(this.curPauseOverlay != Main.instance.room.get_state().pauseOverlay) {
+			this.curPauseOverlay = Main.instance.room.get_state().pauseOverlay;
+			switch(this.curPauseOverlay) {
+			case "":
+				this.overlayText.set_text("");
+				this.pauseOverlayDim.set_visible(false);
+				this.pauseOverlayDark.set_visible(false);
+				break;
+			case "dark":
+				this.overlayText.set_text("[ PAUSED ]");
+				this.pauseOverlayDim.set_visible(false);
+				this.pauseOverlayDark.set_visible(true);
+				this.children.push(this.children.splice(this.children.indexOf(this.pauseOverlayDark),1)[0]);
+				this.children.push(this.children.splice(this.children.indexOf(this.overlayText),1)[0]);
+				break;
+			case "dim":
+				this.overlayText.set_text("[ PAUSED ]");
+				this.pauseOverlayDim.set_visible(true);
+				this.pauseOverlayDark.set_visible(false);
+				this.children.push(this.children.splice(this.children.indexOf(this.pauseOverlayDim),1)[0]);
+				this.children.push(this.children.splice(this.children.indexOf(this.overlayText),1)[0]);
+				break;
+			case "win":
+				this.overlayText.set_text("[RUN SUCCESSFUL]\n[YOU STOLE THE DATA]");
+				this.pauseOverlayDim.set_visible(true);
+				this.pauseOverlayDark.set_visible(false);
+				this.children.push(this.children.splice(this.children.indexOf(this.pauseOverlayDim),1)[0]);
+				this.children.push(this.children.splice(this.children.indexOf(this.overlayText),1)[0]);
+				break;
+			default:
+				haxe_Log.trace("WARN: unhandled pauseOverlay: " + this.curPauseOverlay,{ fileName : "src/scenes/SimBase.hx", lineNumber : 139, className : "scenes.SimBase", methodName : "update"});
+			}
 		}
 	}
 	,checkCollisions: function() {
@@ -67924,7 +67981,7 @@ var scenes_Tut1 = function() {
 	step.posChanged = true;
 	step.y = y;
 	var step1 = new h2d_Text(this.font,this);
-	step1.set_text("You will know if you have succeeded because you will see this sign [RUN SUCCESSFUL, YOU STOLE THE DATA].");
+	step1.set_text("You will know if you have succeeded because you will see this sign [RUN SUCCESSFUL][YOU STOLE THE DATA].");
 	step1.posChanged = true;
 	step1.x = x;
 	step1.posChanged = true;

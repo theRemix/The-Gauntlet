@@ -47,6 +47,7 @@ class State extends Schema {
     this.practiceNet = createPracticeNet();
     this.realNet = createRealNet();
     this.timer = 600;
+    this.pauseOverlay = "";
   }
 
   something = "This attribute won't be sent to the client-side";
@@ -145,6 +146,10 @@ class State extends Schema {
     if(s.keys.includes(program)){
       s.owned = true;
       s.ownedBy = playerAlias;
+      if(subsystem == "ENCRYPTED\nDATA STORE"){
+        // VICTORY
+        this.pause("win");
+      }
     } else {
       if(!s.runners.includes(playerAlias))
         s.runners.push(playerAlias)

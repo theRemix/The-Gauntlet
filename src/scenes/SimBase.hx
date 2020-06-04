@@ -53,6 +53,12 @@ class SimBase extends h2d.Scene{
 
   private var timerText:Text;
 
+  private var curPauseOverlay:String;
+  private var pauseOverlayDim:Graphics;
+  private var pauseOverlayDark:Graphics;
+
+  private var overlayText:Text;
+
   public function new(){
     super();
 
@@ -70,6 +76,23 @@ class SimBase extends h2d.Scene{
     timerText.x = 20;
     timerText.y = 40;
 
+    overlayText = new h2d.Text(font, this);
+    overlayText.scale(2);
+    overlayText.x = 400;
+    overlayText.y = 400;
+
+    pauseOverlayDim = new Graphics(this);
+    pauseOverlayDim.beginFill(Colors.NET_NO_ACCESS, 0.5);
+    pauseOverlayDim.drawRect(0,0,1000,1000);
+    pauseOverlayDim.endFill();
+    pauseOverlayDim.visible = false;
+
+    pauseOverlayDark = new Graphics(this);
+    pauseOverlayDark.beginFill(Colors.NET_NO_ACCESS, 1);
+    pauseOverlayDark.drawRect(0,0,1000,1000);
+    pauseOverlayDark.endFill();
+    pauseOverlayDark.visible = false;
+
     Main.instance.sceneUpdate = update;
     Main.instance.room.state.practiceNet.onChange =
     Main.instance.room.state.realNet.onChange = onNetChange;
@@ -83,6 +106,38 @@ class SimBase extends h2d.Scene{
     checkCollisions();
     if(timerText.text != Std.string(Main.instance.room.state.timer)){
       timerText.text = Std.string(Main.instance.room.state.timer);
+    }
+    if(curPauseOverlay != Main.instance.room.state.pauseOverlay){
+      curPauseOverlay = Main.instance.room.state.pauseOverlay;
+      switch(curPauseOverlay){
+        case "dim":
+          overlayText.text = "[ PAUSED ]";
+          pauseOverlayDim.visible = true;
+          pauseOverlayDark.visible = false;
+          // bring overlay forward
+          this.children.push(this.children.splice(this.children.indexOf(pauseOverlayDim), 1)[0]);
+          this.children.push(this.children.splice(this.children.indexOf(overlayText), 1)[0]);
+        case "dark":
+          overlayText.text = "[ PAUSED ]";
+          pauseOverlayDim.visible = false;
+          pauseOverlayDark.visible = true;
+          // bring overlay forward
+          this.children.push(this.children.splice(this.children.indexOf(pauseOverlayDark), 1)[0]);
+          this.children.push(this.children.splice(this.children.indexOf(overlayText), 1)[0]);
+        case "win":
+          overlayText.text = "[RUN SUCCESSFUL]\n[YOU STOLE THE DATA]";
+          pauseOverlayDim.visible = true;
+          pauseOverlayDark.visible = false;
+          // bring overlay forward
+          this.children.push(this.children.splice(this.children.indexOf(pauseOverlayDim), 1)[0]);
+          this.children.push(this.children.splice(this.children.indexOf(overlayText), 1)[0]);
+        case "":
+          overlayText.text = "";
+          pauseOverlayDim.visible = false;
+          pauseOverlayDark.visible = false;
+        default:
+          trace('WARN: unhandled pauseOverlay: $curPauseOverlay');
+      }
     }
   }
 
