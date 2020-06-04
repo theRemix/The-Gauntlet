@@ -23,7 +23,7 @@ class Program extends Graphics{
     return int.isOver() && (this.x != origin.x || this.y != origin.y);
   }
 
-  public var colliders:List<Bounds>;
+  public var colliders:List<Firewall>;
 
   public function new(scene:Scene, name:String, color:Int, x:Int, y:Int) {
     super(scene);
@@ -32,7 +32,7 @@ class Program extends Graphics{
     this.y = y;
     this.origin = {x:x,y:y};
     this.offset = {x:x,y:y};
-    this.colliders = new List<Bounds>();
+    this.colliders = new List<Firewall>();
 
     beginFill(color);
     drawRect(0, 0, WIDTH, HEIGHT);
@@ -67,8 +67,8 @@ class Program extends Graphics{
     var b = getBounds();
     for (i in 0...steps){
       var a = Bounds.fromValues(x + dx * step * i, y + dy * step * i, WIDTH, HEIGHT);
-      for(c in colliders)
-        if(c.intersects(a)) return false;
+      for(c in colliders.filter(function(a) return !a.persist && a.visible))
+        if(c.getBounds().intersects(a)) return false;
 
     }
 

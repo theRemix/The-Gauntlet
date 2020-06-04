@@ -47,7 +47,7 @@ class RealNet extends SimBase{
     // designSubSystems();
 
     for(p in programs){
-      p.colliders = firewalls.map(function(f) return f.getBounds());
+      p.colliders = firewalls;
     }
 
     createNetConns();
@@ -98,39 +98,39 @@ class RealNet extends SimBase{
     programs.add(new Program(this, "Bossy",         Colors.PROG_2, group[7].x, group[7].y+40));
     programs.add(new Program(this, "XMultivac",     Colors.PROG_1, group[7].x, group[7].y+80));
 
-    // first layer                   x    y    width
-    firewalls.add(new Firewall(this,   0, 830, 400, 3));
-    firewalls.add(new Firewall(this, 600, 830, 400, 3));
+    // first layer                   persist x    y    width
+    firewalls.add(new Firewall(this,  true,    0, 830, 400, 3));
+    firewalls.add(new Firewall(this,  true,  600, 830, 400, 3));
 
     // 2nd layer
-    firewalls.add(new Firewall(this, 120, 760, 760, 3));
+    firewalls.add(new Firewall(this, false,  120, 760, 760, 3));
 
     // 3rd layer left path
-    firewalls.add(new Firewall(this,   0, 690, 400, 3));
+    firewalls.add(new Firewall(this, false,    0, 690, 400, 3));
 
     // 4th layer left path
-    firewalls.add(new Firewall(this, 120, 620, 400, 3));
+    firewalls.add(new Firewall(this, false,  120, 620, 400, 3));
 
     // 5th layer left path
-    firewalls.add(new Firewall(this,   0, 550, 400, 3));
+    firewalls.add(new Firewall(this, false,    0, 550, 400, 3));
 
     // mid vertical
-    firewalls.add(new Firewall(this, 520, 550, 3, 170));
+    firewalls.add(new Firewall(this, false,  520, 550, 3, 170));
 
     // 3rd layer right path
-    firewalls.add(new Firewall(this, 780, 690, 100, 3));
-    firewalls.add(new Firewall(this, 880, 690, 3, 73));
+    firewalls.add(new Firewall(this, false,  780, 690, 100, 3));
+    firewalls.add(new Firewall(this, false,  880, 690, 3, 73));
 
     // 4th layer right path
-    firewalls.add(new Firewall(this, 660, 620, 360, 3));
-    firewalls.add(new Firewall(this, 660, 620, 3, 73));
+    firewalls.add(new Firewall(this, false,  660, 620, 360, 3));
+    firewalls.add(new Firewall(this, false,  660, 620, 3, 73));
 
     // 5th layer right path
-    firewalls.add(new Firewall(this, 520, 550, 320, 3));
+    firewalls.add(new Firewall(this, false,  520, 550, 320, 3));
 
     // side borders
-    firewalls.add(new Firewall(this, -3, 550, 3, 280));
-    firewalls.add(new Firewall(this, 1000, 550, 3, 280));
+    firewalls.add(new Firewall(this,  true,  -3, 550, 3, 280));
+    firewalls.add(new Firewall(this,  true,  1000, 550, 3, 280));
 
   }
 
@@ -221,21 +221,21 @@ class RealNet extends SimBase{
     programs.add(new Program(this, "Frost",         Colors.PROG_4, group[15].x, group[15].y+40));
     programs.add(new Program(this, "Vulcan 3",      Colors.PROG_4, group[15].x, group[15].y+80));
 
-    // first layer                   x    y    width
-    firewalls.add(new Firewall(this,   0, 680, 400, 3));
-    firewalls.add(new Firewall(this, 600, 680, 400, 3));
+    // first layer                    persist x    y    width
+    firewalls.add(new Firewall(this,   true,    0, 680, 400, 3));
+    firewalls.add(new Firewall(this,   true,  600, 680, 400, 3));
 
     // 2nd layer
-    firewalls.add(new Firewall(this, 120, 610, 720, 3));
+    firewalls.add(new Firewall(this,  false,  120, 610, 720, 3));
 
     // 3rd layer left path
-    firewalls.add(new Firewall(this,   0, 550, 200, 3));
-    firewalls.add(new Firewall(this, 400, 550, 200, 3));
-    firewalls.add(new Firewall(this, 800, 550, 200, 3));
+    firewalls.add(new Firewall(this,  false,    0, 550, 200, 3));
+    firewalls.add(new Firewall(this,  false,  400, 550, 200, 3));
+    firewalls.add(new Firewall(this,  false,  800, 550, 200, 3));
 
     // side borders
-    firewalls.add(new Firewall(this, -3, 550, 3, 280));
-    firewalls.add(new Firewall(this, 1000, 550, 3, 280));
+    firewalls.add(new Firewall(this,   true,  -3, 550, 3, 130));
+    firewalls.add(new Firewall(this,   true,  1000, 550, 3, 130));
   }
 
 

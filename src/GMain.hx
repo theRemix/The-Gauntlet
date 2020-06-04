@@ -20,6 +20,8 @@ class GState extends Schema {
   public static inline var SET_TIMER = "setTimer";
   public static inline var PAUSE = "pause";
   public static inline var UNPAUSE = "unpause";
+  public static inline var FIREWALLS_UP = "disableFirewalls";
+  public static inline var FIREWALLS_DOWN = "enableFirewalls";
 
 	@:type("number")
 	public var dummy:Int = 0;
@@ -54,6 +56,9 @@ class GMain {
   var scene_sim_base_controls:DOMElement;
   var timer_form:FormElement;
   var timer_seconds_input:InputElement;
+
+  var fw_up:InputElement;
+  var fw_down:InputElement;
 
   var server_name:String;
 
@@ -115,6 +120,8 @@ class GMain {
     scene_sim_base_controls = document.getElementById("scene_sim_base_controls");
     timer_form = cast(document.getElementById("timer_form"), FormElement);
     timer_seconds_input = cast(document.getElementById("timer_seconds_input"), InputElement);
+    fw_up = cast(document.getElementById("fw_up"), InputElement);
+    fw_down = cast(document.getElementById("fw_down"), InputElement);
 
     server_address.hidden =
     servers_container.hidden =
@@ -239,6 +246,12 @@ class GMain {
     }
     sim_pause_dark.onclick = function(_){
       room.send(GState.PAUSE, "dark");
+    }
+    fw_up.onclick = function(_){
+      room.send(GState.FIREWALLS_DOWN); // idk wtf
+    }
+    fw_down.onclick = function(_){
+      room.send(GState.FIREWALLS_UP);
     }
     cur_scene.onchange = function(e){
       room.send(GState.SET_SCENE, e.target.value);

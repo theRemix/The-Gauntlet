@@ -405,6 +405,8 @@ GMain.prototype = {
 		this.scene_sim_base_controls = window.document.getElementById("scene_sim_base_controls");
 		this.timer_form = js_Boot.__cast(window.document.getElementById("timer_form") , HTMLFormElement);
 		this.timer_seconds_input = js_Boot.__cast(window.document.getElementById("timer_seconds_input") , HTMLInputElement);
+		this.fw_up = js_Boot.__cast(window.document.getElementById("fw_up") , HTMLInputElement);
+		this.fw_down = js_Boot.__cast(window.document.getElementById("fw_down") , HTMLInputElement);
 		this.server_address.hidden = this.servers_container.hidden = this.players_container.hidden = this.controls_container.hidden = this.scene_tut1_controls.hidden = this.scene_tut2_controls.hidden = this.scene_tut3_controls.hidden = this.scene_sim_base_controls.hidden = true;
 		this.status.innerText = "📡 Connecting to Room Controller";
 	}
@@ -412,7 +414,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:138:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:145:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.servers_container.hidden = false;
@@ -447,7 +449,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:187:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:194:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.players_container.hidden = false;
@@ -521,6 +523,12 @@ GMain.prototype = {
 		};
 		this.sim_pause_dark.onclick = function(_2) {
 			room.send("pause","dark");
+		};
+		this.fw_up.onclick = function(_3) {
+			room.send("enableFirewalls");
+		};
+		this.fw_down.onclick = function(_4) {
+			room.send("disableFirewalls");
 		};
 		this.cur_scene.onchange = function(e) {
 			room.send("setScene",e.target.value);
@@ -652,7 +660,7 @@ GMain.prototype = {
 			_gthis.status.innerText = "👷 Setting Timer to: " + seconds;
 			room.send("setTimer",seconds);
 		};
-		window.onbeforeunload = function(_3) {
+		window.onbeforeunload = function(_5) {
 			room.leave();
 			return null;
 		};
@@ -821,6 +829,8 @@ var State = function() {
 	this._childSchemaTypes.h[6] = SubSystem;
 	this._indexes.h[7] = "timer";
 	this._types.h[7] = "number";
+	this._indexes.h[8] = "firewalls";
+	this._types.h[8] = "boolean";
 };
 State.__name__ = "State";
 State.__super__ = io_colyseus_serializer_schema_Schema;
@@ -3830,6 +3840,8 @@ GState.SET_TUT_STEP = "setTutStep";
 GState.SET_TIMER = "setTimer";
 GState.PAUSE = "pause";
 GState.UNPAUSE = "unpause";
+GState.FIREWALLS_UP = "disableFirewalls";
+GState.FIREWALLS_DOWN = "enableFirewalls";
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
 State.SET_ALIAS_STATS = "setAliasAndStats";
 State.HACK_ATTEMPT = "hackAttempt";

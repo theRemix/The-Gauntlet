@@ -34,4 +34,7 @@ class State extends Schema {
 	@:type("number")
 	public var timer: Int; // seconds
 
+	@:type("boolean")
+	public var firewalls: Bool;
+
 }

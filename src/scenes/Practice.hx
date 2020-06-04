@@ -38,12 +38,12 @@ class Practice extends SimBase{
     }
 
     firewalls = new List<Firewall>();
-    firewalls.add(new Firewall(this,   0, 350, 220, 3));
-    firewalls.add(new Firewall(this, 400, 350, 220, 3));
-    firewalls.add(new Firewall(this, 800, 350, 220, 3));
+    firewalls.add(new Firewall(this, false,   0, 350, 220, 3));
+    firewalls.add(new Firewall(this, false, 400, 350, 220, 3));
+    firewalls.add(new Firewall(this, false, 800, 350, 220, 3));
 
     for(p in programs){
-      p.colliders = firewalls.map(function(f) return f.getBounds());
+      p.colliders = firewalls;
     }
 
   }

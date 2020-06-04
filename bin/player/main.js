@@ -928,6 +928,8 @@ var State = function() {
 	this._childSchemaTypes.h[6] = SubSystem;
 	this._indexes.h[7] = "timer";
 	this._types.h[7] = "number";
+	this._indexes.h[8] = "firewalls";
+	this._types.h[8] = "boolean";
 };
 $hxClasses["State"] = State;
 State.__name__ = "State";
@@ -4417,12 +4419,13 @@ entities_Box.prototype = $extend(h2d_Graphics.prototype,{
 	}
 	,__class__: entities_Box
 });
-var entities_Firewall = function(scene,x,y,w,h) {
+var entities_Firewall = function(scene,persist,x,y,w,h) {
 	h2d_Graphics.call(this,scene);
 	this.posChanged = true;
 	this.x = x;
 	this.posChanged = true;
 	this.y = y;
+	this.persist = persist;
 	this.colLine = new h2d_col_Line(new h2d_col_Point(x,y),new h2d_col_Point(x + w,y + h));
 	this.beginFill(16672293);
 	this.drawRect(0,0,w,h);
@@ -4504,12 +4507,19 @@ entities_Program.prototype = $extend(h2d_Graphics.prototype,{
 			a_yMin = y0;
 			a_xMax = x0 + 80;
 			a_yMax = y0 + 30;
-			var _g_head = this.colliders.h;
+			var _g_head = this.colliders.filter(function(a) {
+				if(!a.persist) {
+					return a.visible;
+				} else {
+					return false;
+				}
+			}).h;
 			while(_g_head != null) {
 				var val = _g_head.item;
 				_g_head = _g_head.next;
 				var c = val;
-				if(!(c.xMin > a_xMax || c.yMin > a_yMax || c.xMax < a_xMin || c.yMax < a_yMin)) {
+				var _this = c.getBounds();
+				if(!(_this.xMin > a_xMax || _this.yMin > a_yMax || _this.xMax < a_xMin || _this.yMax < a_yMin)) {
 					return false;
 				}
 			}
@@ -41073,16 +41083,6 @@ haxe_ds_List.prototype = {
 		}
 		return l2;
 	}
-	,map: function(f) {
-		var b = new haxe_ds_List();
-		var l = this.h;
-		while(l != null) {
-			var v = l.item;
-			l = l.next;
-			b.add(f(v));
-		}
-		return b;
-	}
 	,__class__: haxe_ds_List
 };
 var haxe_ds__$List_ListNode = function(item,next) {
@@ -67418,6 +67418,7 @@ var scenes_SimBase = function() {
 	this.firewalls = new haxe_ds_List();
 	this.subsystems = [];
 	this.cnx = new haxe_ds_List();
+	this.fw_up = true;
 	var b = new h2d_col_Bounds();
 	b.xMin = 0;
 	b.yMin = 0;
@@ -67547,7 +67548,29 @@ scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
 				this.children.push(this.children.splice(this.children.indexOf(this.overlayText),1)[0]);
 				break;
 			default:
-				haxe_Log.trace("WARN: unhandled pauseOverlay: " + this.curPauseOverlay,{ fileName : "src/scenes/SimBase.hx", lineNumber : 139, className : "scenes.SimBase", methodName : "update"});
+				haxe_Log.trace("WARN: unhandled pauseOverlay: " + this.curPauseOverlay,{ fileName : "src/scenes/SimBase.hx", lineNumber : 142, className : "scenes.SimBase", methodName : "update"});
+			}
+		}
+		if(this.fw_up != Main.instance.room.get_state().firewalls) {
+			this.fw_up = Main.instance.room.get_state().firewalls;
+			if(this.fw_up) {
+				var _g_head = this.firewalls.h;
+				while(_g_head != null) {
+					var val = _g_head.item;
+					_g_head = _g_head.next;
+					var f = val;
+					f.set_visible(true);
+				}
+			} else {
+				var _g_head1 = this.firewalls.filter(function(a) {
+					return !a.persist;
+				}).h;
+				while(_g_head1 != null) {
+					var val1 = _g_head1.item;
+					_g_head1 = _g_head1.next;
+					var f1 = val1;
+					f1.set_visible(false);
+				}
 			}
 		}
 	}
@@ -67660,17 +67683,15 @@ var scenes_Practice = function() {
 		this.subsystems.push(new entities_Box(this,s1.name,s1.x,s1.y));
 	}
 	this.firewalls = new haxe_ds_List();
-	this.firewalls.add(new entities_Firewall(this,0,350,220,3));
-	this.firewalls.add(new entities_Firewall(this,400,350,220,3));
-	this.firewalls.add(new entities_Firewall(this,800,350,220,3));
+	this.firewalls.add(new entities_Firewall(this,false,0,350,220,3));
+	this.firewalls.add(new entities_Firewall(this,false,400,350,220,3));
+	this.firewalls.add(new entities_Firewall(this,false,800,350,220,3));
 	var _g_head = this.programs.h;
 	while(_g_head != null) {
 		var val = _g_head.item;
 		_g_head = _g_head.next;
 		var p = val;
-		p.colliders = this.firewalls.map(function(f) {
-			return f.getBounds();
-		});
+		p.colliders = this.firewalls;
 	}
 };
 $hxClasses["scenes.Practice"] = scenes_Practice;
@@ -67721,11 +67742,8 @@ var scenes_RealNet = function() {
 		var val = _g1_head.item;
 		_g1_head = _g1_head.next;
 		var p = val;
-		p.colliders = this.firewalls.map(function(f) {
-			return f.getBounds();
-		});
+		p.colliders = this.firewalls;
 	}
-	this.createNetConns();
 };
 $hxClasses["scenes.RealNet"] = scenes_RealNet;
 scenes_RealNet.__name__ = "scenes.RealNet";
@@ -67772,20 +67790,20 @@ scenes_RealNet.prototype = $extend(scenes_SimBase.prototype,{
 		this.programs.add(new entities_Program(this,"XGold",1470576,group_7_x,group_7_y));
 		this.programs.add(new entities_Program(this,"Bossy",1138041,group_7_x,group_7_y + 40));
 		this.programs.add(new entities_Program(this,"XMultivac",4278863,group_7_x,group_7_y + 80));
-		this.firewalls.add(new entities_Firewall(this,0,830,400,3));
-		this.firewalls.add(new entities_Firewall(this,600,830,400,3));
-		this.firewalls.add(new entities_Firewall(this,120,760,760,3));
-		this.firewalls.add(new entities_Firewall(this,0,690,400,3));
-		this.firewalls.add(new entities_Firewall(this,120,620,400,3));
-		this.firewalls.add(new entities_Firewall(this,0,550,400,3));
-		this.firewalls.add(new entities_Firewall(this,520,550,3,170));
-		this.firewalls.add(new entities_Firewall(this,780,690,100,3));
-		this.firewalls.add(new entities_Firewall(this,880,690,3,73));
-		this.firewalls.add(new entities_Firewall(this,660,620,360,3));
-		this.firewalls.add(new entities_Firewall(this,660,620,3,73));
-		this.firewalls.add(new entities_Firewall(this,520,550,320,3));
-		this.firewalls.add(new entities_Firewall(this,-3,550,3,280));
-		this.firewalls.add(new entities_Firewall(this,1000,550,3,280));
+		this.firewalls.add(new entities_Firewall(this,true,0,830,400,3));
+		this.firewalls.add(new entities_Firewall(this,true,600,830,400,3));
+		this.firewalls.add(new entities_Firewall(this,false,120,760,760,3));
+		this.firewalls.add(new entities_Firewall(this,false,0,690,400,3));
+		this.firewalls.add(new entities_Firewall(this,false,120,620,400,3));
+		this.firewalls.add(new entities_Firewall(this,false,0,550,400,3));
+		this.firewalls.add(new entities_Firewall(this,false,520,550,3,170));
+		this.firewalls.add(new entities_Firewall(this,false,780,690,100,3));
+		this.firewalls.add(new entities_Firewall(this,false,880,690,3,73));
+		this.firewalls.add(new entities_Firewall(this,false,660,620,360,3));
+		this.firewalls.add(new entities_Firewall(this,false,660,620,3,73));
+		this.firewalls.add(new entities_Firewall(this,false,520,550,320,3));
+		this.firewalls.add(new entities_Firewall(this,true,-3,550,3,280));
+		this.firewalls.add(new entities_Firewall(this,true,1000,550,3,280));
 	}
 	,loadHackerProgs: function() {
 		var group_0_x = 110;
@@ -67868,14 +67886,14 @@ scenes_RealNet.prototype = $extend(scenes_SimBase.prototype,{
 		this.programs.add(new entities_Program(this,"Colossus",16487220,group_15_x,group_15_y));
 		this.programs.add(new entities_Program(this,"Frost",16487220,group_15_x,group_15_y + 40));
 		this.programs.add(new entities_Program(this,"Vulcan 3",16487220,group_15_x,group_15_y + 80));
-		this.firewalls.add(new entities_Firewall(this,0,680,400,3));
-		this.firewalls.add(new entities_Firewall(this,600,680,400,3));
-		this.firewalls.add(new entities_Firewall(this,120,610,720,3));
-		this.firewalls.add(new entities_Firewall(this,0,550,200,3));
-		this.firewalls.add(new entities_Firewall(this,400,550,200,3));
-		this.firewalls.add(new entities_Firewall(this,800,550,200,3));
-		this.firewalls.add(new entities_Firewall(this,-3,550,3,280));
-		this.firewalls.add(new entities_Firewall(this,1000,550,3,280));
+		this.firewalls.add(new entities_Firewall(this,true,0,680,400,3));
+		this.firewalls.add(new entities_Firewall(this,true,600,680,400,3));
+		this.firewalls.add(new entities_Firewall(this,false,120,610,720,3));
+		this.firewalls.add(new entities_Firewall(this,false,0,550,200,3));
+		this.firewalls.add(new entities_Firewall(this,false,400,550,200,3));
+		this.firewalls.add(new entities_Firewall(this,false,800,550,200,3));
+		this.firewalls.add(new entities_Firewall(this,true,-3,550,3,130));
+		this.firewalls.add(new entities_Firewall(this,true,1000,550,3,130));
 	}
 	,createNetConns: function() {
 		this.createNetCnx(this.subsystems[0],this.subsystems[3]);

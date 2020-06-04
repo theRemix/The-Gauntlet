@@ -12,11 +12,13 @@ import h2d.col.Point;
 class Firewall extends Graphics{
 
   public var colLine:Line;
+  public var persist:Bool; // even when fw is disabled, these remain
 
-  public function new(scene:Scene, x:Int, y:Int, w:Int, h:Int) {
+  public function new(scene:Scene, persist:Bool, x:Int, y:Int, w:Int, h:Int) {
     super(scene);
     this.x = x;
     this.y = y;
+    this.persist = persist;
 
     colLine = new Line(new Point(x, y), new Point(x+w,y+h));
 

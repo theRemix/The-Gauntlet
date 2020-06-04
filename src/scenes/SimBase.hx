@@ -59,6 +59,8 @@ class SimBase extends h2d.Scene{
 
   private var overlayText:Text;
 
+  private var fw_up:Bool;
+
   public function new(){
     super();
 
@@ -66,6 +68,7 @@ class SimBase extends h2d.Scene{
     this.firewalls = new List<Firewall>();
     this.subsystems = new Array<Box>();
     this.cnx = new List<SystemCnxLine>();
+    this.fw_up = true;
 
     _stageBounds = Bounds.fromValues(0,0,1000,1000);
 
@@ -137,6 +140,18 @@ class SimBase extends h2d.Scene{
           pauseOverlayDark.visible = false;
         default:
           trace('WARN: unhandled pauseOverlay: $curPauseOverlay');
+      }
+    }
+    if(fw_up != Main.instance.room.state.firewalls){
+      fw_up = Main.instance.room.state.firewalls;
+      if(fw_up){
+        for(f in firewalls){
+          f.visible = true;
+        }
+      } else {
+        for(f in firewalls.filter(function(a) return !a.persist)){
+          f.visible = false;
+        }
       }
     }
   }

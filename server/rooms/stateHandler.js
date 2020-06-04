@@ -48,6 +48,7 @@ class State extends Schema {
     this.realNet = createRealNet();
     this.timer = 600;
     this.pauseOverlay = "";
+    this.firewalls = true;
   }
 
   something = "This attribute won't be sent to the client-side";
@@ -108,6 +109,14 @@ class State extends Schema {
     this.startTimer();
   }
 
+  enableFirewalls() {
+    this.firewalls = true;
+  }
+
+  disableFirewalls() {
+    this.firewalls = false;
+  }
+
   setScene(sceneName) {
     this.scene = sceneName;
     // reset
@@ -148,7 +157,9 @@ class State extends Schema {
       s.ownedBy = playerAlias;
       if(subsystem == "ENCRYPTED\nDATA STORE"){
         // VICTORY
-        this.pause("win");
+        this.pause("win")
+      } else if (subsystem.startsWith("FIREWALL")){
+        this.disableFirewalls()
       }
     } else {
       if(!s.runners.includes(playerAlias))
@@ -168,6 +179,7 @@ schema.defineTypes(State, {
 	practiceNet: [SubSystem],
 	realNet: [SubSystem],
 	timer: "number",
+	firewalls: "boolean",
 });
 
 module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
@@ -229,6 +241,20 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
         return console.warn('WARN: non GM attempted to run unpause');
 
       this.state.unpause()
+    });
+
+    this.onMessage("disableFirewalls", (client) => {
+      if(client.sessionId != this.state.gm.key)
+        return console.warn('WARN: non GM attempted to run disableFirewalls');
+
+      this.state.disableFirewalls()
+    });
+
+    this.onMessage("enableFirewalls", (client) => {
+      if(client.sessionId != this.state.gm.key)
+        return console.warn('WARN: non GM attempted to run enableFirewalls');
+
+      this.state.enableFirewalls()
     });
 
   }
