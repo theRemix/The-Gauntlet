@@ -140,37 +140,37 @@ class RealNet extends SimBase{
       { x: 810, y: 860 },
     ];
 
-    programs.add(new Program(this, "Shroomz",       Colors.PROG_4, group[0].x, group[0].y));
-    programs.add(new Program(this, "AOHell",        Colors.PROG_4, group[0].x, group[0].y+40));
-    programs.add(new Program(this, "GodPunter",     Colors.PROG_4, group[0].x, group[0].y+80));
+    programs.add(new Program(this, "Shroomz",       Colors.PROG_3, group[0].x, group[0].y));
+    programs.add(new Program(this, "AOHell",        Colors.PROG_2, group[0].x, group[0].y+40));
+    programs.add(new Program(this, "GodPunter",     Colors.PROG_1, group[0].x, group[0].y+80));
 
     programs.add(new Program(this, "Subzero",       Colors.PROG_3, group[1].x, group[1].y));
-    programs.add(new Program(this, "Firetoolz",     Colors.PROG_3, group[1].x, group[1].y+40));
-    programs.add(new Program(this, "Daemon",        Colors.PROG_3, group[1].x, group[1].y+80));
+    programs.add(new Program(this, "Firetoolz",     Colors.PROG_2, group[1].x, group[1].y+40));
+    programs.add(new Program(this, "Daemon",        Colors.PROG_1, group[1].x, group[1].y+80));
 
-    programs.add(new Program(this, "Lambda",        Colors.PROG_2, group[2].x, group[2].y));
+    programs.add(new Program(this, "Lambda",        Colors.PROG_3, group[2].x, group[2].y));
     programs.add(new Program(this, "Shodan",        Colors.PROG_2, group[2].x, group[2].y+40));
-    programs.add(new Program(this, "Tron",          Colors.PROG_2, group[2].x, group[2].y+80));
+    programs.add(new Program(this, "Tron",          Colors.PROG_1, group[2].x, group[2].y+80));
 
-    programs.add(new Program(this, "Supr AI",       Colors.PROG_1, group[3].x, group[3].y));
-    programs.add(new Program(this, "Mega ML",       Colors.PROG_1, group[3].x, group[3].y+40));
+    programs.add(new Program(this, "Supr AI",       Colors.PROG_3, group[3].x, group[3].y));
+    programs.add(new Program(this, "Mega ML",       Colors.PROG_2, group[3].x, group[3].y+40));
     programs.add(new Program(this, "The Engine",    Colors.PROG_1, group[3].x, group[3].y+80));
 
-    programs.add(new Program(this, "Misfit",        Colors.PROG_1, group[4].x, group[4].y));
-    programs.add(new Program(this, "The Brain",     Colors.PROG_1, group[4].x, group[4].y+40));
+    programs.add(new Program(this, "Misfit",        Colors.PROG_3, group[4].x, group[4].y));
+    programs.add(new Program(this, "The Brain",     Colors.PROG_2, group[4].x, group[4].y+40));
     programs.add(new Program(this, "Logic",         Colors.PROG_1, group[4].x, group[4].y+80));
 
-    programs.add(new Program(this, "MARAK",         Colors.PROG_2, group[5].x, group[5].y));
+    programs.add(new Program(this, "MARAK",         Colors.PROG_3, group[5].x, group[5].y));
     programs.add(new Program(this, "Kosmokrator",   Colors.PROG_2, group[5].x, group[5].y+40));
-    programs.add(new Program(this, "EPICAC",        Colors.PROG_2, group[5].x, group[5].y+80));
+    programs.add(new Program(this, "EPICAC",        Colors.PROG_1, group[5].x, group[5].y+80));
 
     programs.add(new Program(this, "XMARK V",       Colors.PROG_3, group[6].x, group[6].y));
-    programs.add(new Program(this, "Prime Radiant", Colors.PROG_3, group[6].x, group[6].y+40));
-    programs.add(new Program(this, "Mima",          Colors.PROG_3, group[6].x, group[6].y+80));
+    programs.add(new Program(this, "Prime Radiant", Colors.PROG_2, group[6].x, group[6].y+40));
+    programs.add(new Program(this, "Mima",          Colors.PROG_1, group[6].x, group[6].y+80));
 
-    programs.add(new Program(this, "XGold",         Colors.PROG_4, group[7].x, group[7].y));
-    programs.add(new Program(this, "Bossy",         Colors.PROG_4, group[7].x, group[7].y+40));
-    programs.add(new Program(this, "XMultivac",     Colors.PROG_4, group[7].x, group[7].y+80));
+    programs.add(new Program(this, "XGold",         Colors.PROG_3, group[7].x, group[7].y));
+    programs.add(new Program(this, "Bossy",         Colors.PROG_2, group[7].x, group[7].y+40));
+    programs.add(new Program(this, "XMultivac",     Colors.PROG_1, group[7].x, group[7].y+80));
 
 
     programs.add(new Program(this, "LEVIN",         Colors.PROG_4, group[8].x, group[8].y));
@@ -179,27 +179,27 @@ class RealNet extends SimBase{
 
     programs.add(new Program(this, "Ghostwheel",    Colors.PROG_3, group[9].x, group[9].y));
     programs.add(new Program(this, "Mandarax",      Colors.PROG_3, group[9].x, group[9].y+40));
-    programs.add(new Program(this, "Teletran",      Colors.PROG_3, group[9].x, group[9].y+80));
+    programs.add(new Program(this, "Teletran",      Colors.PROG_4, group[9].x, group[9].y+80));
 
     programs.add(new Program(this, "Valentina",     Colors.PROG_2, group[10].x, group[10].y));
     programs.add(new Program(this, "Loki 7281",     Colors.PROG_2, group[10].x, group[10].y+40));
-    programs.add(new Program(this, "Cyclops",       Colors.PROG_2, group[10].x, group[10].y+80));
+    programs.add(new Program(this, "Cyclops",       Colors.PROG_4, group[10].x, group[10].y+80));
 
     programs.add(new Program(this, "VALIS",         Colors.PROG_1, group[11].x, group[11].y));
     programs.add(new Program(this, "Spartacus",     Colors.PROG_1, group[11].x, group[11].y+40));
-    programs.add(new Program(this, "JEVEX",         Colors.PROG_1, group[11].x, group[11].y+80));
+    programs.add(new Program(this, "JEVEX",         Colors.PROG_4, group[11].x, group[11].y+80));
 
     programs.add(new Program(this, "UNITRACK",      Colors.PROG_1, group[12].x, group[12].y));
     programs.add(new Program(this, "Proteus",       Colors.PROG_1, group[12].x, group[12].y+40));
-    programs.add(new Program(this, "Extro",         Colors.PROG_1, group[12].x, group[12].y+80));
+    programs.add(new Program(this, "Extro",         Colors.PROG_4, group[12].x, group[12].y+80));
 
     programs.add(new Program(this, "Minerva",       Colors.PROG_2, group[13].x, group[13].y));
     programs.add(new Program(this, "Pallas Athena", Colors.PROG_2, group[13].x, group[13].y+40));
-    programs.add(new Program(this, "Project 79",    Colors.PROG_2, group[13].x, group[13].y+80));
+    programs.add(new Program(this, "Project 79",    Colors.PROG_4, group[13].x, group[13].y+80));
 
     programs.add(new Program(this, "The Berserker", Colors.PROG_3, group[14].x, group[14].y));
     programs.add(new Program(this, "Little Brother",Colors.PROG_3, group[14].x, group[14].y+40));
-    programs.add(new Program(this, "Merlin",        Colors.PROG_3, group[14].x, group[14].y+80));
+    programs.add(new Program(this, "Merlin",        Colors.PROG_4, group[14].x, group[14].y+80));
 
     programs.add(new Program(this, "Colossus",      Colors.PROG_4, group[15].x, group[15].y));
     programs.add(new Program(this, "Frost",         Colors.PROG_4, group[15].x, group[15].y+40));
