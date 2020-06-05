@@ -74,7 +74,8 @@ class GMain {
   function new() {
     document.addEventListener("DOMContentLoaded", init);
 
-    client = new Client('ws://${window.location.host}');
+    var proto = window.location.protocol == "https:" ? "wss://" : "ws://";
+    client = new Client('${proto}${window.location.host}');
     client.joinOrCreate("room_controller", [], GState, onRoomJoinOrCreate);
   }
 
@@ -240,7 +241,6 @@ class GMain {
           case "timer":
             current_timer.innerText = change.value;
           case "practiceNet" | "realNet":
-            trace(changes);
             if(!serverTablePopulated){ // create
               for(s in room.state.practiceNet){
                 createServerTableRow(room, servers_table_practice, s);

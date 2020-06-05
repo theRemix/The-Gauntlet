@@ -22,7 +22,8 @@ class Main extends hxd.App {
   public function new() {
     super();
 
-    this.client = new Client('ws://${window.location.host}');
+    var proto = window.location.protocol == "https:" ? "wss://" : "ws://";
+    this.client = new Client('${proto}${window.location.host}');
   }
 
   public function goToScene(scene:Class<h2d.Scene>):h2d.Scene {

@@ -337,7 +337,8 @@ hxd_App.prototype = {
 };
 var Main = function() {
 	hxd_App.call(this);
-	this.client = new io_colyseus_Client("ws://" + window.location.host);
+	var proto = window.location.protocol == "https:" ? "wss://" : "ws://";
+	this.client = new io_colyseus_Client("" + proto + window.location.host);
 };
 $hxClasses["Main"] = Main;
 Main.__name__ = "Main";
@@ -388,7 +389,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 			this.setScene(this.scene,true);
 			break;
 		default:
-			haxe_Log.trace("WARN! No handler for scene = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 67, className : "Main", methodName : "goToScene"});
+			haxe_Log.trace("WARN! No handler for scene = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 68, className : "Main", methodName : "goToScene"});
 		}
 		return this.scene;
 	}
@@ -400,17 +401,17 @@ Main.prototype = $extend(hxd_App.prototype,{
 			tf.set_text(err.message);
 			tf.posChanged = true;
 			tf.y = 20;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 80, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 81, className : "Main", methodName : "onJoin"});
 			return;
 		}
 		this.room = room;
 		this.room.get_state().onChange = $bind(this,this.onStateChange);
 		var onError = function(code,message) {
-			haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Main.hx", lineNumber : 88, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Main.hx", lineNumber : 89, className : "Main", methodName : "onJoin"});
 		};
 		this.room.onError.push(onError);
 		var onLeave = function() {
-			haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Main.hx", lineNumber : 91, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Main.hx", lineNumber : 92, className : "Main", methodName : "onJoin"});
 			window.alert("Server Disconnected! Will reload the browser.");
 			window.document.location.reload();
 		};
@@ -449,7 +450,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 						this.goToScene(scenes_Tut3);
 						break;
 					default:
-						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 130, className : "Main", methodName : "onStateChange"});
+						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 131, className : "Main", methodName : "onStateChange"});
 					}
 				}
 			}

@@ -355,7 +355,8 @@ GState.prototype = $extend(io_colyseus_serializer_schema_Schema.prototype,{
 });
 var GMain = function() {
 	window.document.addEventListener("DOMContentLoaded",$bind(this,this.init));
-	this.client = new io_colyseus_Client("ws://" + window.location.host);
+	var proto = window.location.protocol == "https:" ? "wss://" : "ws://";
+	this.client = new io_colyseus_Client("" + proto + window.location.host);
 	this.client.joinOrCreate_GState("room_controller",new haxe_ds_StringMap(),GState,$bind(this,this.onRoomJoinOrCreate));
 };
 GMain.__name__ = "GMain";
@@ -452,7 +453,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:155:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:156:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.servers_container.hidden = false;
@@ -487,7 +488,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:204:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:205:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.players_container.hidden = false;
@@ -560,7 +561,6 @@ GMain.prototype = {
 				++_g3;
 				switch(change.field) {
 				case "practiceNet":case "realNet":
-					console.log("src/GMain.hx:243:",changes);
 					if(!serverTablePopulated) {
 						var s = room.get_state().practiceNet.iterator();
 						while(s.hasNext()) {
