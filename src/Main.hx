@@ -130,8 +130,8 @@ class Main extends hxd.App {
                 trace('WARN: unhandled change scene in Main.onStateChange[scene]: ${change.value}');
             }
           }
-        case "pauseOverlay":
-          trace("Main.onStateChange pauseOverlay");
+        // case "pauseOverlay":
+        //   trace("Main.onStateChange pauseOverlay");
         // case "tutStep":
         // case "players":
         // case "gm":

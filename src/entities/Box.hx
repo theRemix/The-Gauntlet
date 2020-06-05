@@ -9,6 +9,8 @@ import h2d.col.Bounds;
 
 import scenes.SimBase;
 
+using Lambda;
+
 class Box extends Graphics {
 
   public static inline var WIDTH = 100;
@@ -63,6 +65,16 @@ class Box extends Graphics {
     endFill();
   }
 
+  public function makeInaccessible(){
+    if(inboundCnx.exists(function(i) return i.owned)) return;
+
+    this.accessible = false;
+
+    beginFill(Colors.SYS_NO_ACCESS);
+    drawRect(0, 0, WIDTH, HEIGHT);
+    endFill();
+  }
+
   public function hackAttempt(program){
     if(!this.accessible) return;
 
@@ -88,6 +100,19 @@ class Box extends Graphics {
       }
 
       scene.onBoxOwned(this);
+
+    }else if(owned && !ss.owned){ // GM reset the box
+      owned = ss.owned;
+      label.text = name;
+
+      beginFill(Colors.SYS_ACCESS);
+      drawRect(0, 0, WIDTH, HEIGHT);
+      endFill();
+
+      // add cnx to make accessible
+      for(b in outboundCnx.filter(function(s) return !s.owned)){
+        b.makeInaccessible();
+      }
 
     }else if(ss.runners.length > 0){
       // label.text = name + "\nrunners:\n";

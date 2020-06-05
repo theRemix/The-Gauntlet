@@ -173,6 +173,20 @@ class State extends Schema {
 
   }
 
+  setServerOwn(subsystem, owned){
+    let s = this.realNet.find((a) => a.name === subsystem);
+    if(s == null){
+      s = this.practiceNet.find((a) => a.name === subsystem);
+    }
+    if(s == null){
+      console.warn('WARN: could not find subsystem in net:', subsystem)
+    }
+    s.owned = owned;
+    if(s.owned && s.ownedBy == ""){
+      s.ownedBy = "GM";
+    }
+  }
+
 
 }
 schema.defineTypes(State, {
@@ -272,6 +286,20 @@ module.exports.StateHandlerRoom = class StateHandlerRoom extends Room {
       for(let c of this.clients){
         if(c.sessionId == key) c.leave()
       }
+    });
+
+    this.onMessage("gmOwn", (client, serverName) => {
+      if(client.sessionId != this.state.gm.key)
+        return console.warn('WARN: non GM attempted to run gmOwn');
+
+      this.state.setServerOwn(serverName, true)
+    });
+
+    this.onMessage("gmReset", (client, serverName) => {
+      if(client.sessionId != this.state.gm.key)
+        return console.warn('WARN: non GM attempted to run gmReset');
+
+      this.state.setServerOwn(serverName, false)
     });
 
   }

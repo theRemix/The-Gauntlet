@@ -9,6 +9,9 @@ import io.colyseus.Client;
 import io.colyseus.Room;
 import io.colyseus.serializer.schema.Schema;
 
+using StringTools;
+using Lambda;
+
 class GState extends Schema {
   // messages server -> client
   public static inline var SERVER_CREATED = "SERVER_CREATED";
@@ -24,6 +27,8 @@ class GState extends Schema {
   public static inline var FIREWALLS_UP = "disableFirewalls";
   public static inline var FIREWALLS_DOWN = "enableFirewalls";
   public static inline var KICK = "kick";
+  public static inline var GM_OWN = "gmOwn";
+  public static inline var GM_RESET = "gmReset";
 
 	@:type("number")
 	public var dummy:Int = 0;
@@ -60,6 +65,9 @@ class GMain {
 
   var fw_up:InputElement;
   var fw_down:InputElement;
+
+  var servers_table_practice:DOMElement;
+  var servers_table_real:DOMElement;
 
   var server_name:String;
 
@@ -122,6 +130,8 @@ class GMain {
     timer_seconds_input = cast(document.getElementById("timer_seconds_input"), InputElement);
     fw_up = cast(document.getElementById("fw_up"), InputElement);
     fw_down = cast(document.getElementById("fw_down"), InputElement);
+    servers_table_practice = document.getElementById("servers_table_practice");
+    servers_table_real = document.getElementById("servers_table_real");
 
     server_address.hidden =
     servers_container.hidden =
@@ -201,9 +211,6 @@ class GMain {
 
     status.innerText = '✅ Connected to Game State room!';
 
-    // room.state.players.onAdd =
-
-    // FAST DEV START
     room.state.players.onChange = function updatePlayerList(player, key){
       var rows = players_table.getElementsByClassName("player_row");
       for(row in rows){
@@ -225,16 +232,41 @@ class GMain {
       }
 
     }
-    // FAST DEV END
 
+    var serverTablePopulated = false;
     room.state.onChange = function roomOnChange(changes){
       for(change in changes){
         switch(change.field){
           case "timer":
             current_timer.innerText = change.value;
+          case "practiceNet" | "realNet":
+            trace(changes);
+            if(!serverTablePopulated){ // create
+              for(s in room.state.practiceNet){
+                createServerTableRow(room, servers_table_practice, s);
+              }
+              for(s in room.state.realNet){
+                createServerTableRow(room, servers_table_real, s);
+              }
+              serverTablePopulated = true;
+            } else { // update
+              var net:ArraySchema<SubSystem> = change.value;
+              for(s in net.items){
+                var owned = document.getElementById('server_row_owned_${ s.name.replace(" ","_") }');
+                var ownedBy = document.getElementById('server_row_ownedBy_${ s.name.replace(" ","_") }');
+                if(owned != null){
+                  owned.innerText = Std.string(s.owned);
+                } else { trace('WARN! el is null: server_row_owned_${ s.name.replace(" ","_") }'); }
+                if(ownedBy != null){
+                  ownedBy.innerText = s.ownedBy;
+                } else { trace('WARN! el is null: server_row_ownedBy_${ s.name.replace(" ","_") }'); }
+              }
+
+            }
         }
       }
     }
+
 
 
     // CONTROLS
@@ -338,6 +370,7 @@ class GMain {
 
   }
 
+
   static function main() new GMain();
 
 
@@ -365,7 +398,42 @@ class GMain {
     dc.append(dcBtn);
 
     row.append(key, alias, stats, dc);
-    // row.appendChild(key);
+    table.appendChild(row);
+  }
+
+  static inline function createServerTableRow(room, table, server){
+    var row = document.createElement("tr");
+    var name = document.createElement("td");
+    var owned = document.createElement("td");
+    var ownedBy = document.createElement("td");
+    var close = document.createElement("td");
+    var open = document.createElement("td");
+
+    row.className = "server_row";
+    name.className = "server_key";
+    name.innerText = server.name;
+    owned.innerText = Std.string(server.owned);
+    owned.id = 'server_row_owned_${ server.name.replace(" ","_") }';
+    ownedBy.innerText = server.ownedBy;
+    ownedBy.id = 'server_row_ownedBy_${ server.name.replace(" ","_") }';
+
+    var ownBtn:ButtonElement = cast(document.createElement("button"), ButtonElement);
+    ownBtn.type = "button";
+    ownBtn.innerText = "Own";
+    ownBtn.onclick = function(_){
+      room.send(GState.GM_OWN, server.name);
+    };
+    open.append(ownBtn);
+
+    var rstBtn:ButtonElement = cast(document.createElement("button"), ButtonElement);
+    rstBtn.type = "button";
+    rstBtn.innerText = "Reset";
+    rstBtn.onclick = function(_){
+      room.send(GState.GM_RESET, server.name);
+    };
+    close.append(rstBtn);
+
+    row.append(name, owned, ownedBy, close, open);
     table.appendChild(row);
   }
 

@@ -427,11 +427,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 		while(_g < changes.length) {
 			var change = changes[_g];
 			++_g;
-			switch(change.field) {
-			case "pauseOverlay":
-				haxe_Log.trace("Main.onStateChange pauseOverlay",{ fileName : "src/Main.hx", lineNumber : 134, className : "Main", methodName : "onStateChange"});
-				break;
-			case "scene":
+			if(change.field == "scene") {
 				if(this.gmControlledScenes) {
 					switch(Std.string(change.value)) {
 					case "Lobby":
@@ -456,7 +452,6 @@ Main.prototype = $extend(hxd_App.prototype,{
 						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 130, className : "Main", methodName : "onStateChange"});
 					}
 				}
-				break;
 			}
 		}
 	}
@@ -4364,6 +4359,17 @@ entities_Box.prototype = $extend(h2d_Graphics.prototype,{
 		this.drawRect(0,0,100,80);
 		this.endFill();
 	}
+	,makeInaccessible: function() {
+		if(Lambda.exists(this.inboundCnx,function(i) {
+			return i.owned;
+		})) {
+			return;
+		}
+		this.accessible = false;
+		this.beginFill(1002625);
+		this.drawRect(0,0,100,80);
+		this.endFill();
+	}
 	,hackAttempt: function(program) {
 		if(!this.accessible) {
 			return;
@@ -4407,6 +4413,21 @@ entities_Box.prototype = $extend(h2d_Graphics.prototype,{
 				b.makeAccessible();
 			}
 			this.scene.onBoxOwned(this);
+		} else if(this.owned && !ss.owned) {
+			this.owned = ss.owned;
+			this.label.set_text(this.name);
+			this.beginFill(16753522);
+			this.drawRect(0,0,100,80);
+			this.endFill();
+			var _g_head1 = this.outboundCnx.filter(function(s1) {
+				return !s1.owned;
+			}).h;
+			while(_g_head1 != null) {
+				var val1 = _g_head1.item;
+				_g_head1 = _g_head1.next;
+				var b1 = val1;
+				b1.makeInaccessible();
+			}
 		} else if(ss.runners.get_length() > 0) {
 			this.label.set_text(this.name + "\n");
 			var r = ss.runners.iterator();

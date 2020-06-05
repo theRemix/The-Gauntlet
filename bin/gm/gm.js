@@ -385,6 +385,37 @@ GMain.createPlayerTableRow = function(room,table,player) {
 	row.append(key,alias,stats,dc);
 	table.appendChild(row);
 };
+GMain.createServerTableRow = function(room,table,server) {
+	var row = window.document.createElement("tr");
+	var name = window.document.createElement("td");
+	var owned = window.document.createElement("td");
+	var ownedBy = window.document.createElement("td");
+	var close = window.document.createElement("td");
+	var open = window.document.createElement("td");
+	row.className = "server_row";
+	name.className = "server_key";
+	name.innerText = server.name;
+	owned.innerText = server.owned == null ? "null" : "" + server.owned;
+	owned.id = "server_row_owned_" + StringTools.replace(server.name," ","_");
+	ownedBy.innerText = server.ownedBy;
+	ownedBy.id = "server_row_ownedBy_" + StringTools.replace(server.name," ","_");
+	var ownBtn = js_Boot.__cast(window.document.createElement("button") , HTMLButtonElement);
+	ownBtn.type = "button";
+	ownBtn.innerText = "Own";
+	ownBtn.onclick = function(_) {
+		room.send("gmOwn",server.name);
+	};
+	open.append(ownBtn);
+	var rstBtn = js_Boot.__cast(window.document.createElement("button") , HTMLButtonElement);
+	rstBtn.type = "button";
+	rstBtn.innerText = "Reset";
+	rstBtn.onclick = function(_1) {
+		room.send("gmReset",server.name);
+	};
+	close.append(rstBtn);
+	row.append(name,owned,ownedBy,close,open);
+	table.appendChild(row);
+};
 GMain.prototype = {
 	init: function(_) {
 		this.servers_container = window.document.getElementById("servers_container");
@@ -412,6 +443,8 @@ GMain.prototype = {
 		this.timer_seconds_input = js_Boot.__cast(window.document.getElementById("timer_seconds_input") , HTMLInputElement);
 		this.fw_up = js_Boot.__cast(window.document.getElementById("fw_up") , HTMLInputElement);
 		this.fw_down = js_Boot.__cast(window.document.getElementById("fw_down") , HTMLInputElement);
+		this.servers_table_practice = window.document.getElementById("servers_table_practice");
+		this.servers_table_real = window.document.getElementById("servers_table_real");
 		this.server_address.hidden = this.servers_container.hidden = this.players_container.hidden = this.controls_container.hidden = this.scene_tut1_controls.hidden = this.scene_tut2_controls.hidden = this.scene_tut3_controls.hidden = this.scene_sim_base_controls.hidden = true;
 		this.status.innerText = "📡 Connecting to Room Controller";
 	}
@@ -419,7 +452,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:145:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:155:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.servers_container.hidden = false;
@@ -454,7 +487,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:194:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:204:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.players_container.hidden = false;
@@ -519,30 +552,139 @@ GMain.prototype = {
 			}
 		};
 		room.get_state().players.onRemove = removePlayerList;
+		var serverTablePopulated = false;
 		var roomOnChange = function(changes) {
 			var _g3 = 0;
 			while(_g3 < changes.length) {
 				var change = changes[_g3];
 				++_g3;
-				if(change.field == "timer") {
+				switch(change.field) {
+				case "practiceNet":case "realNet":
+					console.log("src/GMain.hx:243:",changes);
+					if(!serverTablePopulated) {
+						var s = room.get_state().practiceNet.iterator();
+						while(s.hasNext()) {
+							var s1 = s.next();
+							var room3 = [room];
+							var table1 = _gthis.servers_table_practice;
+							var server = [s1];
+							var row3 = window.document.createElement("tr");
+							var name = window.document.createElement("td");
+							var owned = window.document.createElement("td");
+							var ownedBy = window.document.createElement("td");
+							var close = window.document.createElement("td");
+							var open = window.document.createElement("td");
+							row3.className = "server_row";
+							name.className = "server_key";
+							name.innerText = server[0].name;
+							owned.innerText = Std.string(server[0].owned);
+							owned.id = "server_row_owned_" + StringTools.replace(server[0].name," ","_");
+							ownedBy.innerText = server[0].ownedBy;
+							ownedBy.id = "server_row_ownedBy_" + StringTools.replace(server[0].name," ","_");
+							var ownBtn = js_Boot.__cast(window.document.createElement("button") , HTMLButtonElement);
+							ownBtn.type = "button";
+							ownBtn.innerText = "Own";
+							ownBtn.onclick = (function(server1,room4) {
+								return function(_1) {
+									room4[0].send("gmOwn",server1[0].name);
+								};
+							})(server,room3);
+							open.append(ownBtn);
+							var rstBtn = js_Boot.__cast(window.document.createElement("button") , HTMLButtonElement);
+							rstBtn.type = "button";
+							rstBtn.innerText = "Reset";
+							rstBtn.onclick = (function(server2,room5) {
+								return function(_2) {
+									room5[0].send("gmReset",server2[0].name);
+								};
+							})(server,room3);
+							close.append(rstBtn);
+							row3.append(name,owned,ownedBy,close,open);
+							table1.appendChild(row3);
+						}
+						var s2 = room.get_state().realNet.iterator();
+						while(s2.hasNext()) {
+							var s3 = s2.next();
+							var room6 = [room];
+							var table2 = _gthis.servers_table_real;
+							var server3 = [s3];
+							var row4 = window.document.createElement("tr");
+							var name1 = window.document.createElement("td");
+							var owned1 = window.document.createElement("td");
+							var ownedBy1 = window.document.createElement("td");
+							var close1 = window.document.createElement("td");
+							var open1 = window.document.createElement("td");
+							row4.className = "server_row";
+							name1.className = "server_key";
+							name1.innerText = server3[0].name;
+							owned1.innerText = Std.string(server3[0].owned);
+							owned1.id = "server_row_owned_" + StringTools.replace(server3[0].name," ","_");
+							ownedBy1.innerText = server3[0].ownedBy;
+							ownedBy1.id = "server_row_ownedBy_" + StringTools.replace(server3[0].name," ","_");
+							var ownBtn1 = js_Boot.__cast(window.document.createElement("button") , HTMLButtonElement);
+							ownBtn1.type = "button";
+							ownBtn1.innerText = "Own";
+							ownBtn1.onclick = (function(server4,room7) {
+								return function(_3) {
+									room7[0].send("gmOwn",server4[0].name);
+								};
+							})(server3,room6);
+							open1.append(ownBtn1);
+							var rstBtn1 = js_Boot.__cast(window.document.createElement("button") , HTMLButtonElement);
+							rstBtn1.type = "button";
+							rstBtn1.innerText = "Reset";
+							rstBtn1.onclick = (function(server5,room8) {
+								return function(_4) {
+									room8[0].send("gmReset",server5[0].name);
+								};
+							})(server3,room6);
+							close1.append(rstBtn1);
+							row4.append(name1,owned1,ownedBy1,close1,open1);
+							table2.appendChild(row4);
+						}
+						serverTablePopulated = true;
+					} else {
+						var net = change.value;
+						var _g4 = 0;
+						var _g11 = net.items;
+						while(_g4 < _g11.length) {
+							var s4 = _g11[_g4];
+							++_g4;
+							var owned2 = window.document.getElementById("server_row_owned_" + StringTools.replace(s4.name," ","_"));
+							var ownedBy2 = window.document.getElementById("server_row_ownedBy_" + StringTools.replace(s4.name," ","_"));
+							if(owned2 != null) {
+								owned2.innerText = s4.owned == null ? "null" : "" + s4.owned;
+							} else {
+								console.log("src/GMain.hx:259:","WARN! el is null: server_row_owned_" + StringTools.replace(s4.name," ","_"));
+							}
+							if(ownedBy2 != null) {
+								ownedBy2.innerText = s4.ownedBy;
+							} else {
+								console.log("src/GMain.hx:262:","WARN! el is null: server_row_ownedBy_" + StringTools.replace(s4.name," ","_"));
+							}
+						}
+					}
+					break;
+				case "timer":
 					_gthis.current_timer.innerText = change.value;
+					break;
 				}
 			}
 		};
 		room.get_state().onChange = roomOnChange;
-		this.sim_running.onclick = function(_1) {
+		this.sim_running.onclick = function(_5) {
 			room.send("unpause");
 		};
-		this.sim_pause_dim.onclick = function(_2) {
+		this.sim_pause_dim.onclick = function(_6) {
 			room.send("pause","dim");
 		};
-		this.sim_pause_dark.onclick = function(_3) {
+		this.sim_pause_dark.onclick = function(_7) {
 			room.send("pause","dark");
 		};
-		this.fw_up.onclick = function(_4) {
+		this.fw_up.onclick = function(_8) {
 			room.send("enableFirewalls");
 		};
-		this.fw_down.onclick = function(_5) {
+		this.fw_down.onclick = function(_9) {
 			room.send("disableFirewalls");
 		};
 		this.cur_scene.onchange = function(e) {
@@ -572,17 +714,17 @@ GMain.prototype = {
 				_gthis.scene_tut3_controls.hidden = false;
 				break;
 			}
-			var _g11 = 0;
+			var _g12 = 0;
 			var _g21 = _gthis.scene_tut1_control_inputs;
-			while(_g11 < _g21.length) {
-				var i = _g21[_g11];
-				++_g11;
+			while(_g12 < _g21.length) {
+				var i = _g21[_g12];
+				++_g12;
 				i.checked = false;
 			}
 			var _g31 = 0;
-			var _g4 = _gthis.scene_tut2_control_inputs;
-			while(_g31 < _g4.length) {
-				var i1 = _g4[_g31];
+			var _g41 = _gthis.scene_tut2_control_inputs;
+			while(_g31 < _g41.length) {
+				var i1 = _g41[_g31];
 				++_g31;
 				i1.checked = false;
 			}
@@ -595,8 +737,8 @@ GMain.prototype = {
 			}
 		};
 		var _g7 = 0;
-		var _g12 = this.scene_tut1_control_inputs.length;
-		while(_g7 < _g12) {
+		var _g13 = this.scene_tut1_control_inputs.length;
+		while(_g7 < _g13) {
 			var i3 = [_g7++];
 			this.scene_tut1_control_inputs[i3[0]].onchange = (function(i4) {
 				return function(e1) {
@@ -638,25 +780,25 @@ GMain.prototype = {
 				};
 			})(i5);
 		}
-		var _g41 = 0;
+		var _g42 = 0;
 		var _g51 = this.scene_tut3_control_inputs.length;
-		while(_g41 < _g51) {
-			var i7 = [_g41++];
+		while(_g42 < _g51) {
+			var i7 = [_g42++];
 			this.scene_tut3_control_inputs[i7[0]].onchange = (function(i8) {
 				return function(e3) {
-					var _g42 = new haxe_ds_StringMap();
+					var _g43 = new haxe_ds_StringMap();
 					if(__map_reserved["step"] != null) {
-						_g42.setReserved("step",i8[0]);
+						_g43.setReserved("step",i8[0]);
 					} else {
-						_g42.h["step"] = i8[0];
+						_g43.h["step"] = i8[0];
 					}
 					var value2 = e3.target.checked;
 					if(__map_reserved["value"] != null) {
-						_g42.setReserved("value",value2);
+						_g43.setReserved("value",value2);
 					} else {
-						_g42.h["value"] = value2;
+						_g43.h["value"] = value2;
 					}
-					room.send("setTutStep",_g42);
+					room.send("setTutStep",_g43);
 				};
 			})(i7);
 		}
@@ -675,7 +817,7 @@ GMain.prototype = {
 			_gthis.status.innerText = "👷 Setting Timer to: " + seconds;
 			room.send("setTimer",seconds);
 		};
-		window.onbeforeunload = function(_6) {
+		window.onbeforeunload = function(_10) {
 			room.leave();
 			return null;
 		};
@@ -3858,6 +4000,8 @@ GState.UNPAUSE = "unpause";
 GState.FIREWALLS_UP = "disableFirewalls";
 GState.FIREWALLS_DOWN = "enableFirewalls";
 GState.KICK = "kick";
+GState.GM_OWN = "gmOwn";
+GState.GM_RESET = "gmReset";
 State.ALIAS_ENTERED = "ALIAS_ENTERED";
 State.SET_ALIAS_STATS = "setAliasAndStats";
 State.HACK_ATTEMPT = "hackAttempt";
