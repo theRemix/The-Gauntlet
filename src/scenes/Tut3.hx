@@ -36,14 +36,12 @@ class Tut3 extends h2d.Scene{
     var yspace = 40;
 
     steps = [
-      createStep("Run Programs on subsystems to break in.", x, y+yspace*1),
-      createStep("To run a program, simply drag the program onto the subsystem.", x, y+yspace*2),
-      createStep("If the program was not the correct one, it will flash red.", x, y+yspace*3),
-      createStep("If the program was the correct one, it will flash blue,\n  the subsystem will be ACCESSED and your team can now connect to any connected subsystems.", x, y+yspace*4),
-      createStep("Some subsystems are not accessible from the net, so you must enter through other systems.", x, y+yspace*4),
-      createStep("Firewalls block programs, avoid them!", x, y+yspace*5),
-      createStep("Multiple programs can be used to access a subsystem, having lots of programs is generally a good thing.", x, y+yspace*6),
-      createStep("Depending on your Skills and Int levels, you will each have different programs.", x, y+yspace*7),
+      createStep("Run Programs on subsystems to break in.", x, y),
+      createStep("To run a program, drag the program onto the subsystem.", x, y+yspace),
+      createStep("If the program is correct,\n  the subsystem will be PWNED and your team can access any connected subsystems.", x, y+yspace*2),
+      createStep("Some subsystems are not accessible from the net, so you must enter through other systems.", x, y+yspace*3),
+      createStep("Firewalls block programs, avoid them!", x, y+yspace*4),
+      createStep("Multiple programs can be used to access a subsystem.\n  Having lots of programs is generally a good thing.", x, y+yspace*5),
     ];
 
     var stepVals = Main.instance.room.state.tutStep.items;

@@ -33,11 +33,9 @@ class Tut1 extends h2d.Scene{
     var yspace = 40;
 
     steps = [
-      createStep("You start with 600 seconds of in game time to access the Encrypted Backup Server that holds the data you are stealing.", x, y),
+      createStep("You start with 600 seconds to access the ENCRYPTED DATA STORE.", x, y),
       createStep("You will know if you have succeeded because you will see this sign [RUN SUCCESSFUL][YOU STOLE THE DATA].", x, y+yspace),
-      createStep("You may fail by getting caught in game.", x, y+yspace*2),
-      createStep("You may fail by running out of time, this can cause Intrusion Detection Systems to lock out all your connections,\n  and/or SysOps tracing one of you, and/or brain damage on BMI connected.", x, y+yspace*3),
-      createStep("You will know if you have failed by the GM pausing the simulation and telling you how you failed.", x, y+yspace*4),
+      createStep("You will know if you have failed by the GM pausing the simulation and telling you how you failed.", x, y+yspace*2),
     ];
 
     var stepVals = Main.instance.room.state.tutStep.items;

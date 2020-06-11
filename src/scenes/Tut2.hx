@@ -39,12 +39,9 @@ class Tut2 extends h2d.Scene{
     steps = [
       createStep("Players can, and should communicate in real time.", x, y),
       createStep("GM can pause at any time, freezing time for RP.", x, y+yspace),
-      createStep("Players can ask the GM to pause for reasons of RP, not to strategize on the actual simulation.", x, y+yspace*2),
-      createStep("If players talk about simulation strategy this must happen in game time, GM will unpause.\n  Surely you can discuss strategy while hacking!", x, y+yspace*3),
-      createStep("GM can manually manipulate some things in the simulation, this power is used for fixing things, or to sync the simulation with any in world events.", x, y+yspace*4),
-      createStep("Depending on your Skills and Int levels, you will each have different programs.", x, y+yspace*5),
-      createStep("Program names don't have meaning.", x, y+yspace*6),
-      createStep("SubSystem names DO have meaning.", x, y+yspace*7)
+      createStep("The GM has the ability manipulate the simulation to sync with any in-world events.", x, y+yspace*2),
+      createStep("Depending on your Skills and Int levels, you may have access to different programs.", x, y+yspace*3),
+      createStep("Pay attention to SubSystem names.", x, y+yspace*4)
     ];
 
     var stepVals = Main.instance.room.state.tutStep.items;

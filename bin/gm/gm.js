@@ -433,11 +433,11 @@ GMain.prototype = {
 		this.sim_pause_dark = js_Boot.__cast(window.document.getElementById("sim_pause_dark") , HTMLInputElement);
 		this.cur_scene = js_Boot.__cast(window.document.getElementById("cur_scene") , HTMLSelectElement);
 		this.scene_tut1_controls = window.document.getElementById("scene_tut1_controls");
-		this.scene_tut1_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut1_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_5") , HTMLInputElement)];
+		this.scene_tut1_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut1_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut1_controls_3") , HTMLInputElement)];
 		this.scene_tut2_controls = window.document.getElementById("scene_tut2_controls");
-		this.scene_tut2_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut2_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_5") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_6") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_7") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_8") , HTMLInputElement)];
+		this.scene_tut2_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut2_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut2_controls_5") , HTMLInputElement)];
 		this.scene_tut3_controls = window.document.getElementById("scene_tut3_controls");
-		this.scene_tut3_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut3_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_5") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_6") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_7") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_8") , HTMLInputElement)];
+		this.scene_tut3_control_inputs = [js_Boot.__cast(window.document.getElementById("scene_tut3_controls_1") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_2") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_3") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_4") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_5") , HTMLInputElement),js_Boot.__cast(window.document.getElementById("scene_tut3_controls_6") , HTMLInputElement)];
 		this.current_timer = window.document.getElementById("current_timer");
 		this.scene_sim_base_controls = window.document.getElementById("scene_sim_base_controls");
 		this.timer_form = js_Boot.__cast(window.document.getElementById("timer_form") , HTMLFormElement);
@@ -453,7 +453,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:156:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:149:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.servers_container.hidden = false;
@@ -488,7 +488,7 @@ GMain.prototype = {
 		var _gthis = this;
 		if(err != null) {
 			this.status.innerText = err.message;
-			console.log("src/GMain.hx:205:","JOIN ERROR: " + Std.string(err));
+			console.log("src/GMain.hx:198:","JOIN ERROR: " + Std.string(err));
 			return;
 		}
 		this.players_container.hidden = false;
@@ -655,12 +655,12 @@ GMain.prototype = {
 							if(owned2 != null) {
 								owned2.innerText = s4.owned == null ? "null" : "" + s4.owned;
 							} else {
-								console.log("src/GMain.hx:259:","WARN! el is null: server_row_owned_" + StringTools.replace(s4.name," ","_"));
+								console.log("src/GMain.hx:252:","WARN! el is null: server_row_owned_" + StringTools.replace(s4.name," ","_"));
 							}
 							if(ownedBy2 != null) {
 								ownedBy2.innerText = s4.ownedBy;
 							} else {
-								console.log("src/GMain.hx:262:","WARN! el is null: server_row_ownedBy_" + StringTools.replace(s4.name," ","_"));
+								console.log("src/GMain.hx:255:","WARN! el is null: server_row_ownedBy_" + StringTools.replace(s4.name," ","_"));
 							}
 						}
 					}

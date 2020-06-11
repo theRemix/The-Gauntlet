@@ -100,8 +100,6 @@ class GMain {
       cast(document.getElementById("scene_tut1_controls_1"), InputElement),
       cast(document.getElementById("scene_tut1_controls_2"), InputElement),
       cast(document.getElementById("scene_tut1_controls_3"), InputElement),
-      cast(document.getElementById("scene_tut1_controls_4"), InputElement),
-      cast(document.getElementById("scene_tut1_controls_5"), InputElement),
     ];
     scene_tut2_controls = document.getElementById("scene_tut2_controls");
     scene_tut2_control_inputs = [
@@ -110,9 +108,6 @@ class GMain {
       cast(document.getElementById("scene_tut2_controls_3"), InputElement),
       cast(document.getElementById("scene_tut2_controls_4"), InputElement),
       cast(document.getElementById("scene_tut2_controls_5"), InputElement),
-      cast(document.getElementById("scene_tut2_controls_6"), InputElement),
-      cast(document.getElementById("scene_tut2_controls_7"), InputElement),
-      cast(document.getElementById("scene_tut2_controls_8"), InputElement),
     ];
     scene_tut3_controls = document.getElementById("scene_tut3_controls");
     scene_tut3_control_inputs = [
@@ -122,8 +117,6 @@ class GMain {
       cast(document.getElementById("scene_tut3_controls_4"), InputElement),
       cast(document.getElementById("scene_tut3_controls_5"), InputElement),
       cast(document.getElementById("scene_tut3_controls_6"), InputElement),
-      cast(document.getElementById("scene_tut3_controls_7"), InputElement),
-      cast(document.getElementById("scene_tut3_controls_8"), InputElement),
     ];
     current_timer = document.getElementById("current_timer");
     scene_sim_base_controls = document.getElementById("scene_sim_base_controls");
