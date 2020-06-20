@@ -360,7 +360,8 @@ const createPracticeNet = () => {
 
 const createRealNet = () => {
   const cols = [ 80, 325, 570, 815 ];
-  const rows = [ 440, 330, 220, 110, 2 ];
+  const rows = [ 364, 272, 182, 92, 2 ];
+
   const a = new ArraySchema();
   [
     new SubSystem({x: cols[0], y: rows[0], name: "Mail Server", keys: ["Kosmokrator", "Prime Radiant", "LEVIN", "XMultivac", "Bossy", "Arius", "The Engine", "Mandarax" ]}),
