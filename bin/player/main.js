@@ -389,7 +389,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 			this.setScene(this.scene,true);
 			break;
 		default:
-			haxe_Log.trace("WARN! No handler for scene = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 68, className : "Main", methodName : "goToScene"});
+			haxe_Log.trace("WARN! No handler for scene = " + Std.string(scene),{ fileName : "src/Main.hx", lineNumber : 71, className : "Main", methodName : "goToScene"});
 		}
 		return this.scene;
 	}
@@ -401,17 +401,17 @@ Main.prototype = $extend(hxd_App.prototype,{
 			tf.set_text(err.message);
 			tf.posChanged = true;
 			tf.y = 20;
-			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 81, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("JOIN ERROR: " + Std.string(err),{ fileName : "src/Main.hx", lineNumber : 84, className : "Main", methodName : "onJoin"});
 			return;
 		}
 		this.room = room;
 		this.room.get_state().onChange = $bind(this,this.onStateChange);
 		var onError = function(code,message) {
-			haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Main.hx", lineNumber : 89, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("ROOM ERROR: " + code + " => " + message,{ fileName : "src/Main.hx", lineNumber : 92, className : "Main", methodName : "onJoin"});
 		};
 		this.room.onError.push(onError);
 		var onLeave = function() {
-			haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Main.hx", lineNumber : 92, className : "Main", methodName : "onJoin"});
+			haxe_Log.trace("ROOM LEAVE",{ fileName : "src/Main.hx", lineNumber : 95, className : "Main", methodName : "onJoin"});
 			window.alert("Server Disconnected! Will reload the browser.");
 			window.document.location.reload();
 		};
@@ -450,7 +450,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 						this.goToScene(scenes_Tut3);
 						break;
 					default:
-						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 131, className : "Main", methodName : "onStateChange"});
+						haxe_Log.trace("WARN: unhandled change scene in Main.onStateChange[scene]: " + Std.string(change.value),{ fileName : "src/Main.hx", lineNumber : 134, className : "Main", methodName : "onStateChange"});
 					}
 				}
 			}
@@ -4530,11 +4530,7 @@ entities_Program.prototype = $extend(h2d_Graphics.prototype,{
 			a_xMax = x0 + 80;
 			a_yMax = y0 + 30;
 			var _g_head = this.colliders.filter(function(a) {
-				if(!a.persist) {
-					return a.visible;
-				} else {
-					return false;
-				}
+				return a.visible;
 			}).h;
 			while(_g_head != null) {
 				var val = _g_head.item;
@@ -23881,9 +23877,6 @@ h3d_impl_Driver.prototype = {
 	,begin: function(frame) {
 	}
 	,log: function(str) {
-		if(this.logEnable) {
-			this.logImpl(str);
-		}
 	}
 	,generateMipMaps: function(texture) {
 		throw new js__$Boot_HaxeError("Mipmaps auto generation is not supported on this platform");
@@ -29370,10 +29363,6 @@ h3d_pass_Default.prototype = $extend(h3d_pass_Base.prototype,{
 		}
 	}
 	,log: function(str) {
-		var _this = this.ctx.engine.driver;
-		if(_this.logEnable) {
-			_this.logImpl(str);
-		}
 	}
 	,drawObject: function(p) {
 		this.ctx.drawPass = p;
@@ -33878,9 +33867,6 @@ h3d_scene_Object.prototype = {
 		if(o == null) {
 			o = new h3d_scene_Object();
 		}
-		if(js_Boot.getClass(o) != js_Boot.getClass(this)) {
-			throw new js__$Boot_HaxeError(Std.string(this) + " is missing clone()");
-		}
 		var v = this.x;
 		o.x = v;
 		var f = 1;
@@ -36183,7 +36169,6 @@ var h3d_scene_Scene = function(createRenderer,createLightSystem) {
 	if(createRenderer == null) {
 		createRenderer = true;
 	}
-	this.checkPasses = true;
 	h3d_scene_Object.call(this,null);
 	this.window = hxd_Window.getInstance();
 	this.eventListeners = [];
@@ -36896,16 +36881,6 @@ h3d_scene_Scene.prototype = $extend(h3d_scene_Object.prototype,{
 			this.lightSystem.initLights(this.ctx);
 		}
 		this.renderer.process(passes);
-		if(!this.ctx.computingStatic && this.checkPasses) {
-			var _g2 = 0;
-			while(_g2 < passes.length) {
-				var p2 = passes[_g2];
-				++_g2;
-				if(!p2.rendered) {
-					haxe_Log.trace("Pass " + p2.name + " has not been rendered : don't know how to handle.",{ fileName : "h3d/scene/Scene.hx", lineNumber : 438, className : "h3d.scene.Scene", methodName : "render"});
-				}
-			}
-		}
 		if(this.camera.rightHanded) {
 			engine.driver.setRenderFlag(h3d_impl_RenderFlag.CameraHandness,0);
 		}
@@ -36913,13 +36888,13 @@ h3d_scene_Scene.prototype = $extend(h3d_scene_Object.prototype,{
 		this.ctx.scene = null;
 		this.ctx.camera = null;
 		this.ctx.engine = null;
-		var _g3 = 0;
+		var _g2 = 0;
 		var _g11 = passIndex;
-		while(_g3 < _g11) {
-			var i1 = _g3++;
-			var p3 = this.ctx.cachedPassObjects[i1];
-			p3.name = null;
-			var _this1 = p3.passes;
+		while(_g2 < _g11) {
+			var i1 = _g2++;
+			var p2 = this.ctx.cachedPassObjects[i1];
+			p2.name = null;
+			var _this1 = p2.passes;
 			_this1.current = null;
 			_this1.discarded = _this1.lastDisc = null;
 		}
@@ -50511,14 +50486,8 @@ hxd_res_NanoJpeg.prototype = {
 		this.pos += count;
 		this.size -= count;
 		this.length -= count;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 	}
 	,syntax: function(flag) {
-		if(flag) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 	}
 	,get: function(p) {
 		return this.bytes.b[this.pos + p];
@@ -50545,9 +50514,6 @@ hxd_res_NanoJpeg.prototype = {
 			this.bufbits += 8;
 			this.buf = this.buf << 8 | newbyte;
 			if(newbyte == 255) {
-				if(this.size == 0) {
-					throw new js__$Boot_HaxeError("Invalid JPEG file");
-				}
 				var marker = this.bytes.b[this.pos];
 				this.pos++;
 				this.size--;
@@ -50558,9 +50524,6 @@ hxd_res_NanoJpeg.prototype = {
 				case 0:case 255:
 					break;
 				default:
-					if((marker & 248) != 208) {
-						throw new js__$Boot_HaxeError("Invalid JPEG file");
-					}
 					this.buf = this.buf << 8 | marker;
 					this.bufbits += 8;
 				}
@@ -50580,59 +50543,26 @@ hxd_res_NanoJpeg.prototype = {
 		return r;
 	}
 	,njDecodeLength: function() {
-		if(this.size < 2) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.length = this.bytes.b[this.pos] << 8 | this.bytes.b[this.pos + 1];
-		if(this.length > this.size) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.pos += 2;
 		this.size -= 2;
 		this.length -= 2;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 	}
 	,njSkipMarker: function() {
-		if(this.size < 2) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.length = this.bytes.b[this.pos] << 8 | this.bytes.b[this.pos + 1];
-		if(this.length > this.size) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.pos += 2;
 		this.size -= 2;
 		this.length -= 2;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		var count = this.length;
 		this.pos += count;
 		this.size -= count;
 		this.length -= count;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 	}
 	,njDecodeSOF: function() {
-		if(this.size < 2) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.length = this.bytes.b[this.pos] << 8 | this.bytes.b[this.pos + 1];
-		if(this.length > this.size) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.pos += 2;
 		this.size -= 2;
 		this.length -= 2;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
-		if(this.length < 9) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		if(this.bytes.b[this.pos] != 8) {
 			this.notSupported();
 		}
@@ -50642,17 +50572,11 @@ hxd_res_NanoJpeg.prototype = {
 		this.pos += 6;
 		this.size -= 6;
 		this.length -= 6;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		switch(this.ncomp) {
 		case 1:case 3:
 			break;
 		default:
 			this.notSupported();
-		}
-		if(this.length < this.ncomp * 3) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
 		}
 		var ssxmax = 0;
 		var ssymax = 0;
@@ -50663,29 +50587,17 @@ hxd_res_NanoJpeg.prototype = {
 			var c = this.comps[i];
 			c.cid = this.bytes.b[this.pos];
 			c.ssx = this.bytes.b[this.pos + 1] >> 4;
-			if(c.ssx == 0) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			if((c.ssx & c.ssx - 1) != 0) {
 				this.notSupported();
 			}
 			c.ssy = this.bytes.b[this.pos + 1] & 15;
-			if(c.ssy == 0) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			if((c.ssy & c.ssy - 1) != 0) {
 				this.notSupported();
 			}
 			c.qtsel = this.bytes.b[this.pos + 2];
-			if((c.qtsel & 252) != 0) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			this.pos += 3;
 			this.size -= 3;
 			this.length -= 3;
-			if(this.size < 0) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			this.qtused |= 1 << c.qtsel;
 			if(c.ssx > ssxmax) {
 				ssxmax = c.ssx;
@@ -50722,29 +50634,14 @@ hxd_res_NanoJpeg.prototype = {
 		this.pos += count;
 		this.size -= count;
 		this.length -= count;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 	}
 	,njDecodeDQT: function() {
-		if(this.size < 2) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.length = this.bytes.b[this.pos] << 8 | this.bytes.b[this.pos + 1];
-		if(this.length > this.size) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.pos += 2;
 		this.size -= 2;
 		this.length -= 2;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		while(this.length >= 65) {
 			var i = this.bytes.b[this.pos];
-			if((i & 252) != 0) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			this.qtavail |= 1 << i;
 			var t = this.qtab[i];
 			var _g = 0;
@@ -50755,33 +50652,15 @@ hxd_res_NanoJpeg.prototype = {
 			this.pos += 65;
 			this.size -= 65;
 			this.length -= 65;
-			if(this.size < 0) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
-		}
-		if(this.length != 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
 		}
 	}
 	,njDecodeDHT: function() {
-		if(this.size < 2) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.length = this.bytes.b[this.pos] << 8 | this.bytes.b[this.pos + 1];
-		if(this.length > this.size) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.pos += 2;
 		this.size -= 2;
 		this.length -= 2;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		while(this.length >= 17) {
 			var i = this.bytes.b[this.pos];
-			if((i & 236) != 0) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			i = i >> 4 & 1 | (i & 3) << 1;
 			this.counts[0] = this.bytes.b[this.pos + 1];
 			this.counts[1] = this.bytes.b[this.pos + 2];
@@ -50802,9 +50681,6 @@ hxd_res_NanoJpeg.prototype = {
 			this.pos += 17;
 			this.size -= 17;
 			this.length -= 17;
-			if(this.size < 0) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			var vlc = this.vlctab[i];
 			var vpos = 0;
 			var remain = 65536;
@@ -50817,13 +50693,7 @@ hxd_res_NanoJpeg.prototype = {
 				if(currcnt == 0) {
 					continue;
 				}
-				if(this.length < currcnt) {
-					throw new js__$Boot_HaxeError("Invalid JPEG file");
-				}
 				remain -= currcnt << 16 - codelen;
-				if(remain < 0) {
-					throw new js__$Boot_HaxeError("Invalid JPEG file");
-				}
 				var _g1 = 0;
 				var _g11 = currcnt;
 				while(_g1 < _g11) {
@@ -50840,51 +50710,27 @@ hxd_res_NanoJpeg.prototype = {
 				this.pos += currcnt;
 				this.size -= currcnt;
 				this.length -= currcnt;
-				if(this.size < 0) {
-					throw new js__$Boot_HaxeError("Invalid JPEG file");
-				}
 			}
 			while(remain-- != 0) {
 				vlc.b[vpos] = 0;
 				vpos += 2;
 			}
 		}
-		if(this.length != 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 	}
 	,njDecodeDRI: function() {
-		if(this.size < 2) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.length = this.bytes.b[this.pos] << 8 | this.bytes.b[this.pos + 1];
-		if(this.length > this.size) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.pos += 2;
 		this.size -= 2;
 		this.length -= 2;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
-		if(this.length < 2) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.rstinterval = this.bytes.b[this.pos] << 8 | this.bytes.b[this.pos + 1];
 		var count = this.length;
 		this.pos += count;
 		this.size -= count;
 		this.length -= count;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 	}
 	,njGetVLC: function(vlc) {
 		var value = this.njShowBits(16);
 		var bits = vlc.b[value << 1];
-		if(bits == 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		if(this.bufbits < bits) {
 			this.njShowBits(bits);
 		}
@@ -51043,9 +50889,6 @@ hxd_res_NanoJpeg.prototype = {
 		var vlc = this.vlctab[c.dctabsel];
 		var value1 = this.njShowBits(16);
 		var bits = vlc.b[value1 << 1];
-		if(bits == 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		if(this.bufbits < bits) {
 			this.njShowBits(bits);
 		}
@@ -51072,9 +50915,6 @@ hxd_res_NanoJpeg.prototype = {
 		while(true) {
 			var value2 = this.njShowBits(16);
 			var bits1 = at.b[value2 << 1];
-			if(bits1 == 0) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			if(this.bufbits < bits1) {
 				this.njShowBits(bits1);
 			}
@@ -51096,13 +50936,7 @@ hxd_res_NanoJpeg.prototype = {
 			if(this.vlcCode == 0) {
 				break;
 			}
-			if((this.vlcCode & 15) == 0 && this.vlcCode != 240) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			coef += (this.vlcCode >> 4) + 1;
-			if(coef > 63) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			this.block[this.njZZ[coef]] = value * qt[coef];
 			if(!(coef < 63)) {
 				break;
@@ -52137,50 +51971,26 @@ hxd_res_NanoJpeg.prototype = {
 		throw new js__$Boot_HaxeError("This JPG file is not supported");
 	}
 	,njDecodeScan: function() {
-		if(this.size < 2) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.length = this.bytes.b[this.pos] << 8 | this.bytes.b[this.pos + 1];
-		if(this.length > this.size) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		this.pos += 2;
 		this.size -= 2;
 		this.length -= 2;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
-		if(this.length < 4 + 2 * this.ncomp) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		if(this.bytes.b[this.pos] != this.ncomp) {
 			this.notSupported();
 		}
 		this.pos += 1;
 		this.size -= 1;
 		this.length -= 1;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		var _g = 0;
 		var _g1 = this.ncomp;
 		while(_g < _g1) {
 			var i = _g++;
 			var c = this.comps[i];
-			if(this.bytes.b[this.pos] != c.cid) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
-			if((this.bytes.b[this.pos + 1] & 236) != 0) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			c.dctabsel = this.bytes.b[this.pos + 1] >> 4 << 1;
 			c.actabsel = (this.bytes.b[this.pos + 1] & 3) << 1 | 1;
 			this.pos += 2;
 			this.size -= 2;
 			this.length -= 2;
-			if(this.size < 0) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 		}
 		var start = this.bytes.b[this.pos];
 		var count = this.bytes.b[this.pos + 1];
@@ -52192,9 +52002,6 @@ hxd_res_NanoJpeg.prototype = {
 		this.pos += count1;
 		this.size -= count1;
 		this.length -= count1;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		var mbx = 0;
 		var mby = 0;
 		var rstcount = this.rstinterval;
@@ -52228,9 +52035,6 @@ hxd_res_NanoJpeg.prototype = {
 				var r = this.njShowBits(16);
 				this.bufbits -= 16;
 				var i2 = r;
-				if((i2 & 65528) != 65488 || (i2 & 7) != nextrst) {
-					throw new js__$Boot_HaxeError("Invalid JPEG file");
-				}
 				nextrst = nextrst + 1 & 7;
 				rstcount = this.rstinterval;
 				this.comps[0].dcpred = 0;
@@ -52444,19 +52248,10 @@ hxd_res_NanoJpeg.prototype = {
 		this.pos += 2;
 		this.size -= 2;
 		this.length -= 2;
-		if(this.size < 0) {
-			throw new js__$Boot_HaxeError("Invalid JPEG file");
-		}
 		_hx_loop1: while(true) {
-			if(this.size < 2 || this.bytes.b[this.pos] != 255) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			this.pos += 2;
 			this.size -= 2;
 			this.length -= 2;
-			if(this.size < 0) {
-				throw new js__$Boot_HaxeError("Invalid JPEG file");
-			}
 			switch(this.bytes.b[this.pos + (-1)]) {
 			case 192:
 				this.njDecodeSOF();
@@ -52495,52 +52290,28 @@ hxd_res_NanoJpeg.prototype = {
 				this.njDecodeDRI();
 				break;
 			case 254:
-				if(this.size < 2) {
-					throw new js__$Boot_HaxeError("Invalid JPEG file");
-				}
 				this.length = this.bytes.b[this.pos] << 8 | this.bytes.b[this.pos + 1];
-				if(this.length > this.size) {
-					throw new js__$Boot_HaxeError("Invalid JPEG file");
-				}
 				this.pos += 2;
 				this.size -= 2;
 				this.length -= 2;
-				if(this.size < 0) {
-					throw new js__$Boot_HaxeError("Invalid JPEG file");
-				}
 				var count = this.length;
 				this.pos += count;
 				this.size -= count;
 				this.length -= count;
-				if(this.size < 0) {
-					throw new js__$Boot_HaxeError("Invalid JPEG file");
-				}
 				break;
 			default:
 				switch(this.bytes.b[this.pos + (-1)] & 240) {
 				case 192:
 					throw new js__$Boot_HaxeError("Unsupported jpeg type " + (this.bytes.b[this.pos + (-1)] & 15));
 				case 224:
-					if(this.size < 2) {
-						throw new js__$Boot_HaxeError("Invalid JPEG file");
-					}
 					this.length = this.bytes.b[this.pos] << 8 | this.bytes.b[this.pos + 1];
-					if(this.length > this.size) {
-						throw new js__$Boot_HaxeError("Invalid JPEG file");
-					}
 					this.pos += 2;
 					this.size -= 2;
 					this.length -= 2;
-					if(this.size < 0) {
-						throw new js__$Boot_HaxeError("Invalid JPEG file");
-					}
 					var count1 = this.length;
 					this.pos += count1;
 					this.size -= count1;
 					this.length -= count1;
-					if(this.size < 0) {
-						throw new js__$Boot_HaxeError("Invalid JPEG file");
-					}
 					break;
 				default:
 					throw new js__$Boot_HaxeError("Unsupported jpeg tag 0x" + StringTools.hex(this.bytes.b[this.pos + (-1)],2));
@@ -53469,7 +53240,6 @@ hxd_snd_Manager.prototype = {
 			c1.duration = c1.sound.getData().get_duration();
 			var playedSamples = this.driver.getPlayedSampleCount(s1.handle);
 			if(playedSamples < 0) {
-				haxe_Log.trace("playedSamples should positive : bug in driver",{ fileName : "hxd/snd/Manager.hx", lineNumber : 360, className : "hxd.snd.Manager", methodName : "update"});
 				playedSamples = 0;
 			}
 			c1.set_position((s1.start + playedSamples) / s1.buffers[0].sampleRate);
@@ -56203,123 +55973,105 @@ hxsl_Cache.prototype = {
 		haxe_ds_ArraySort.sort(shaderDatas,function(s11,s2) {
 			return s2.p - s11.p;
 		});
-		var _g1 = 0;
-		while(_g1 < shaderDatas.length) {
-			var s3 = shaderDatas[_g1];
-			++_g1;
-			hxsl_Printer.check(s3.inst.shader);
-		}
 		var linker = new hxsl_Linker(batchMode);
-		var s4;
+		var s3;
 		try {
-			var _g2 = [];
-			var _g3 = 0;
-			while(_g3 < shaderDatas.length) {
-				var s5 = shaderDatas[_g3];
-				++_g3;
-				_g2.push(s5.inst.shader);
+			var _g1 = [];
+			var _g2 = 0;
+			while(_g2 < shaderDatas.length) {
+				var s4 = shaderDatas[_g2];
+				++_g2;
+				_g1.push(s4.inst.shader);
 			}
-			s4 = linker.link(_g2);
+			s3 = linker.link(_g1);
 		} catch( e ) {
 			var e1 = ((e) instanceof js__$Boot_HaxeError) ? e.val : e;
 			if(((e1) instanceof hxsl_Error)) {
 				var e2 = e1;
-				var _g21 = [];
-				var _g31 = 0;
-				while(_g31 < shaderDatas.length) {
-					var s6 = shaderDatas[_g31];
-					++_g31;
-					_g21.push(hxsl_Printer.shaderToString(s6.inst.shader));
+				var _g11 = [];
+				var _g21 = 0;
+				while(_g21 < shaderDatas.length) {
+					var s5 = shaderDatas[_g21];
+					++_g21;
+					_g11.push(hxsl_Printer.shaderToString(s5.inst.shader));
 				}
-				var shaders1 = _g21;
+				var shaders1 = _g11;
 				e2.msg += "\n\nin\n\n" + shaders1.join("\n-----\n");
 				throw new js__$Boot_HaxeError(e2);
 			} else {
 				throw e;
 			}
 		}
-		var _g22 = [];
-		var _g32 = 0;
-		while(_g32 < shaderDatas.length) {
-			var s7 = shaderDatas[_g32];
-			++_g32;
-			_g22.push(s7.inst.shader);
-		}
-		hxsl_Printer.check(s4,_g22);
 		var paramVars = new haxe_ds_IntMap();
-		var _g4 = 0;
-		var _g5 = linker.allVars;
-		while(_g4 < _g5.length) {
-			var v = _g5[_g4];
-			++_g4;
+		var _g12 = 0;
+		var _g22 = linker.allVars;
+		while(_g12 < _g22.length) {
+			var v = _g22[_g12];
+			++_g12;
 			if(v.v.kind == hxsl_VarKind.Param) {
-				var _g41 = v.v.type;
-				if(_g41._hx_index == 13) {
-					var _g51 = _g41.vl;
+				var _g13 = v.v.type;
+				if(_g13._hx_index == 13) {
+					var _g23 = _g13.vl;
 					continue;
 				}
 				var inf = shaderDatas[v.instanceIndex];
 				paramVars.h[v.id] = { instance : inf.index, index : inf.inst.params.h[v.merged[0].id]};
 			}
 		}
-		var prev = s4;
-		var s8;
+		var prev = s3;
+		var s6;
 		try {
-			s8 = new hxsl_Splitter().split(s4);
+			s6 = new hxsl_Splitter().split(s3);
 		} catch( e3 ) {
 			var e4 = ((e3) instanceof js__$Boot_HaxeError) ? e3.val : e3;
 			if(((e4) instanceof hxsl_Error)) {
 				var e5 = e4;
-				e5.msg += "\n\nin\n\n" + hxsl_Printer.shaderToString(s4);
+				e5.msg += "\n\nin\n\n" + hxsl_Printer.shaderToString(s3);
 				throw new js__$Boot_HaxeError(e5);
 			} else {
 				throw e3;
 			}
 		}
 		if(batchMode) {
-			var _g6 = 0;
-			var _g7 = s8.vertex.vars;
-			while(_g6 < _g7.length) {
-				var v1 = _g7[_g6];
-				++_g6;
+			var _g3 = 0;
+			var _g4 = s6.vertex.vars;
+			while(_g3 < _g4.length) {
+				var v1 = _g4[_g3];
+				++_g3;
 				if(v1.qualifiers != null && v1.qualifiers.indexOf(hxsl_VarQualifier.PerObject) >= 0) {
 					v1.kind = hxsl_VarKind.Local;
 				}
 			}
 		}
-		hxsl_Printer.check(s8.vertex,[prev]);
-		hxsl_Printer.check(s8.fragment,[prev]);
-		var prev1 = s8;
-		var s9 = new hxsl_Dce().dce(s8.vertex,s8.fragment);
-		hxsl_Printer.check(s9.vertex,[prev1.vertex]);
-		hxsl_Printer.check(s9.fragment,[prev1.fragment]);
-		var r = this.buildRuntimeShader(s9.vertex,s9.fragment,paramVars);
-		var _g61 = [];
-		var _g7_l = shaders;
-		var _g7_last = null;
-		while(_g7_l != _g7_last) {
-			var s10 = _g7_l.s;
-			_g7_l = _g7_l.next;
-			var s12 = s10;
-			_g61.push(new hxsl_ShaderInstanceDesc(s12.shader,s12.constBits));
+		var prev1 = s6;
+		var s7 = new hxsl_Dce().dce(s6.vertex,s6.fragment);
+		var r = this.buildRuntimeShader(s7.vertex,s7.fragment,paramVars);
+		var _g31 = [];
+		var _g4_l = shaders;
+		var _g4_last = null;
+		while(_g4_l != _g4_last) {
+			var s8 = _g4_l.s;
+			_g4_l = _g4_l.next;
+			var s9 = s8;
+			_g31.push(new hxsl_ShaderInstanceDesc(s9.shader,s9.constBits));
 		}
-		r.spec = { instances : _g61, signature : null};
+		r.spec = { instances : _g31, signature : null};
+		var _g5 = 0;
+		var _g6 = shaderDatas.length;
+		while(_g5 < _g6) {
+			var i1 = _g5++;
+			var s10 = shaderDatas[shaderDatas.length - 1 - i1];
+			r.spec.instances[s10.index].index = i1;
+		}
+		var _g7 = [];
 		var _g8 = 0;
-		var _g9 = shaderDatas.length;
-		while(_g8 < _g9) {
-			var i1 = _g8++;
-			var s13 = shaderDatas[shaderDatas.length - 1 - i1];
-			r.spec.instances[s13.index].index = i1;
+		var _g9 = r.spec.instances;
+		while(_g8 < _g9.length) {
+			var i2 = _g9[_g8];
+			++_g8;
+			_g7.push(i2.shader.data.name + "_" + i2.bits + "_" + i2.index);
 		}
-		var _g10 = [];
-		var _g11 = 0;
-		var _g12 = r.spec.instances;
-		while(_g11 < _g12.length) {
-			var i2 = _g12[_g11];
-			++_g11;
-			_g10.push(i2.shader.data.name + "_" + i2.bits + "_" + i2.index);
-		}
-		var signParts = _g10;
+		var signParts = _g7;
 		var tmp = signParts.join(":");
 		r.spec.signature = haxe_crypto_Md5.encode(tmp);
 		r.signature = haxe_crypto_Md5.encode(hxsl_Printer.shaderToString(r.vertex.data) + hxsl_Printer.shaderToString(r.fragment.data));
@@ -56348,8 +56100,6 @@ hxsl_Cache.prototype = {
 		r.globals = new haxe_ds_IntMap();
 		this.initGlobals(r,r.vertex);
 		this.initGlobals(r,r.fragment);
-		hxsl_Printer.check(r.vertex.data,[vertex]);
-		hxsl_Printer.check(r.fragment.data,[fragment]);
 		return r;
 	}
 	,initGlobals: function(r,s) {
@@ -64854,7 +64604,6 @@ hxsl_SharedShader.prototype = {
 		$eval.inlineCalls = true;
 		$eval.unrollLoops = hxsl_SharedShader.UNROLL_LOOPS;
 		var i = new hxsl_ShaderInstance($eval.eval(this.data));
-		hxsl_Printer.check(i.shader,[this.data]);
 		this.paramsCount = 0;
 		var _g2 = 0;
 		var _g11 = this.data.vars;
@@ -65638,14 +65387,10 @@ var io_colyseus_Room = function(name,cls) {
 	this.serializer = null;
 	this.serializerId = null;
 	this.onMessageHandlers = new haxe_ds_StringMap();
-	var this1 = [];
-	this.onLeave = this1;
-	var this11 = [];
-	this.onError = this11;
-	var this12 = [];
-	this.onStateChange = this12;
-	var this13 = [];
-	this.onJoin = this13;
+	this.onLeave = [];
+	this.onError = [];
+	this.onStateChange = [];
+	this.onJoin = [];
 	this.id = null;
 	this.name = name;
 	this.tmpStateClass = cls;
@@ -67151,10 +66896,6 @@ scenes_Connecting.prototype = $extend(h2d_Scene.prototype,{
 		this.backBtn.set_textColor(16777215);
 		Main.instance.goToScene(scenes_FormServer);
 	}
-	,dispose: function() {
-		haxe_Log.trace("Scene:Connecting DISPOSE",{ fileName : "src/scenes/Connecting.hx", lineNumber : 37, className : "scenes.Connecting", methodName : "dispose"});
-		h2d_Scene.prototype.dispose.call(this);
-	}
 	,__class__: scenes_Connecting
 });
 var scenes__$FormAlias_InputType = $hxEnums["scenes._FormAlias.InputType"] = { __ename__ : true, __constructs__ : ["Alpha","Number"]
@@ -67293,7 +67034,6 @@ scenes_FormAlias.prototype = $extend(h2d_Scene.prototype,{
 		Main.instance.goToScene(scenes_Lobby);
 	}
 	,dispose: function() {
-		haxe_Log.trace("Scene:InputAlias DISPOSE",{ fileName : "src/scenes/FormAlias.hx", lineNumber : 111, className : "scenes.FormAlias", methodName : "dispose"});
 		Main.instance.room.onMessage("ALIAS_ENTERED",null);
 		h2d_Scene.prototype.dispose.call(this);
 	}
@@ -67368,7 +67108,6 @@ scenes_FormServer.prototype = $extend(h2d_Scene.prototype,{
 		Main.instance.goToScene(scenes_Connecting);
 	}
 	,dispose: function() {
-		haxe_Log.trace("Scene:InputServer DISPOSE",{ fileName : "src/scenes/FormServer.hx", lineNumber : 64, className : "scenes.FormServer", methodName : "dispose"});
 		hxd_Window.getInstance().removeEventTarget($bind(this,this.onEvent));
 		h2d_Scene.prototype.dispose.call(this);
 	}
@@ -67419,8 +67158,7 @@ scenes_Lobby.prototype = $extend(h2d_Scene.prototype,{
 			}
 		}
 	}
-	,destroy: function() {
-		haxe_Log.trace("Scene:Lobby DISPOSE",{ fileName : "src/scenes/Lobby.hx", lineNumber : 53, className : "scenes.Lobby", methodName : "destroy"});
+	,dispose: function() {
 		if(($_=Main.instance.room.get_state().players,$bind($_,$_.onAdd)) == $bind(this,this.onAddPlayer)) {
 			Main.instance.room.get_state().players.onAdd = null;
 		}
@@ -67445,7 +67183,7 @@ var scenes_SimBase = function() {
 	b.xMin = 0;
 	b.yMin = 0;
 	b.xMax = 1000;
-	b.yMax = 1000;
+	b.yMax = 900;
 	this._stageBounds = b;
 	var font = hxd_res_DefaultFont.get();
 	this.timerText = new h2d_Text(font,this);
@@ -67478,12 +67216,12 @@ var scenes_SimBase = function() {
 	_this5.y = 400;
 	this.pauseOverlayDim = new h2d_Graphics(this);
 	this.pauseOverlayDim.beginFill(1002625,0.5);
-	this.pauseOverlayDim.drawRect(0,0,1000,1000);
+	this.pauseOverlayDim.drawRect(0,0,1000,900);
 	this.pauseOverlayDim.endFill();
 	this.pauseOverlayDim.set_visible(false);
 	this.pauseOverlayDark = new h2d_Graphics(this);
 	this.pauseOverlayDark.beginFill(1002625,1);
-	this.pauseOverlayDark.drawRect(0,0,1000,1000);
+	this.pauseOverlayDark.drawRect(0,0,1000,900);
 	this.pauseOverlayDark.endFill();
 	this.pauseOverlayDark.set_visible(false);
 	Main.instance.sceneUpdate = $bind(this,this.update);
@@ -67570,7 +67308,7 @@ scenes_SimBase.prototype = $extend(h2d_Scene.prototype,{
 				this.children.push(this.children.splice(this.children.indexOf(this.overlayText),1)[0]);
 				break;
 			default:
-				haxe_Log.trace("WARN: unhandled pauseOverlay: " + this.curPauseOverlay,{ fileName : "src/scenes/SimBase.hx", lineNumber : 142, className : "scenes.SimBase", methodName : "update"});
+				haxe_Log.trace("WARN: unhandled pauseOverlay: " + this.curPauseOverlay,{ fileName : "src/scenes/SimBase.hx", lineNumber : 144, className : "scenes.SimBase", methodName : "update"});
 			}
 		}
 		if(this.fw_up != Main.instance.room.get_state().firewalls) {
@@ -67746,7 +67484,7 @@ var scenes_RealNet = function() {
 		net = Main.instance.room.get_state().realNet;
 		break;
 	default:
-		haxe_Log.trace("ERROR: unhandled scene " + Main.instance.room.get_state().scene,{ fileName : "src/scenes/RealNet.hx", lineNumber : 32, className : "scenes.RealNet", methodName : "new"});
+		haxe_Log.trace("ERROR: unhandled scene " + Main.instance.room.get_state().scene,{ fileName : "src/scenes/RealNet.hx", lineNumber : 40, className : "scenes.RealNet", methodName : "new"});
 		net = null;
 	}
 	var s = net.iterator();
@@ -67774,21 +67512,21 @@ scenes_RealNet.__super__ = scenes_SimBase;
 scenes_RealNet.prototype = $extend(scenes_SimBase.prototype,{
 	loadNoobProgs: function() {
 		var group_0_x = 110;
-		var group_0_y = 870;
+		var group_0_y = 760;
 		var group_1_x = 210;
-		var group_1_y = 870;
+		var group_1_y = 760;
 		var group_2_x = 310;
-		var group_2_y = 870;
+		var group_2_y = 760;
 		var group_3_x = 410;
-		var group_3_y = 870;
+		var group_3_y = 760;
 		var group_4_x = 510;
-		var group_4_y = 870;
+		var group_4_y = 760;
 		var group_5_x = 610;
-		var group_5_y = 870;
+		var group_5_y = 760;
 		var group_6_x = 710;
-		var group_6_y = 870;
+		var group_6_y = 760;
 		var group_7_x = 810;
-		var group_7_y = 870;
+		var group_7_y = 760;
 		this.programs.add(new entities_Program(this,"Shroomz",1470576,group_0_x,group_0_y));
 		this.programs.add(new entities_Program(this,"AOHell",1138041,group_0_x,group_0_y + 40));
 		this.programs.add(new entities_Program(this,"GodPunter",4278863,group_0_x,group_0_y + 80));
@@ -67813,54 +67551,54 @@ scenes_RealNet.prototype = $extend(scenes_SimBase.prototype,{
 		this.programs.add(new entities_Program(this,"XGold",1470576,group_7_x,group_7_y));
 		this.programs.add(new entities_Program(this,"Bossy",1138041,group_7_x,group_7_y + 40));
 		this.programs.add(new entities_Program(this,"XMultivac",4278863,group_7_x,group_7_y + 80));
-		this.firewalls.add(new entities_Firewall(this,true,0,830,400,3));
-		this.firewalls.add(new entities_Firewall(this,true,600,830,400,3));
-		this.firewalls.add(new entities_Firewall(this,false,120,760,760,3));
-		this.firewalls.add(new entities_Firewall(this,false,0,690,400,3));
-		this.firewalls.add(new entities_Firewall(this,false,120,620,400,3));
-		this.firewalls.add(new entities_Firewall(this,false,0,550,400,3));
-		this.firewalls.add(new entities_Firewall(this,false,520,550,3,170));
-		this.firewalls.add(new entities_Firewall(this,false,780,690,100,3));
-		this.firewalls.add(new entities_Firewall(this,false,880,690,3,73));
-		this.firewalls.add(new entities_Firewall(this,false,660,620,360,3));
-		this.firewalls.add(new entities_Firewall(this,false,660,620,3,73));
-		this.firewalls.add(new entities_Firewall(this,false,520,550,320,3));
-		this.firewalls.add(new entities_Firewall(this,true,-3,550,3,280));
-		this.firewalls.add(new entities_Firewall(this,true,1000,550,3,280));
+		this.firewalls.add(new entities_Firewall(this,true,0,730,400,3));
+		this.firewalls.add(new entities_Firewall(this,true,600,730,400,3));
+		this.firewalls.add(new entities_Firewall(this,false,120,660,760,3));
+		this.firewalls.add(new entities_Firewall(this,false,0,590,400,3));
+		this.firewalls.add(new entities_Firewall(this,false,120,520,400,3));
+		this.firewalls.add(new entities_Firewall(this,false,0,450,400,3));
+		this.firewalls.add(new entities_Firewall(this,false,520,450,3,170));
+		this.firewalls.add(new entities_Firewall(this,false,780,590,100,3));
+		this.firewalls.add(new entities_Firewall(this,false,880,590,3,73));
+		this.firewalls.add(new entities_Firewall(this,false,660,520,360,3));
+		this.firewalls.add(new entities_Firewall(this,false,660,520,3,73));
+		this.firewalls.add(new entities_Firewall(this,false,520,450,320,3));
+		this.firewalls.add(new entities_Firewall(this,true,-3,450,3,280));
+		this.firewalls.add(new entities_Firewall(this,true,1000,450,3,280));
 	}
 	,loadHackerProgs: function() {
 		var group_0_x = 110;
-		var group_0_y = 720;
+		var group_0_y = 625;
 		var group_1_x = 210;
-		var group_1_y = 720;
+		var group_1_y = 625;
 		var group_2_x = 310;
-		var group_2_y = 720;
+		var group_2_y = 625;
 		var group_3_x = 410;
-		var group_3_y = 720;
+		var group_3_y = 625;
 		var group_4_x = 510;
-		var group_4_y = 720;
+		var group_4_y = 625;
 		var group_5_x = 610;
-		var group_5_y = 720;
+		var group_5_y = 625;
 		var group_6_x = 710;
-		var group_6_y = 720;
+		var group_6_y = 625;
 		var group_7_x = 810;
-		var group_7_y = 720;
+		var group_7_y = 625;
 		var group_8_x = 110;
-		var group_8_y = 860;
+		var group_8_y = 765;
 		var group_9_x = 210;
-		var group_9_y = 860;
+		var group_9_y = 765;
 		var group_10_x = 310;
-		var group_10_y = 860;
+		var group_10_y = 765;
 		var group_11_x = 410;
-		var group_11_y = 860;
+		var group_11_y = 765;
 		var group_12_x = 510;
-		var group_12_y = 860;
+		var group_12_y = 765;
 		var group_13_x = 610;
-		var group_13_y = 860;
+		var group_13_y = 765;
 		var group_14_x = 710;
-		var group_14_y = 860;
+		var group_14_y = 765;
 		var group_15_x = 810;
-		var group_15_y = 860;
+		var group_15_y = 765;
 		this.programs.add(new entities_Program(this,"Shroomz",1470576,group_0_x,group_0_y));
 		this.programs.add(new entities_Program(this,"AOHell",1138041,group_0_x,group_0_y + 40));
 		this.programs.add(new entities_Program(this,"GodPunter",4278863,group_0_x,group_0_y + 80));
@@ -67909,14 +67647,14 @@ scenes_RealNet.prototype = $extend(scenes_SimBase.prototype,{
 		this.programs.add(new entities_Program(this,"Colossus",16487220,group_15_x,group_15_y));
 		this.programs.add(new entities_Program(this,"Frost",16487220,group_15_x,group_15_y + 40));
 		this.programs.add(new entities_Program(this,"Vulcan 3",16487220,group_15_x,group_15_y + 80));
-		this.firewalls.add(new entities_Firewall(this,true,0,680,400,3));
-		this.firewalls.add(new entities_Firewall(this,true,600,680,400,3));
-		this.firewalls.add(new entities_Firewall(this,false,120,610,720,3));
-		this.firewalls.add(new entities_Firewall(this,false,0,550,200,3));
-		this.firewalls.add(new entities_Firewall(this,false,400,550,200,3));
-		this.firewalls.add(new entities_Firewall(this,false,800,550,200,3));
-		this.firewalls.add(new entities_Firewall(this,true,-3,550,3,130));
-		this.firewalls.add(new entities_Firewall(this,true,1000,550,3,130));
+		this.firewalls.add(new entities_Firewall(this,true,0,600,400,3));
+		this.firewalls.add(new entities_Firewall(this,true,600,600,400,3));
+		this.firewalls.add(new entities_Firewall(this,false,120,530,720,3));
+		this.firewalls.add(new entities_Firewall(this,false,0,460,200,3));
+		this.firewalls.add(new entities_Firewall(this,false,400,460,200,3));
+		this.firewalls.add(new entities_Firewall(this,false,800,460,200,3));
+		this.firewalls.add(new entities_Firewall(this,true,-3,460,3,130));
+		this.firewalls.add(new entities_Firewall(this,true,1000,460,3,130));
 	}
 	,createNetConns: function() {
 		this.createNetCnx(this.subsystems[0],this.subsystems[3]);
@@ -67943,10 +67681,10 @@ scenes_RealNet.prototype = $extend(scenes_SimBase.prototype,{
 		var cols_1 = 325;
 		var cols_2 = 570;
 		var cols_3 = 815;
-		var rows_0 = 440;
-		var rows_1 = 330;
-		var rows_2 = 220;
-		var rows_3 = 110;
+		var rows_0 = 364;
+		var rows_1 = 272;
+		var rows_2 = 182;
+		var rows_3 = 92;
 		var rows_4 = 2;
 		this.subsystems.push(new entities_Box(this,"Mail Server",cols_0,rows_0));
 		this.subsystems.push(new entities_Box(this,"Proxy",cols_2,rows_0));
@@ -68060,7 +67798,7 @@ scenes_Tut1.prototype = $extend(h2d_Scene.prototype,{
 		var stepVals = Main.instance.room.get_state().tutStep.items;
 		this.steps[key].set_visible(item);
 	}
-	,destroy: function() {
+	,dispose: function() {
 		if(($_=Main.instance.room.get_state().tutStep,$bind($_,$_.onChange)) == $bind(this,this.onTutStepChange)) {
 			Main.instance.room.get_state().tutStep.onChange = null;
 		}
@@ -68146,7 +67884,7 @@ scenes_Tut2.prototype = $extend(h2d_Scene.prototype,{
 		var stepVals = Main.instance.room.get_state().tutStep.items;
 		this.steps[key].set_visible(item);
 	}
-	,destroy: function() {
+	,dispose: function() {
 		if(($_=Main.instance.room.get_state().tutStep,$bind($_,$_.onAdd)) == $bind(this,this.onTutStepChange)) {
 			Main.instance.room.get_state().tutStep.onAdd = null;
 		}
@@ -68244,7 +67982,7 @@ scenes_Tut3.prototype = $extend(h2d_Scene.prototype,{
 		var stepVals = Main.instance.room.get_state().tutStep.items;
 		this.steps[key].set_visible(item);
 	}
-	,destroy: function() {
+	,dispose: function() {
 		if(($_=Main.instance.room.get_state().tutStep,$bind($_,$_.onChange)) == $bind(this,this.onTutStepChange)) {
 			Main.instance.room.get_state().tutStep.onChange = null;
 		}
@@ -68745,7 +68483,7 @@ hxd_fmt_hmd_Reader.CULLING = h3d_mat_Face.__empty_constructs__.slice();
 hxd_impl__$Allocator_BufferFlags_$Impl_$.Dynamic = 0;
 hxd_impl__$Allocator_BufferFlags_$Impl_$.UniformDynamic = 1;
 hxd_poly2tri_Point.C_ID = 0;
-hxd_res_Resource.LIVE_UPDATE = true;
+hxd_res_Resource.LIVE_UPDATE = false;
 hxd_res__$Image_ImageFormat_$Impl_$.Jpg = 0;
 hxd_res__$Image_ImageFormat_$Impl_$.Png = 1;
 hxd_res__$Image_ImageFormat_$Impl_$.Gif = 2;
@@ -68897,5 +68635,3 @@ scenes_SystemCnxLine.LINE_THICKNESS = 3;
 	haxe_EntryPoint.run();
 }
 })(typeof window != "undefined" ? window : typeof global != "undefined" ? global : typeof self != "undefined" ? self : this);
-
-//# sourceMappingURL=main.js.map

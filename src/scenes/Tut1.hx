@@ -60,7 +60,7 @@ class Tut1 extends h2d.Scene{
     steps[key].visible = item;
   }
 
-  public function destroy(){
+  public override function dispose(){
     if(Main.instance.room.state.tutStep.onChange == onTutStepChange){
       Main.instance.room.state.tutStep.onChange = null;
     }

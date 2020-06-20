@@ -70,7 +70,7 @@ class SimBase extends h2d.Scene{
     this.cnx = new List<SystemCnxLine>();
     this.fw_up = true;
 
-    _stageBounds = Bounds.fromValues(0,0,1000,1000);
+    _stageBounds = Bounds.fromValues(0,0,1000,900);
 
     var font = hxd.res.DefaultFont.get();
 
@@ -86,19 +86,21 @@ class SimBase extends h2d.Scene{
 
     pauseOverlayDim = new Graphics(this);
     pauseOverlayDim.beginFill(Colors.NET_NO_ACCESS, 0.5);
-    pauseOverlayDim.drawRect(0,0,1000,1000);
+    pauseOverlayDim.drawRect(0,0,1000,900);
     pauseOverlayDim.endFill();
     pauseOverlayDim.visible = false;
 
     pauseOverlayDark = new Graphics(this);
     pauseOverlayDark.beginFill(Colors.NET_NO_ACCESS, 1);
-    pauseOverlayDark.drawRect(0,0,1000,1000);
+    pauseOverlayDark.drawRect(0,0,1000,900);
     pauseOverlayDark.endFill();
     pauseOverlayDark.visible = false;
 
+#if !design_mode
     Main.instance.sceneUpdate = update;
     Main.instance.room.state.practiceNet.onChange =
     Main.instance.room.state.realNet.onChange = onNetChange;
+#end
   }
 
   private inline function onNetChange(ss:SubSystem, key:Int) {

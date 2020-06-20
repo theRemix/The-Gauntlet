@@ -108,7 +108,6 @@ class FormAlias extends h2d.Scene{
   }
 
   public override function dispose(){
-    trace("Scene:InputAlias DISPOSE");
     Main.instance.room.onMessage(State.ALIAS_ENTERED, null);
     super.dispose();
   }

@@ -49,9 +49,7 @@ class Lobby extends h2d.Scene{
     }
   }
 
-  public function destroy(){
-    trace("Scene:Lobby DISPOSE");
-
+  public override function dispose(){
     if(Main.instance.room.state.players.onAdd == onAddPlayer){
       Main.instance.room.state.players.onAdd = null;
     }

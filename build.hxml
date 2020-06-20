@@ -3,7 +3,14 @@
 -lib colyseus
 -js bin/player/main.js
 -cp src
--debug
+
+# -debug
+
+# to design subsystems, firewalls, and programs without having to connect to server,
+#   enable design_mode then one of design_noob or design_hacker
+# -D design_mode
+# -D design_noob
+# -D design_hacker
 
 --next
 

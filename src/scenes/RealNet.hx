@@ -23,6 +23,14 @@ class RealNet extends SimBase{
     tf.x = 20;
     tf.y = 10;
 
+#if design_mode
+  #if design_hacker
+      loadHackerProgs();
+  #elseif design_noob
+      loadNoobProgs();
+  #end
+  designSubSystems();
+#else
     var net = switch (Main.instance.room.state.scene) {
       case "Practice":
         Main.instance.room.state.practiceNet;
@@ -42,9 +50,7 @@ class RealNet extends SimBase{
     } else {
       loadNoobProgs();
     }
-
-    // only for dev
-    // designSubSystems();
+#end
 
     for(p in programs){
       p.colliders = firewalls;
@@ -56,14 +62,14 @@ class RealNet extends SimBase{
   function loadNoobProgs(){
 
     var group = [
-      { x: 110, y: 870 },
-      { x: 210, y: 870 },
-      { x: 310, y: 870 },
-      { x: 410, y: 870 },
-      { x: 510, y: 870 },
-      { x: 610, y: 870 },
-      { x: 710, y: 870 },
-      { x: 810, y: 870 },
+      { x: 110, y: 760 },
+      { x: 210, y: 760 },
+      { x: 310, y: 760 },
+      { x: 410, y: 760 },
+      { x: 510, y: 760 },
+      { x: 610, y: 760 },
+      { x: 710, y: 760 },
+      { x: 810, y: 760 },
     ];
 
     programs.add(new Program(this, "Shroomz",       Colors.PROG_3, group[0].x, group[0].y));
@@ -99,61 +105,61 @@ class RealNet extends SimBase{
     programs.add(new Program(this, "XMultivac",     Colors.PROG_1, group[7].x, group[7].y+80));
 
     // first layer                   persist x    y    width
-    firewalls.add(new Firewall(this,  true,    0, 830, 400, 3));
-    firewalls.add(new Firewall(this,  true,  600, 830, 400, 3));
+    firewalls.add(new Firewall(this,  true,    0, 730, 400, 3));
+    firewalls.add(new Firewall(this,  true,  600, 730, 400, 3));
 
     // 2nd layer
-    firewalls.add(new Firewall(this, false,  120, 760, 760, 3));
+    firewalls.add(new Firewall(this, false,  120, 660, 760, 3));
 
     // 3rd layer left path
-    firewalls.add(new Firewall(this, false,    0, 690, 400, 3));
+    firewalls.add(new Firewall(this, false,    0, 590, 400, 3));
 
     // 4th layer left path
-    firewalls.add(new Firewall(this, false,  120, 620, 400, 3));
+    firewalls.add(new Firewall(this, false,  120, 520, 400, 3));
 
     // 5th layer left path
-    firewalls.add(new Firewall(this, false,    0, 550, 400, 3));
+    firewalls.add(new Firewall(this, false,    0, 450, 400, 3));
 
     // mid vertical
-    firewalls.add(new Firewall(this, false,  520, 550, 3, 170));
+    firewalls.add(new Firewall(this, false,  520, 450, 3, 170));
 
     // 3rd layer right path
-    firewalls.add(new Firewall(this, false,  780, 690, 100, 3));
-    firewalls.add(new Firewall(this, false,  880, 690, 3, 73));
+    firewalls.add(new Firewall(this, false,  780, 590, 100, 3));
+    firewalls.add(new Firewall(this, false,  880, 590, 3, 73));
 
     // 4th layer right path
-    firewalls.add(new Firewall(this, false,  660, 620, 360, 3));
-    firewalls.add(new Firewall(this, false,  660, 620, 3, 73));
+    firewalls.add(new Firewall(this, false,  660, 520, 360, 3));
+    firewalls.add(new Firewall(this, false,  660, 520, 3, 73));
 
     // 5th layer right path
-    firewalls.add(new Firewall(this, false,  520, 550, 320, 3));
+    firewalls.add(new Firewall(this, false,  520, 450, 320, 3));
 
     // side borders
-    firewalls.add(new Firewall(this,  true,  -3, 550, 3, 280));
-    firewalls.add(new Firewall(this,  true,  1000, 550, 3, 280));
+    firewalls.add(new Firewall(this,  true,  -3,   450, 3, 280));
+    firewalls.add(new Firewall(this,  true,  1000, 450, 3, 280));
 
   }
 
   function loadHackerProgs(){
 
     var group = [
-      { x: 110, y: 720 },
-      { x: 210, y: 720 },
-      { x: 310, y: 720 },
-      { x: 410, y: 720 },
-      { x: 510, y: 720 },
-      { x: 610, y: 720 },
-      { x: 710, y: 720 },
-      { x: 810, y: 720 },
+      { x: 110, y: 625 },
+      { x: 210, y: 625 },
+      { x: 310, y: 625 },
+      { x: 410, y: 625 },
+      { x: 510, y: 625 },
+      { x: 610, y: 625 },
+      { x: 710, y: 625 },
+      { x: 810, y: 625 },
 
-      { x: 110, y: 860 },
-      { x: 210, y: 860 },
-      { x: 310, y: 860 },
-      { x: 410, y: 860 },
-      { x: 510, y: 860 },
-      { x: 610, y: 860 },
-      { x: 710, y: 860 },
-      { x: 810, y: 860 },
+      { x: 110, y: 765 },
+      { x: 210, y: 765 },
+      { x: 310, y: 765 },
+      { x: 410, y: 765 },
+      { x: 510, y: 765 },
+      { x: 610, y: 765 },
+      { x: 710, y: 765 },
+      { x: 810, y: 765 },
     ];
 
     programs.add(new Program(this, "Shroomz",       Colors.PROG_3, group[0].x, group[0].y));
@@ -222,20 +228,20 @@ class RealNet extends SimBase{
     programs.add(new Program(this, "Vulcan 3",      Colors.PROG_4, group[15].x, group[15].y+80));
 
     // first layer                    persist x    y    width
-    firewalls.add(new Firewall(this,   true,    0, 680, 400, 3));
-    firewalls.add(new Firewall(this,   true,  600, 680, 400, 3));
+    firewalls.add(new Firewall(this,   true,    0, 600, 400, 3));
+    firewalls.add(new Firewall(this,   true,  600, 600, 400, 3));
 
     // 2nd layer
-    firewalls.add(new Firewall(this,  false,  120, 610, 720, 3));
+    firewalls.add(new Firewall(this,  false,  120, 530, 720, 3));
 
     // 3rd layer left path
-    firewalls.add(new Firewall(this,  false,    0, 540, 200, 3));
-    firewalls.add(new Firewall(this,  false,  400, 540, 200, 3));
-    firewalls.add(new Firewall(this,  false,  800, 540, 200, 3));
+    firewalls.add(new Firewall(this,  false,    0, 460, 200, 3));
+    firewalls.add(new Firewall(this,  false,  400, 460, 200, 3));
+    firewalls.add(new Firewall(this,  false,  800, 460, 200, 3));
 
     // side borders
-    firewalls.add(new Firewall(this,   true,   -3, 540, 3, 130));
-    firewalls.add(new Firewall(this,   true, 1000, 540, 3, 130));
+    firewalls.add(new Firewall(this,   true,   -3, 460, 3, 130));
+    firewalls.add(new Firewall(this,   true, 1000, 460, 3, 130));
   }
 
 
@@ -266,7 +272,7 @@ class RealNet extends SimBase{
   function designSubSystems(){
 
     var cols = [ 80, 325, 570, 815 ];
-    var rows = [ 440, 330, 220, 110, 2 ];
+    var rows = [ 364, 272, 182, 92, 2 ];
 
     // 1st layer [0]
     subsystems.push(new Box(this, "Mail Server",         cols[0], rows[0]));

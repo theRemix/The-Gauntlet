@@ -61,7 +61,6 @@ class FormServer extends h2d.Scene{
   }
 
   public override function dispose(){
-    trace("Scene:InputServer DISPOSE");
     hxd.Window.getInstance().removeEventTarget(onEvent);
     super.dispose();
   }

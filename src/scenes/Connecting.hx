@@ -32,9 +32,4 @@ class Connecting extends h2d.Scene{
     backBtn.textColor = 0xFFFFFF;
     Main.instance.goToScene(scenes.FormServer);
   }
-
-  public override function dispose(){
-    trace("Scene:Connecting DISPOSE");
-    super.dispose();
-  }
 }
