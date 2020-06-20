@@ -67,7 +67,7 @@ class Program extends Graphics{
     var b = getBounds();
     for (i in 0...steps){
       var a = Bounds.fromValues(x + dx * step * i, y + dy * step * i, WIDTH, HEIGHT);
-      for(c in colliders.filter(function(a) return !a.persist && a.visible))
+      for(c in colliders.filter(function(a) return a.visible))
         if(c.getBounds().intersects(a)) return false;
 
     }
