@@ -229,13 +229,13 @@ class RealNet extends SimBase{
     firewalls.add(new Firewall(this,  false,  120, 610, 720, 3));
 
     // 3rd layer left path
-    firewalls.add(new Firewall(this,  false,    0, 550, 200, 3));
-    firewalls.add(new Firewall(this,  false,  400, 550, 200, 3));
-    firewalls.add(new Firewall(this,  false,  800, 550, 200, 3));
+    firewalls.add(new Firewall(this,  false,    0, 540, 200, 3));
+    firewalls.add(new Firewall(this,  false,  400, 540, 200, 3));
+    firewalls.add(new Firewall(this,  false,  800, 540, 200, 3));
 
     // side borders
-    firewalls.add(new Firewall(this,   true,  -3, 550, 3, 130));
-    firewalls.add(new Firewall(this,   true,  1000, 550, 3, 130));
+    firewalls.add(new Firewall(this,   true,   -3, 540, 3, 130));
+    firewalls.add(new Firewall(this,   true, 1000, 540, 3, 130));
   }
 
 
