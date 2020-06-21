@@ -1,6 +1,6 @@
 package entities;
 
-import h2d.Scene;
+import h2d.Object;
 import h2d.Graphics;
 import h2d.Interactive;
 import h2d.Text;
@@ -25,8 +25,8 @@ class Program extends Graphics{
 
   public var colliders:List<Firewall>;
 
-  public function new(scene:Scene, name:String, color:Int, x:Int, y:Int) {
-    super(scene);
+  public function new(parent:Object, name:String, color:Int, x:Int, y:Int) {
+    super(parent);
     this.name = name;
     this.x = x;
     this.y = y;

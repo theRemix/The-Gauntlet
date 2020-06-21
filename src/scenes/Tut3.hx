@@ -13,12 +13,14 @@
 package scenes;
 
 import io.colyseus.serializer.schema.Schema;
+import entities.Program;
+import entities.Box;
 
 class Tut3 extends h2d.Scene{
 
   private var font:h2d.Font;
   private var headline:h2d.Text;
-  private var steps:Array<h2d.Text>;
+  private var steps:Array<h2d.Object>;
 
   public function new(){
     super();
@@ -36,9 +38,9 @@ class Tut3 extends h2d.Scene{
     var yspace = 40;
 
     steps = [
-      createStep("Run Programs on subsystems to break in.", x, y),
-      createStep("To run a program, drag the program onto the subsystem.", x, y+yspace),
-      createStep("If the program is correct,\n  the subsystem will be PWNED and your team can access any connected subsystems.", x, y+yspace*2),
+      createStep1(x, y),
+      createStep2(x, y+yspace),
+      createStep3(x, y+yspace*2),
       createStep("Some subsystems are not accessible from the net, so you must enter through other systems.", x, y+yspace*3),
       createStep("Firewalls block programs, avoid them!", x, y+yspace*4),
       createStep("Multiple programs can be used to access a subsystem.\n  Having lots of programs is generally a good thing.", x, y+yspace*5),
@@ -50,6 +52,73 @@ class Tut3 extends h2d.Scene{
     Main.instance.room.state.tutStep.onAdd =
     Main.instance.room.state.tutStep.onRemove =
     Main.instance.room.state.tutStep.onChange = onTutStepChange;
+  }
+
+  private inline function createStep1(x, y):h2d.Object{
+    var step = new h2d.Object(this);
+    step.x = x;
+    step.y = y;
+
+    var line = new h2d.Text(font, step);
+    line.text = "Run Programs on subsystems to break in.";
+
+    var program1 = new Program(step, "Subzero", Colors.PROG_3, 400, 0);
+    var program2 = new Program(step, "Tron",    Colors.PROG_2, 500, 0);
+    var program3 = new Program(step, "Supr AI", Colors.PROG_4, 600, 0);
+
+    var progLabel = new h2d.Text(font, step);
+    progLabel.text = "Programs";
+    progLabel.x = 510;
+    progLabel.y = 40;
+
+    var accessibleSys = new Box(step, "Door Locks", 740, -20);
+    var inaccessibleSys = new Box(step, "Door Locks", 860, -20);
+    inaccessibleSys.makeInaccessible();
+
+    var sysLabel = new h2d.Text(font, step);
+    sysLabel.text = "Accessible             Inaccessible\nSubSytem               SubSystem";
+    sysLabel.x = 760;
+    sysLabel.y = 70;
+
+    return step;
+  }
+
+  private inline function createStep2(x, y):h2d.Object{
+    var step = new h2d.Object(this);
+    step.x = x;
+    step.y = y;
+
+    var line = new h2d.Text(font, step);
+    line.text = "To run a program, drag the program onto the subsystem.";
+
+    var accessibleSys = new Box(step, "Door Locks\nNoise\nWhizzard", 740, 120);
+
+    var sysLabel = new h2d.Text(font, step);
+    sysLabel.text = "Runners\n Listed";
+    sysLabel.x = 760;
+    sysLabel.y = 210;
+    return step;
+  }
+
+  private inline function createStep3(x, y):h2d.Object{
+    var step = new h2d.Object(this);
+    step.x = x;
+    step.y = y;
+
+    var line = new h2d.Text(font, step);
+    line.text = "If the program is correct,\n  the subsystem will be PWNED and your team can access any connected subsystems.";
+
+    var ownedSys = new Box(step, "Door Locks", 860, 80);
+    var ss = new SubSystem();
+    ss.owned = true;
+    ss.ownedBy = "Whizzard";
+    ownedSys.syncProps(ss);
+
+    var sysLabel = new h2d.Text(font, step);
+    sysLabel.text = "   Pwned\nSubSystem";
+    sysLabel.x = 876;
+    sysLabel.y = 170;
+    return step;
   }
 
   private inline function createStep(text, x, y):h2d.Text{

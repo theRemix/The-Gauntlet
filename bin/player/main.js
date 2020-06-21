@@ -4317,9 +4317,8 @@ h2d_Graphics.prototype = $extend(h2d_Drawable.prototype,{
 	}
 	,__class__: h2d_Graphics
 });
-var entities_Box = function(scene,name,x,y) {
-	h2d_Graphics.call(this,scene);
-	this.scene = scene;
+var entities_Box = function(parent,name,x,y) {
+	h2d_Graphics.call(this,parent);
 	this.name = name;
 	this.posChanged = true;
 	this.x = x;
@@ -4413,7 +4412,12 @@ entities_Box.prototype = $extend(h2d_Graphics.prototype,{
 				var b = val;
 				b.makeAccessible();
 			}
-			this.scene.onBoxOwned(this);
+			try {
+				(js_Boot.__cast(this.parent , scenes_SimBase)).onBoxOwned(this);
+			} catch( e ) {
+				var e1 = ((e) instanceof js__$Boot_HaxeError) ? e.val : e;
+				return;
+			}
 		} else if(this.owned && !ss.owned) {
 			this.owned = ss.owned;
 			this.label.set_text(this.name);
@@ -4459,8 +4463,8 @@ entities_Firewall.__super__ = h2d_Graphics;
 entities_Firewall.prototype = $extend(h2d_Graphics.prototype,{
 	__class__: entities_Firewall
 });
-var entities_Program = function(scene,name,color,x,y) {
-	h2d_Graphics.call(this,scene);
+var entities_Program = function(parent,name,color,x,y) {
+	h2d_Graphics.call(this,parent);
 	this.name = name;
 	this.posChanged = true;
 	this.x = x;
@@ -67919,24 +67923,63 @@ var scenes_Tut3 = function() {
 	var x = 20;
 	var y = 60;
 	var yspace = 40;
-	var step = new h2d_Text(this.font,this);
-	step.set_text("Run Programs on subsystems to break in.");
+	var step = new h2d_Object(this);
 	step.posChanged = true;
 	step.x = x;
 	step.posChanged = true;
 	step.y = y;
-	var step1 = new h2d_Text(this.font,this);
-	step1.set_text("To run a program, drag the program onto the subsystem.");
+	var line = new h2d_Text(this.font,step);
+	line.set_text("Run Programs on subsystems to break in.");
+	var program1 = new entities_Program(step,"Subzero",1470576,400,0);
+	var program2 = new entities_Program(step,"Tron",1138041,500,0);
+	var program3 = new entities_Program(step,"Supr AI",16487220,600,0);
+	var progLabel = new h2d_Text(this.font,step);
+	progLabel.set_text("Programs");
+	progLabel.posChanged = true;
+	progLabel.x = 510;
+	progLabel.posChanged = true;
+	progLabel.y = 40;
+	var accessibleSys = new entities_Box(step,"Door Locks",740,-20);
+	var inaccessibleSys = new entities_Box(step,"Door Locks",860,-20);
+	inaccessibleSys.makeInaccessible();
+	var sysLabel = new h2d_Text(this.font,step);
+	sysLabel.set_text("Accessible             Inaccessible\nSubSytem               SubSystem");
+	sysLabel.posChanged = true;
+	sysLabel.x = 760;
+	sysLabel.posChanged = true;
+	sysLabel.y = 70;
+	var step1 = new h2d_Object(this);
 	step1.posChanged = true;
 	step1.x = x;
 	step1.posChanged = true;
 	step1.y = y + yspace;
-	var step2 = new h2d_Text(this.font,this);
-	step2.set_text("If the program is correct,\n  the subsystem will be PWNED and your team can access any connected subsystems.");
+	var line1 = new h2d_Text(this.font,step1);
+	line1.set_text("To run a program, drag the program onto the subsystem.");
+	var accessibleSys1 = new entities_Box(step1,"Door Locks\nNoise\nWhizzard",740,120);
+	var sysLabel1 = new h2d_Text(this.font,step1);
+	sysLabel1.set_text("Runners\n Listed");
+	sysLabel1.posChanged = true;
+	sysLabel1.x = 760;
+	sysLabel1.posChanged = true;
+	sysLabel1.y = 210;
+	var step2 = new h2d_Object(this);
 	step2.posChanged = true;
 	step2.x = x;
 	step2.posChanged = true;
 	step2.y = y + yspace * 2;
+	var line2 = new h2d_Text(this.font,step2);
+	line2.set_text("If the program is correct,\n  the subsystem will be PWNED and your team can access any connected subsystems.");
+	var ownedSys = new entities_Box(step2,"Door Locks",860,80);
+	var ss = new SubSystem();
+	ss.owned = true;
+	ss.ownedBy = "Whizzard";
+	ownedSys.syncProps(ss);
+	var sysLabel2 = new h2d_Text(this.font,step2);
+	sysLabel2.set_text("   Pwned\nSubSystem");
+	sysLabel2.posChanged = true;
+	sysLabel2.x = 876;
+	sysLabel2.posChanged = true;
+	sysLabel2.y = 170;
 	var step3 = new h2d_Text(this.font,this);
 	step3.set_text("Some subsystems are not accessible from the net, so you must enter through other systems.");
 	step3.posChanged = true;
@@ -67969,7 +68012,73 @@ $hxClasses["scenes.Tut3"] = scenes_Tut3;
 scenes_Tut3.__name__ = "scenes.Tut3";
 scenes_Tut3.__super__ = h2d_Scene;
 scenes_Tut3.prototype = $extend(h2d_Scene.prototype,{
-	createStep: function(text,x,y) {
+	createStep1: function(x,y) {
+		var step = new h2d_Object(this);
+		step.posChanged = true;
+		step.x = x;
+		step.posChanged = true;
+		step.y = y;
+		var line = new h2d_Text(this.font,step);
+		line.set_text("Run Programs on subsystems to break in.");
+		var program1 = new entities_Program(step,"Subzero",1470576,400,0);
+		var program2 = new entities_Program(step,"Tron",1138041,500,0);
+		var program3 = new entities_Program(step,"Supr AI",16487220,600,0);
+		var progLabel = new h2d_Text(this.font,step);
+		progLabel.set_text("Programs");
+		progLabel.posChanged = true;
+		progLabel.x = 510;
+		progLabel.posChanged = true;
+		progLabel.y = 40;
+		var accessibleSys = new entities_Box(step,"Door Locks",740,-20);
+		var inaccessibleSys = new entities_Box(step,"Door Locks",860,-20);
+		inaccessibleSys.makeInaccessible();
+		var sysLabel = new h2d_Text(this.font,step);
+		sysLabel.set_text("Accessible             Inaccessible\nSubSytem               SubSystem");
+		sysLabel.posChanged = true;
+		sysLabel.x = 760;
+		sysLabel.posChanged = true;
+		sysLabel.y = 70;
+		return step;
+	}
+	,createStep2: function(x,y) {
+		var step = new h2d_Object(this);
+		step.posChanged = true;
+		step.x = x;
+		step.posChanged = true;
+		step.y = y;
+		var line = new h2d_Text(this.font,step);
+		line.set_text("To run a program, drag the program onto the subsystem.");
+		var accessibleSys = new entities_Box(step,"Door Locks\nNoise\nWhizzard",740,120);
+		var sysLabel = new h2d_Text(this.font,step);
+		sysLabel.set_text("Runners\n Listed");
+		sysLabel.posChanged = true;
+		sysLabel.x = 760;
+		sysLabel.posChanged = true;
+		sysLabel.y = 210;
+		return step;
+	}
+	,createStep3: function(x,y) {
+		var step = new h2d_Object(this);
+		step.posChanged = true;
+		step.x = x;
+		step.posChanged = true;
+		step.y = y;
+		var line = new h2d_Text(this.font,step);
+		line.set_text("If the program is correct,\n  the subsystem will be PWNED and your team can access any connected subsystems.");
+		var ownedSys = new entities_Box(step,"Door Locks",860,80);
+		var ss = new SubSystem();
+		ss.owned = true;
+		ss.ownedBy = "Whizzard";
+		ownedSys.syncProps(ss);
+		var sysLabel = new h2d_Text(this.font,step);
+		sysLabel.set_text("   Pwned\nSubSystem");
+		sysLabel.posChanged = true;
+		sysLabel.x = 876;
+		sysLabel.posChanged = true;
+		sysLabel.y = 170;
+		return step;
+	}
+	,createStep: function(text,x,y) {
 		var step = new h2d_Text(this.font,this);
 		step.set_text(text);
 		step.posChanged = true;

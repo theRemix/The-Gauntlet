@@ -1,6 +1,6 @@
 package entities;
 
-import h2d.Scene;
+import h2d.Object;
 import h2d.Graphics;
 import h2d.Interactive;
 import h2d.Text;
@@ -16,7 +16,6 @@ class Box extends Graphics {
   public static inline var WIDTH = 100;
   public static inline var HEIGHT = 80;
 
-  var scene:SimBase;
   public var owned:Bool;
   var accessible:Bool;
 
@@ -25,9 +24,8 @@ class Box extends Graphics {
 
   var label:Text;
 
-  public function new(scene:SimBase, name:String, x:Int, y:Int) {
-    super(scene);
-    this.scene = scene;
+  public function new(parent:Object, name:String, x:Int, y:Int) {
+    super(parent);
     this.name = name;
     this.x = x;
     this.y = y;
@@ -99,7 +97,9 @@ class Box extends Graphics {
         b.makeAccessible();
       }
 
-      scene.onBoxOwned(this);
+      try{ // parent is Object for tutorial scenes
+        cast(parent, SimBase).onBoxOwned(this);
+      }catch(e:Any){ return; }
 
     }else if(owned && !ss.owned){ // GM reset the box
       owned = ss.owned;

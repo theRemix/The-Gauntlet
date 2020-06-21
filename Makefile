@@ -1,5 +1,5 @@
 default:
-	docker run --rm -v ~/.local/haxelib/:/haxelib -v ${PWD}:/app -w /app haxe:4.0-alpine haxe build.hxml
+	docker run --rm -v ~/.local/haxelib/:/haxelib -v ${PWD}:/app -w /app haxe:4.0-alpine haxe --debug build.hxml
 
 docker:
 	docker build -t theremix/the-gauntlet:latest .
@@ -9,6 +9,9 @@ dev-server:
 
 dev-client:
 	~/.gopath/bin/watcher -cmd 'make' -keepalive src/
+
+release-client:
+	docker run --rm -v ~/.local/haxelib/:/haxelib -v ${PWD}:/app -w /app haxe:4.0-alpine haxe build.hxml
 
 run:
 	npm start
