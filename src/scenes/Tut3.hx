@@ -40,8 +40,8 @@ class Tut3 extends h2d.Scene{
     steps = [
       createStep1(x, y),
       createStep2(x, y+yspace),
-      createStep3(x, y+yspace*2),
-      createStep("Some subsystems are not accessible from the net, so you must enter through other systems.", x, y+yspace*3),
+      createStep("Some subsystems are not accessible from the net, so you must enter through other systems.", x, y+yspace*2),
+      createStep4(x, y+yspace*3),
       createStep("Firewalls block programs, avoid them!", x, y+yspace*4),
       createStep("Multiple programs can be used to access a subsystem.\n  Having lots of programs is generally a good thing.", x, y+yspace*5),
     ];
@@ -100,7 +100,7 @@ class Tut3 extends h2d.Scene{
     return step;
   }
 
-  private inline function createStep3(x, y):h2d.Object{
+  private inline function createStep4(x, y):h2d.Object{
     var step = new h2d.Object(this);
     step.x = x;
     step.y = y;
@@ -108,7 +108,7 @@ class Tut3 extends h2d.Scene{
     var line = new h2d.Text(font, step);
     line.text = "If the program is correct,\n  the subsystem will be PWNED and your team can access any connected subsystems.";
 
-    var ownedSys = new Box(step, "Door Locks", 860, 80);
+    var ownedSys = new Box(step, "Door Locks", 860, 40);
     var ss = new SubSystem();
     ss.owned = true;
     ss.ownedBy = "Whizzard";
@@ -117,7 +117,7 @@ class Tut3 extends h2d.Scene{
     var sysLabel = new h2d.Text(font, step);
     sysLabel.text = "   Pwned\nSubSystem";
     sysLabel.x = 876;
-    sysLabel.y = 170;
+    sysLabel.y = 130;
     return step;
   }
 
